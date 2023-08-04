@@ -1,14 +1,18 @@
 import datetime
-import json
 import locale
-
+import random
+import traceback
 import interactions
 import requests
+import uwuifier
+
+from interactions.api.events import CommandError
 from interactions import (
-    Extension, OptionType, slash_option, slash_command, SlashContext, SlashCommandChoice
+    Extension, OptionType, slash_option, slash_command, SlashContext, SlashCommandChoice, listen
 )
 
 locale.setlocale(locale.LC_ALL, 'de_DE')
+UWUCHANCE = 5  # D-De chance dat a commyand wesponse gets u-u-uwuified
 
 
 def setup(bot):
@@ -49,6 +53,17 @@ def saison_slash_option():  # call with @saison_option
         )(func)
 
     return wrapper
+
+
+# Error Handling (at least that's what the docs say)
+@listen(CommandError, disable_default_listeners=True)
+async def on_command_error(self, event: CommandError):
+    traceback.print_exception(event.error)
+    #if not event.ctx.responded:
+    msg = ("Irgendetwas ist schief gelaufen. \n Ich bitte vielmals um Verzeihung! (´。＿。｀) \n"
+               "Sollte mein Ersteller zugegen sein, kannst du ihn bitte auf das Problem aufmerksam machen?")
+    if random.randint(0, 100) < UWUCHANCE: msg = uwuifier.UwUify(msg)
+    await event.ctx.send(msg)
 
 
 class Football(Extension):
@@ -106,13 +121,14 @@ class Football(Extension):
         await ctx.send(embed=matches(team_option, past_option, future_option))
 
 
+# Method for the table command
 def table(liga, saison):
     url = f"https://api.openligadb.de/getbltable/{liga}/{saison}"
     response = requests.get(url)
     data = response.json()
 
     tabelle = "```"
-    tabelle += "# | Team".ljust(35) + "Sp Si Un Ni Tore  Diff".center(20) + "Punkte".rjust(10) + "\n"
+    tabelle += "# | Team".ljust(30) + "Sp Si Un Ni Tore  Diff".center(20) + "Punkte".rjust(10) + "\n"
     i = 1
     for team in data:
         name = germanise(team['teamName'])
@@ -125,16 +141,20 @@ def table(liga, saison):
         won = str(team['won']).zfill(2)
         lost = str(team['lost']).zfill(2)
         draw = str(team['draw']).zfill(2)
-        tabelle += (f"{str(i).zfill(2)}| {name}".ljust(35)
+        tabelle += (f"{str(i).zfill(2)}| {name}".ljust(30)
                     + f"{played} {won} {draw} {lost} {scored_goals}:{conc_goals} {goal_diff}".center(20)
                     + f"{points}".rjust(10) + "\n")
         i += 1
     tabelle += "```"
+
+    if random.randint(0, 100) < UWUCHANCE: tabelle = uwuifier.UwUify(tabelle, False, False)
+
     return tabelle
 
 
+# Method for the matchday command
 def matchday(liga, saison, spieltag):
-    if spieltag == 0: spieltag = getCurrentSpieltag(liga)
+    if spieltag == 0: spieltag = get_current_spieltag(liga)
 
     url = f"https://api.openligadb.de/getmatchdata/{liga}/{saison}/{spieltag}"
     response = requests.get(url)
@@ -155,9 +175,12 @@ def matchday(liga, saison, spieltag):
                         value=f"`{team1: <25}" f"{goals1: ^3} : {goals2: ^4}" f"{team2: >25}`")
         i += 1
 
+    if random.randint(0, 100) < UWUCHANCE: embed = uwuify_embed(embed)
+
     return embed
 
 
+# Method for the goalgetter command
 def goalgetter(liga, saison):
     url = f"https://api.openligadb.de/getgoalgetters/{liga}/{saison}"
     response = requests.get(url)
@@ -169,9 +192,12 @@ def goalgetter(liga, saison):
         goals = data[i]['goalCount']
         embed.add_field(name=name, value=goals, inline=True)
 
+    if random.randint(0, 100) < UWUCHANCE: embed = uwuify_embed(embed)
+
     return embed
 
 
+# Method for the matches command
 def matches(team, past, future):
     url = f"https://api.openligadb.de/getmatchesbyteam/{team}/{past}/{future}"
     response = requests.get(url)
@@ -198,16 +224,30 @@ def matches(team, past, future):
                         value=f"`{team1: <25}" f"{goals1: ^3} : {goals2: ^4}" f"{team2: >25}`")
         i += 1
 
+    if random.randint(0, 100) < UWUCHANCE: embed = uwuify_embed(embed)
+
     return embed
 
 
-def germanise(str):
+# Fixing formatting errors concerning the German letters
+def germanise(msg):
     char_map = {ord('Ã'): '', ord('¼'): 'ü', ord('¶'): 'ö', ord('¤'): 'ä', ord('Ÿ'): 'ß'}
-    return str.translate(char_map)
+    return msg.translate(char_map)
 
 
-def getCurrentSpieltag(liga):
+# Gets the current Spieltag
+def get_current_spieltag(liga):
     url = f'https://api.openligadb.de/getcurrentgroup/{liga}'
     response = requests.get(url)
     data = response.json()
     return data['groupOrderID']
+
+
+# uwuifies an embed
+def uwuify_embed(embed):
+    if not isinstance(embed, interactions.Embed): return embed
+    embed.title = uwuifier.UwUify(embed.title)
+    for field in embed.fields:
+        field.name = uwuifier.UwUify(field.name, False, False)
+        field.value = uwuifier.UwUify(field.value, False, False)
+    return embed
