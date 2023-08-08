@@ -1,47 +1,278 @@
 import datetime
+import json
 import locale
 import random
-import traceback
+
 import interactions
 import requests
-import uwuifier
-
-from interactions.api.events import CommandError
 from interactions import (
-    Extension, OptionType, slash_option, slash_command, SlashContext, SlashCommandChoice, listen
+    Extension, OptionType, slash_option, slash_command, SlashContext, SlashCommandChoice
 )
 
-locale.setlocale(locale.LC_ALL, 'de_DE')
-UWUCHANCE = 5  # D-De chance dat a commyand wesponse gets u-u-uwuified
+import helper
+import uwuifier
+from helper import germanise
+
+locale.setlocale(locale.LC_ALL, 'de_DE')  # Changes local to Deutsch for time display
+UWUCHANCE = helper.UWUCHANCE  # D-De chance dat a commyand wesponse gets u-u-uwuified
+COMPETITION_LIST = ["2. Bundesliga", "Freundschaftsspiele", "Frauen-WM"]  # List of League interested in
 
 
-def setup(bot):
-    Football(bot)
+# Sets up this extension
+def setup(bot): Football(bot)
 
 
-leagueChoices = [
+'''
+##################################################
+LIVE SCORE PART
+##################################################
+'''
+
+
+def create_schedule():
+    """ Returns Schedule based on the starting time of that day's games """
+    start_times = set()
+
+    # Get data from site
+    date_today = datetime.datetime.today().date()
+    url = f"https://api.sport1.info/v2/de/live/soccer/liveMatchesBySport/date/{date_today}/appConfig/false"
+
+    payload = ""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0",
+        "Accept": "*/*",
+        "Accept-Language": "de,en-US;q=0.7,en;q=0.3",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Origin": "https://www.sport1.de",
+        "Connection": "keep-alive",
+        "Referer": "https://www.sport1.de/",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "cross-site",
+        "DNT": "1",
+        "Sec-GPC": "1",
+        "TE": "trailers"
+    }
+
+    response = requests.request("GET", url, data=payload, headers=headers)
+    data = response.json()
+    data = data['content']
+    # Iterate over every league
+    for league in data:
+        # Filter by wanted leagues
+        if league['matches'][0]['competition']['name'] not in COMPETITION_LIST: continue
+        # Add match times to set
+        for match in league['matches']:
+            time = match['scheduledStartTime'].replace('T', ' ').replace('Z', '')
+            start_times.add(time)
+
+    start_times = sorted(start_times)
+    return start_times
+
+
+def get_live(content=""):
+    """ Returns a list of embeds - one for every league - with an embed for every game of that league
+    content -- old message's content, "" if no old message exists, otherwise the message's embeds
+    """
+    embeds = []
+    one_game_still_live = False
+
+    # Get data from site
+    date_today = datetime.datetime.today().date()
+    url = f"https://api.sport1.info/v2/de/live/soccer/liveMatchesBySport/date/{date_today}/appConfig/false"
+
+    payload = ""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0",
+        "Accept": "*/*",
+        "Accept-Language": "de,en-US;q=0.7,en;q=0.3",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Origin": "https://www.sport1.de",
+        "Connection": "keep-alive",
+        "Referer": "https://www.sport1.de/",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "cross-site",
+        "DNT": "1",
+        "Sec-GPC": "1",
+        "TE": "trailers"
+    }
+
+    response = requests.request("GET", url, data=payload, headers=headers)
+    data = response.json()
+    data = data['content']
+
+    print(datetime.datetime.today())
+    print(data)
+    print("\n")
+    # TODO Anzeigen, wenn Spiel fertig
+    # Iterate over every league
+    for league in data:
+        # Skip league if not one of the wanted ones
+        league_name = league['matches'][0]['competition']['name']
+        if league_name not in COMPETITION_LIST: continue
+        embed = interactions.Embed(title=league_name)
+        # Iterate over every match in the league
+        for match in league['matches']:
+            team1 = germanise(match['homeTeam']['name'])
+            team2 = germanise(match['awayTeam']['name'])
+            # Goals
+            score1 = 0
+            score2 = 0
+            if 'homeScore' in match: score1 = match['homeScore']
+            if 'awayScore' in match: score2 = match['awayScore']
+            # Game Time
+            minute = "Startet um " + datetime.datetime.fromisoformat(match['scheduledStartTime']).strftime(
+                "%H:%M") + " Uhr"
+            if 'matchTime' in match['matchInfo']: minute = str(match['matchInfo']['matchTime']) + "' "
+            if match['period'] == "FULL_TIME": minute = "END "
+            # Put in Values
+            new_name = f"```{team1:<30} {score1:^3}:{score2:^4} {team2:>30}```"
+            new_value = f"```{str(minute).zfill(2)}```"
+            # If the score changes in the new message, get the goalscorers and put them as the new value
+            if not content == "":
+                old_embed = content[0]
+                for em in content[1:]:  # Get correct embed
+                    if em.title == embed.title: old_embed = em
+                old = old_embed.fields[0]
+                for field in old_embed.fields[1:]:  # Get correct field
+                    if field.name[0:20] == new_name[0:20]: old = field
+                old_name = old.name
+                old_value = old.value
+                if new_name != old_name:
+                    new_value = new_value.split(' ')[0] + get_match_goals(match['id'])
+                else:
+                    new_value = new_value.split(' ')[0] + " " + ' '.join(old_value.split(' ')[1:])
+            embed.add_field(name=new_name, value=new_value)
+            if match['isLive']: one_game_still_live = True
+
+        embeds.append(embed)
+
+    return embeds, one_game_still_live
+
+
+def get_match_goals(match_id):
+    """ Get the match's goalscorers """
+    # Get data from site
+    url = f"https://api.sport1.info/v2/de/soccer/ticker/{match_id}"
+
+    payload = ""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0",
+        "Accept": "*/*",
+        "Accept-Language": "de,en-US;q=0.7,en;q=0.3",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Origin": "https://www.sport1.de",
+        "Connection": "keep-alive",
+        "Referer": "https://www.sport1.de/",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "cross-site",
+        "DNT": "1",
+        "Sec-GPC": "1",
+        "If-None-Match": "W/0b32f50f11c4909718a882e15de834109",
+        "TE": "trailers"
+    }
+
+    response = requests.request("GET", url, data=payload, headers=headers)
+    match_info = response.json()
+
+    return_string = " "
+
+    id_home = match_info['match']['homeTeam']['id']
+    # id_away = match_info['match']['awayTeam']['id']
+    goals_home = ""
+    goals_away = ""
+    # Iterate over every goal in the match
+    for goal in match_info['matchGoals']:
+        # if goal['failed']: continue
+        team = goal['teamId']
+        time = goal['minute']
+        scorer = goal['player']['lastName']
+        goal_type = ""
+        if goal['penalty']:
+            goal_type = " (P)"
+        elif goal['ownGoal']:
+            goal_type = " (OG)"
+        elif goal['soloRun']:
+            goal_type = " (SR)"
+        if goal['failed']: goal_type = " (F)"
+        if 'nickName' in goal['player']: scorer = goal['player']['nickName']
+        score = f" {time}' {scorer}" + goal_type
+        # Add Goal to the correct team
+        if team == id_home:
+            if not goals_home == "": goals_home += ','
+            goals_home += score
+        else:
+            if not goals_away == "": goals_away += ','
+            goals_away += score
+    # Add the team's shortname if they scored at least one goal
+    if not goals_home == "": goals_home = match_info['match']['homeTeam']['code'] + ":" + goals_home
+    if not goals_away == "": goals_away = match_info['match']['awayTeam']['code'] + ":" + goals_away
+    # Add the two team's goals to the return string
+    if goals_home == "":
+        return_string += goals_away
+    elif goals_away == "":
+        return_string += goals_home
+    else:
+        return_string += goals_home + "\n" + " " * 4 + goals_away
+    return_string += "```"
+    return return_string
+
+
+'''
+##################################################
+COMMAND PART
+##################################################
+'''
+
+SPORTS_CHANNEL_ID = open('./config.txt').readlines()[1]
+
+WRONG_CHANNEL_MESSAGE = "Falscher Channel, Bro"
+LIMIT_REACHED_MESSAGE = "Zu viele Commands, Bro"
+
+LEAGUE_CHOICES = [
     SlashCommandChoice(name="1. Bundesliga", value="bl1"),
     SlashCommandChoice(name="2. Bundesliga", value="bl2"),
     SlashCommandChoice(name="3. Bundesliga", value="bl3"),
     SlashCommandChoice(name="DFB Pokal", value="dfb")
 ]
-currentSaison = 2023
+CURRENT_SEASON = 2023
+
+COMMAND_LIMIT = 3
+
+command_calls = 0
+limit_reached = False
 
 
-def liga_slash_option():  # call with @liga_option
+def reduce_command_calls():
+    """ Used to reduce the command_calls counter """
+    global command_calls, limit_reached
+    if command_calls > 0: command_calls -= 1
+    if command_calls == 0: limit_reached = False
+
+
+def increment_command_calls():
+    """ Used to increment the command_calls counter """
+    global command_calls, limit_reached
+    command_calls += 1
+    if command_calls > COMMAND_LIMIT: limit_reached = True
+
+
+def league_slash_option():  # call with @league_option
     def wrapper(func):
         return slash_option(
             name="liga_option",
             description="Liga",
             required=False,
             opt_type=OptionType.STRING,
-            choices=leagueChoices
+            choices=LEAGUE_CHOICES
         )(func)
 
     return wrapper
 
 
-def saison_slash_option():  # call with @saison_option
+def season_slash_option():  # call with @season_option
     def wrapper(func):
         return slash_option(
             name="saison_option",
@@ -55,27 +286,21 @@ def saison_slash_option():  # call with @saison_option
     return wrapper
 
 
-# Error Handling (at least that's what the docs say)
-@listen(CommandError, disable_default_listeners=True)
-async def on_command_error(self, event: CommandError):
-    traceback.print_exception(event.error)
-    #if not event.ctx.responded:
-    msg = ("Irgendetwas ist schief gelaufen. \n Ich bitte vielmals um Verzeihung! (´。＿。｀) \n"
-               "Sollte mein Ersteller zugegen sein, kannst du ihn bitte auf das Problem aufmerksam machen?")
-    if random.randint(0, 100) < UWUCHANCE: msg = uwuifier.UwUify(msg)
-    await event.ctx.send(msg)
-
-
 class Football(Extension):
     @slash_command(name="table", description="Gibt ne Tabelle")
-    @liga_slash_option()
-    @saison_slash_option()
-    async def table_function(self, ctx: SlashContext, liga_option: str = "bl1", saison_option: int = currentSaison):
-        await ctx.send(table(liga_option, saison_option))
+    @league_slash_option()
+    @season_slash_option()
+    async def table_function(self, ctx: SlashContext, liga_option: str = "bl1", saison_option: int = CURRENT_SEASON):
+        if ctx.channel_id != SPORTS_CHANNEL_ID: msg = WRONG_CHANNEL_MESSAGE
+        elif limit_reached: msg = LIMIT_REACHED_MESSAGE
+        else:
+            msg = table(liga_option, saison_option)
+            increment_command_calls()
+        await ctx.send(msg)
 
     @slash_command(name="matchday", description="Gibtn Spieltag")
-    @liga_slash_option()
-    @saison_slash_option()
+    @league_slash_option()
+    @season_slash_option()
     @slash_option(
         name="day_option",
         description="Spieltag",
@@ -83,14 +308,29 @@ class Football(Extension):
         opt_type=OptionType.INTEGER,
         min_value=1
     )
-    async def matchday_function(self, ctx: SlashContext, liga_option: str = "bl1", saison_option: int = currentSaison,
+    async def matchday_function(self, ctx: SlashContext, liga_option: str = "bl1", saison_option: int = CURRENT_SEASON,
                                 day_option: int = 0):
+        if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
+            await ctx.send(WRONG_CHANNEL_MESSAGE)
+            return
+        elif limit_reached:
+            await ctx.send(LIMIT_REACHED_MESSAGE)
+            return
+        increment_command_calls()
         await ctx.send(embed=matchday(liga_option, saison_option, day_option))
 
     @slash_command(name="goalgetter", description="Gibt die Topscorer zurück")
-    @liga_slash_option()
-    @saison_slash_option()
-    async def goalgetter_funtion(self, ctx: SlashContext, liga_option: str = "bl1", saison_option: int = currentSaison):
+    @league_slash_option()
+    @season_slash_option()
+    async def goalgetter_funtion(self, ctx: SlashContext, liga_option: str = "bl1",
+                                 saison_option: int = CURRENT_SEASON):
+        if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
+            await ctx.send(WRONG_CHANNEL_MESSAGE)
+            return
+        elif limit_reached:
+            await ctx.send(LIMIT_REACHED_MESSAGE)
+            return
+        increment_command_calls()
         await ctx.send(embed=goalgetter(liga_option, saison_option))
 
     @slash_command(name="matches", description="Spiele des Teams")
@@ -118,11 +358,18 @@ class Football(Extension):
     )
     async def matches_function(self, ctx: SlashContext, team_option: str = "Werder Bremen", past_option: int = 2,
                                future_option: int = 2):
+        if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
+            await ctx.send(WRONG_CHANNEL_MESSAGE)
+            return
+        elif limit_reached:
+            await ctx.send(LIMIT_REACHED_MESSAGE)
+            return
+        increment_command_calls()
         await ctx.send(embed=matches(team_option, past_option, future_option))
 
 
-# Method for the table command
 def table(liga, saison):
+    """ Method for the table command """
     url = f"https://api.openligadb.de/getbltable/{liga}/{saison}"
     response = requests.get(url)
     data = response.json()
@@ -152,8 +399,8 @@ def table(liga, saison):
     return tabelle
 
 
-# Method for the matchday command
 def matchday(liga, saison, spieltag):
+    """ Method for the matchday command """
     if spieltag == 0: spieltag = get_current_spieltag(liga)
 
     url = f"https://api.openligadb.de/getmatchdata/{liga}/{saison}/{spieltag}"
@@ -175,30 +422,30 @@ def matchday(liga, saison, spieltag):
                         value=f"`{team1: <25}" f"{goals1: ^3} : {goals2: ^4}" f"{team2: >25}`")
         i += 1
 
-    if random.randint(0, 100) < UWUCHANCE: embed = uwuify_embed(embed)
+    if random.randint(0, 100) < UWUCHANCE: embed = helper.uwuify_embed(embed)
 
     return embed
 
 
-# Method for the goalgetter command
 def goalgetter(liga, saison):
+    """ Method for the goalgetter command """
     url = f"https://api.openligadb.de/getgoalgetters/{liga}/{saison}"
     response = requests.get(url)
     data = response.json()
 
     embed = interactions.Embed(title=f"Torjäger der Liga {liga}")
-    for i in range(0, min(len(data), 15)):
+    for i in range(0, min(len(data), 15)):  # Limit shown scorers to 15
         name = germanise(data[i]['goalGetterName'])
         goals = data[i]['goalCount']
         embed.add_field(name=name, value=goals, inline=True)
 
-    if random.randint(0, 100) < UWUCHANCE: embed = uwuify_embed(embed)
+    if random.randint(0, 100) < UWUCHANCE: embed = helper.uwuify_embed(embed)
 
     return embed
 
 
-# Method for the matches command
 def matches(team, past, future):
+    """ Method for the matches command """
     url = f"https://api.openligadb.de/getmatchesbyteam/{team}/{past}/{future}"
     response = requests.get(url)
     data = response.json()
@@ -210,7 +457,7 @@ def matches(team, past, future):
     i = 1
     for match in data:
         time = datetime.datetime.fromisoformat(match['matchDateTime']).strftime("%a, %d. %b %Y %H:%M")
-        if latest_match_date == time: continue
+        if latest_match_date == time: continue  # Go to next match if match already exists
         latest_match_date = time
 
         team1 = germanise(match['team1']['teamName'])
@@ -224,30 +471,14 @@ def matches(team, past, future):
                         value=f"`{team1: <25}" f"{goals1: ^3} : {goals2: ^4}" f"{team2: >25}`")
         i += 1
 
-    if random.randint(0, 100) < UWUCHANCE: embed = uwuify_embed(embed)
+    if random.randint(0, 100) < UWUCHANCE: embed = helper.uwuify_embed(embed)
 
     return embed
 
 
-# Fixing formatting errors concerning the German letters
-def germanise(msg):
-    char_map = {ord('Ã'): '', ord('¼'): 'ü', ord('¶'): 'ö', ord('¤'): 'ä', ord('Ÿ'): 'ß'}
-    return msg.translate(char_map)
-
-
-# Gets the current Spieltag
 def get_current_spieltag(liga):
+    """ Gets the current Spieltag """
     url = f'https://api.openligadb.de/getcurrentgroup/{liga}'
     response = requests.get(url)
     data = response.json()
     return data['groupOrderID']
-
-
-# uwuifies an embed
-def uwuify_embed(embed):
-    if not isinstance(embed, interactions.Embed): return embed
-    embed.title = uwuifier.UwUify(embed.title)
-    for field in embed.fields:
-        field.name = uwuifier.UwUify(field.name, False, False)
-        field.value = uwuifier.UwUify(field.value, False, False)
-    return embed
