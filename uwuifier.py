@@ -10,16 +10,17 @@ ACTION_WIST = ["*blushes*", "*whispers to self*", "*cries*", "*screams*", "*swea
                "*starts twerking*", "*huggles tightly*", "*boops your nose*"]
 HAWDCOWE_MYODE = False
 
-# Function to fuwwy UwUify a myessage
+
 def UwUify(msg, uwu_excl: bool = True, uwu_spaces: bool = True):
+    """ Function to fuwwy UwUify a myessage """
     msg = UwUifyWords(msg)
     if uwu_excl: msg = UwUifyExclamations(msg)
     if uwu_spaces: msg = UwUifySpaces(msg)
     return msg
 
 
-# UwUify aww de wowds
 def UwUifyWords(wowd):
+    """ UwUify aww de wowds """
     # t + h at de beginnying bad >w<
     if wowd[0:2] == "th": wowd = wowd.replace("th", "d", 1)
     elif wowd[0:2] == "Th": wowd = wowd.replace("Th", "D", 1)
@@ -54,8 +55,8 @@ def UwUifyWords(wowd):
     return wowd
 
 
-# UwUify de exwamation mawks
 def UwUifyExclamations(msg):
+    """ UwUify de exwamation mawks """
     excwamyation = ""
     for excl in msg.split("!"):
         if len(excl) < 1: break
@@ -76,8 +77,8 @@ def UwUifyExclamations(msg):
     return excwamyation
 
 
-# UwUify wiff wandom faces/actions/stuttews between de wowds
 def UwUifySpaces(msg):
+    """ UwUify wiff wandom faces/actions/stuttews between de wowds """
     wowds = ""
 
     for wowd in msg.split(" "):
