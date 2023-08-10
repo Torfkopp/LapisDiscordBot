@@ -1,5 +1,4 @@
-from apscheduler.schedulers.background import BackgroundScheduler
-from interactions import Client, Intents, listen, Task, IntervalTrigger
+from interactions import Client, Intents, listen, Task, IntervalTrigger, DateTrigger
 from interactions.client.errors import HTTPException
 
 from core.extensions_loader import load_extensions
@@ -8,29 +7,44 @@ from extensions import football
 bot = Client(intents=Intents.DEFAULT)
 global SPORT_CHANNEL
 LIVE_SCORE_MESSAGE = ""
-
-
-@Task.create(IntervalTrigger(minutes=2))
-async def games_in_progress():
-    global LIVE_SCORE_MESSAGE
-    if LIVE_SCORE_MESSAGE == "": LIVE_SCORE_MESSAGE = await SPORT_CHANNEL.send(embeds=football.get_live()[0])
-    else:
-        embeds, still_going = football.get_live(LIVE_SCORE_MESSAGE.embeds)
-        try: await LIVE_SCORE_MESSAGE.edit(embeds=embeds)
-        except HTTPException: LIVE_SCORE_MESSAGE = await SPORT_CHANNEL.send(embeds=embeds)
-        if not still_going: games_in_progress.stop()
+current_task = None
 
 
 @Task.create(IntervalTrigger(minutes=1))
-def command_call_limit(): football.reduce_command_calls()
+def command_call_limit():
+    """ Task to regularly call the extension's handling of command limiting"""
+    football.reduce_command_calls()
 
 
-def start_gip():
-    games_in_progress.start()
+async def live_scoring():
+    """ Sends the live scoring to the channel and keeps it updated until all live games have ended """
+    global LIVE_SCORE_MESSAGE
+    if LIVE_SCORE_MESSAGE == "":
+        LIVE_SCORE_MESSAGE = await SPORT_CHANNEL.send(embeds=football.get_live()[0])
+    else:
+        embeds, still_going = football.get_live(LIVE_SCORE_MESSAGE.embeds)
+        try:
+            await LIVE_SCORE_MESSAGE.edit(embeds=embeds)
+        except HTTPException:
+            LIVE_SCORE_MESSAGE = await SPORT_CHANNEL.send(embeds=embeds)
+        if not still_going: current_task.stop()  # current_task is a task when this is called, thus ignorable
+
+
+async def start_gip():
+    """ When called, creates a task calling live_scoring and starts it
+    or, if it already exits and is stopped, starts it again """
+    global current_task
+    if current_task is None:
+        current_task = Task(live_scoring, IntervalTrigger(minutes=2))
+        current_task.start()
+        return
+    if not current_task.running:
+        current_task.start()
 
 
 @listen()
 async def on_ready():
+    """ Is called when the bot is ready """
     print("Ready")
     print(f"This bot is owned by {bot.owner}")
     global SPORT_CHANNEL
@@ -39,12 +53,14 @@ async def on_ready():
 
 @listen()
 async def on_startup():
+    """ Is called when the bot starts up """
     command_call_limit.start()
-    scheduler = BackgroundScheduler()
-    jobs = football.create_schedule()
-    for job in jobs: scheduler.add_job(start_gip, 'date', run_date=job)
-    scheduler.start()
-    games_in_progress.start()
+    football_schedule = football.create_schedule()
+    print("Starting times of today's games: " + str(football_schedule))
+    for start_time in football_schedule:
+        task = Task(start_gip, DateTrigger(start_time))
+        task.start()
+    # games_in_progress.start()  # For testing purposes
 
 
 # load all extensions in the ./extensions folder

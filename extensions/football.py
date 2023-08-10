@@ -67,6 +67,7 @@ def create_schedule():
         for match in league['matches']:
             time = datetime.datetime.fromisoformat(match['scheduledStartTime'])
             time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
+            #  Maybe time = datetime.timedelta(minutes=2) to ensure a start at 0'
             start_times.add(time)
 
     start_times = sorted(start_times)
@@ -105,8 +106,6 @@ def get_live(content=""):
     data = response.json()
     data = data['content']
 
-    print("Today:" + str(datetime.datetime.today()))
-    print("Data:" + str(data))
     # Iterate over every league
     for league in data:
         # Skip league if not one of the wanted ones
@@ -146,16 +145,11 @@ def get_live(content=""):
                     if field.name[0:20] == new_name[0:20]: old = field
                 old_name = old.name
                 old_value = old.value
-                print("OldName:" + old_name)
-                print("NewName:" + new_name)
                 # Get the match's goalscorers if a goal happened (old and new names differ)
                 # or the score doesn't align with the amount of goalscorers
                 if new_name != old_name or (score1 + score2) != (old_value.count("'") - 1):
                     new_value = new_value.split(' ')[0] + get_match_goals(match['id'])
                 else: new_value = new_value.split(' ')[0] + " " + ' '.join(old_value.split(' ')[1:])
-                print("OldValue:" + old_value)
-                print("NewValue:" + new_value)
-                print("\n\n")
             embed.add_field(name=new_name, value=new_value)
             if match['isLive']: one_game_still_live = True
 
@@ -166,7 +160,6 @@ def get_live(content=""):
 
 def get_match_goals(match_id):
     """ Get the match's goalscorers """
-    print("Goal Match is called")
     # Get data from site
     url = f"https://api.sport1.info/v2/de/soccer/ticker/{match_id}"
 
@@ -228,7 +221,6 @@ def get_match_goals(match_id):
     elif goals_away == "": return_string += goals_home
     else: return_string += goals_home + "\n" + " " * 4 + goals_away
     return_string += "```"
-    print("GoalsReturn:" + return_string)
     return return_string
 
 
