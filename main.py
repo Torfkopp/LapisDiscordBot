@@ -40,10 +40,10 @@ async def on_ready():
 @listen()
 async def on_startup():
     command_call_limit.start()
-    #scheduler = BackgroundScheduler()
-    #jobs = football.create_schedule()
-    #for job in jobs: scheduler.add_job(start_gip, 'date', run_date=job)
-    #scheduler.start()
+    scheduler = BackgroundScheduler()
+    jobs = football.create_schedule()
+    for job in jobs: scheduler.add_job(start_gip, 'date', run_date=job)
+    scheduler.start()
     games_in_progress.start()
 
 

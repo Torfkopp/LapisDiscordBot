@@ -1,13 +1,14 @@
 import datetime
-import json
 import locale
 import random
 
 import interactions
+import pytz
 import requests
 from interactions import (
     Extension, OptionType, slash_option, slash_command, SlashContext, SlashCommandChoice
 )
+from interactions.models import discord
 
 import helper
 import uwuifier
@@ -15,7 +16,8 @@ from helper import germanise
 
 locale.setlocale(locale.LC_ALL, 'de_DE')  # Changes local to Deutsch for time display
 UWUCHANCE = helper.UWUCHANCE  # D-De chance dat a commyand wesponse gets u-u-uwuified
-COMPETITION_LIST = ["2. Bundesliga", "Freundschaftsspiele", "Frauen-WM"]  # List of League interested in
+COMPETITION_LIST = ["2. Bundesliga", "League Cup", "Frauen-WM"]  # List of League interested in
+COLOUR = discord.Color.from_rgb(29, 144, 83)  # Werder Bremen Green
 
 
 # Sets up this extension
@@ -63,7 +65,8 @@ def create_schedule():
         if league['matches'][0]['competition']['name'] not in COMPETITION_LIST: continue
         # Add match times to set
         for match in league['matches']:
-            time = match['scheduledStartTime'].replace('T', ' ').replace('Z', '')
+            time = datetime.datetime.fromisoformat(match['scheduledStartTime'])
+            time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
             start_times.add(time)
 
     start_times = sorted(start_times)
@@ -102,16 +105,14 @@ def get_live(content=""):
     data = response.json()
     data = data['content']
 
-    print(datetime.datetime.today())
-    print(data)
-    print("\n")
-    # TODO Anzeigen, wenn Spiel fertig
+    print("Today:" + str(datetime.datetime.today()))
+    print("Data:" + str(data))
     # Iterate over every league
     for league in data:
         # Skip league if not one of the wanted ones
         league_name = league['matches'][0]['competition']['name']
         if league_name not in COMPETITION_LIST: continue
-        embed = interactions.Embed(title=league_name)
+        embed = interactions.Embed(title=league_name, color=COLOUR)
         # Iterate over every match in the league
         for match in league['matches']:
             team1 = germanise(match['homeTeam']['name'])
@@ -121,13 +122,19 @@ def get_live(content=""):
             score2 = 0
             if 'homeScore' in match: score1 = match['homeScore']
             if 'awayScore' in match: score2 = match['awayScore']
-            # Game Time
+            # Game starting time
             minute = "Startet um " + datetime.datetime.fromisoformat(match['scheduledStartTime']).strftime(
                 "%H:%M") + " Uhr"
+            # If match has begun, get the minutes
             if 'matchTime' in match['matchInfo']: minute = str(match['matchInfo']['matchTime']) + "' "
+            # If match has ended, put in the END
             if match['period'] == "FULL_TIME": minute = "END "
+            # If match has gone to the penalties, add the score after the penalties after the normal score
+            penalty_score = ""
+            if 'homePenaltyScore' in match and 'awayPenaltyScore' in match:
+                penalty_score = f" {match['homePenaltyScore']}:{match['awayPenaltyScore']} nE"
             # Put in Values
-            new_name = f"```{team1:<30} {score1:^3}:{score2:^4} {team2:>30}```"
+            new_name = f"```{team1:<30} {score1:^3}:{score2:^4}{penalty_score} {team2:>30}```"
             new_value = f"```{str(minute).zfill(2)}```"
             # If the score changes in the new message, get the goalscorers and put them as the new value
             if not content == "":
@@ -139,10 +146,16 @@ def get_live(content=""):
                     if field.name[0:20] == new_name[0:20]: old = field
                 old_name = old.name
                 old_value = old.value
-                if new_name != old_name:
+                print("OldName:" + old_name)
+                print("NewName:" + new_name)
+                # Get the match's goalscorers if a goal happened (old and new names differ)
+                # or the score doesn't align with the amount of goalscorers
+                if new_name != old_name or (score1 + score2) != (old_value.count("'") - 1):
                     new_value = new_value.split(' ')[0] + get_match_goals(match['id'])
-                else:
-                    new_value = new_value.split(' ')[0] + " " + ' '.join(old_value.split(' ')[1:])
+                else: new_value = new_value.split(' ')[0] + " " + ' '.join(old_value.split(' ')[1:])
+                print("OldValue:" + old_value)
+                print("NewValue:" + new_value)
+                print("\n\n")
             embed.add_field(name=new_name, value=new_value)
             if match['isLive']: one_game_still_live = True
 
@@ -153,6 +166,7 @@ def get_live(content=""):
 
 def get_match_goals(match_id):
     """ Get the match's goalscorers """
+    print("Goal Match is called")
     # Get data from site
     url = f"https://api.sport1.info/v2/de/soccer/ticker/{match_id}"
 
@@ -210,13 +224,11 @@ def get_match_goals(match_id):
     if not goals_home == "": goals_home = match_info['match']['homeTeam']['code'] + ":" + goals_home
     if not goals_away == "": goals_away = match_info['match']['awayTeam']['code'] + ":" + goals_away
     # Add the two team's goals to the return string
-    if goals_home == "":
-        return_string += goals_away
-    elif goals_away == "":
-        return_string += goals_home
-    else:
-        return_string += goals_home + "\n" + " " * 4 + goals_away
+    if goals_home == "": return_string += goals_away
+    elif goals_away == "": return_string += goals_home
+    else: return_string += goals_home + "\n" + " " * 4 + goals_away
     return_string += "```"
+    print("GoalsReturn:" + return_string)
     return return_string
 
 
@@ -291,8 +303,10 @@ class Football(Extension):
     @league_slash_option()
     @season_slash_option()
     async def table_function(self, ctx: SlashContext, liga_option: str = "bl1", saison_option: int = CURRENT_SEASON):
-        if ctx.channel_id != SPORTS_CHANNEL_ID: msg = WRONG_CHANNEL_MESSAGE
-        elif limit_reached: msg = LIMIT_REACHED_MESSAGE
+        if ctx.channel_id != SPORTS_CHANNEL_ID:
+            msg = WRONG_CHANNEL_MESSAGE
+        elif limit_reached:
+            msg = LIMIT_REACHED_MESSAGE
         else:
             msg = table(liga_option, saison_option)
             increment_command_calls()
@@ -407,7 +421,7 @@ def matchday(liga, saison, spieltag):
     response = requests.get(url)
     jsondata = response.json()
 
-    embed = interactions.Embed(title=f"{germanise(jsondata[0]['leagueName'])} Spieltag {spieltag}")
+    embed = interactions.Embed(title=f"{germanise(jsondata[0]['leagueName'])} Spieltag {spieltag}", color=COLOUR)
     i = 1
     for match in jsondata:
         time = datetime.datetime.fromisoformat(match['matchDateTime']).strftime("%A, %d. %B %Y %H:%M")
@@ -433,7 +447,7 @@ def goalgetter(liga, saison):
     response = requests.get(url)
     data = response.json()
 
-    embed = interactions.Embed(title=f"Torjäger der Liga {liga}")
+    embed = interactions.Embed(title=f"Torjäger der Liga {liga}", color=COLOUR)
     for i in range(0, min(len(data), 15)):  # Limit shown scorers to 15
         name = germanise(data[i]['goalGetterName'])
         goals = data[i]['goalCount']
@@ -450,7 +464,8 @@ def matches(team, past, future):
     response = requests.get(url)
     data = response.json()
 
-    embed = interactions.Embed(title=f"Spiele von {team} in den letzten {past} und den nächsten {future} Wochen")
+    embed = interactions.Embed(title=f"Spiele von {team} in den letzten {past} und den nächsten {future} Wochen",
+                               color=COLOUR)
 
     latest_match_date = ""  # To prevent two games at the same time from making the list
 
