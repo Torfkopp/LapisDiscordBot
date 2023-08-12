@@ -2,7 +2,7 @@ from interactions import Client, Intents, listen, Task, IntervalTrigger, DateTri
 from interactions.client.errors import HTTPException
 
 from core.extensions_loader import load_extensions
-from extensions import football
+from extensions.football import football
 
 bot = Client(intents=Intents.DEFAULT)
 global SPORT_CHANNEL
@@ -55,11 +55,11 @@ async def on_ready():
 async def on_startup():
     """ Is called when the bot starts up """
     command_call_limit.start()
-    football_schedule = football.create_schedule()
-    print("Starting times of today's games: " + str(football_schedule))
-    for start_time in football_schedule:
-        task = Task(start_gip, DateTrigger(start_time))
-        task.start()
+    #football_schedule = football.create_schedule()
+    #print("Starting times of today's games: " + str(football_schedule))
+    #for start_time in football_schedule:
+    #    task = Task(start_gip, DateTrigger(start_time))
+    #    task.start()
     # games_in_progress.start()  # For testing purposes
 
 
