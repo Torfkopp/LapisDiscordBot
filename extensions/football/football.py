@@ -9,8 +9,16 @@ from extensions.football import _live, _commands
 
 """ Main method for the football commands """
 
-
 locale.setlocale(locale.LC_ALL, 'de_DE')  # Changes local to Deutsch for time display
+
+SPORTS_CHANNEL_ID = util.SPORTS_CHANNEL_ID
+
+WRONG_CHANNEL_MESSAGE = util.WRONG_CHANNEL_MESSAGE
+LIMIT_REACHED_MESSAGE = util.LIMIT_REACHED_MESSAGE
+
+CURRENT_SEASON = util.CURRENT_FOOTBALL_SEASON
+
+COMMAND_LIMIT = 3
 
 
 # Sets up this extension
@@ -46,20 +54,12 @@ COMMAND PART
 ##################################################
 '''
 
-SPORTS_CHANNEL_ID = util.SPORTS_CHANNEL_ID
-
-WRONG_CHANNEL_MESSAGE = util.WRONG_CHANNEL_MESSAGE
-LIMIT_REACHED_MESSAGE = util.LIMIT_REACHED_MESSAGE
-
 LEAGUE_CHOICES = [
     SlashCommandChoice(name="1. Bundesliga", value="bl1"),
     SlashCommandChoice(name="2. Bundesliga", value="bl2"),
     SlashCommandChoice(name="3. Bundesliga", value="bl3"),
     SlashCommandChoice(name="DFB Pokal", value="dfb")
 ]
-CURRENT_SEASON = util.CURRENT_FOOTBALL_SEASON
-
-COMMAND_LIMIT = 3
 
 command_calls = 0
 limit_reached = False
@@ -107,11 +107,13 @@ def season_slash_option():  # call with @season_option
 
 
 class Football(Extension):
-    @slash_command(name="goalgetter", description="Gibt die Topscorer zurück")
+    @slash_command(name="football", description="Football command base",
+                   sub_cmd_name="goalgetter",
+                   sub_cmd_description="Gibt die Topscorer der Liga zurück (Standard: Bundesliga")
     @league_slash_option()
     @season_slash_option()
-    async def goalgetter_funtion(self, ctx: SlashContext, liga_option: str = LEAGUE_CHOICES[0].value,
-                                 saison_option: int = CURRENT_SEASON):
+    async def goalgetter_function(self, ctx: SlashContext, liga_option: str = LEAGUE_CHOICES[0].value,
+                                  saison_option: int = CURRENT_SEASON):
         if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
             await ctx.send(WRONG_CHANNEL_MESSAGE)
             return
@@ -121,7 +123,9 @@ class Football(Extension):
         increment_command_calls()
         await ctx.send(embed=_commands.goalgetter(liga_option, saison_option))
 
-    @slash_command(name="matchday", description="Gibtn Spieltag")
+    @goalgetter_function.subcommand(sub_cmd_name="matchday",
+                                    sub_cmd_description="Gibtn Spieltag der Liga zur Saison "
+                                                        "(Standard: Momentaner Bundesliga Spieltag")
     @league_slash_option()
     @season_slash_option()
     @slash_option(
@@ -143,7 +147,9 @@ class Football(Extension):
         increment_command_calls()
         await ctx.send(embed=_commands.matchday(liga_option, saison_option, day_option))
 
-    @slash_command(name="matches", description="Spiele des Teams")
+    @goalgetter_function.subcommand(sub_cmd_name="matches",
+                                    sub_cmd_description="Alle Spiele des Teams von vor y und bis in x Wochen"
+                                                        "(Standard: SVW, vor 2 und in 2 Wochen)")
     @slash_option(
         name="team_option",
         description="Teamname",
@@ -177,7 +183,8 @@ class Football(Extension):
         increment_command_calls()
         await ctx.send(embed=_commands.matches(team_option, past_option, future_option))
 
-    @slash_command(name="table", description="Gibt ne Tabelle")
+    @goalgetter_function.subcommand(sub_cmd_name="table",
+                                    sub_cmd_description="Tabelle der Liga zur Saison (Standard: Jetzige Bundesliga)")
     @league_slash_option()
     @season_slash_option()
     async def table_function(self, ctx: SlashContext, liga_option: str = LEAGUE_CHOICES[0].value,

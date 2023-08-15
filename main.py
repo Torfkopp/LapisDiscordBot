@@ -1,8 +1,12 @@
+import datetime
+
+import interactions
 from interactions import Client, Intents, listen, Task, IntervalTrigger, DateTrigger
 from interactions.client.errors import HTTPException
 
 from core.extensions_loader import load_extensions
 from extensions.football import football
+from extensions.formula1 import formula1
 
 bot = Client(intents=Intents.DEFAULT)
 global SPORT_CHANNEL
@@ -14,6 +18,7 @@ current_task = None
 def command_call_limit():
     """ Task to regularly call the extension's handling of command limiting"""
     football.reduce_command_calls()
+    formula1.reduce_command_calls()
 
 
 async def live_scoring():
@@ -42,6 +47,14 @@ async def start_gip():
         current_task.start()
 
 
+async def formula1_result():
+    """ When called, sends in the result of the latest Formula1 session"""
+    result = formula1.auto_result()
+    # If getting result fails, try again in an hour
+    if result == "": Task(formula1_result, DateTrigger(datetime.datetime.now() + datetime.timedelta(hours=1))).start()
+    await SPORT_CHANNEL.send(result)
+
+
 @listen()
 async def on_ready():
     """ Is called when the bot is ready """
@@ -55,11 +68,18 @@ async def on_ready():
 async def on_startup():
     """ Is called when the bot starts up """
     command_call_limit.start()
-    #football_schedule = football.create_schedule()
-    #print("Starting times of today's games: " + str(football_schedule))
-    #for start_time in football_schedule:
+    # football_schedule = football.create_schedule()
+    formula1_schedule, embed = formula1.create_schedule()
+    if isinstance(embed, interactions.Embed): await SPORT_CHANNEL.send(embed=embed)
+    # print("Starting times of today's games: " + str(football_schedule))
+    # print("Today's formula1 sessions: " + str(formula1_schedule))
+    # for start_time in football_schedule:
     #    task = Task(start_gip, DateTrigger(start_time))
     #    task.start()
+    for start_time in formula1_schedule:
+        task = Task(formula1_result, DateTrigger(start_time))
+        task.start()
+
     # games_in_progress.start()  # For testing purposes
 
 

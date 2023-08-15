@@ -1,8 +1,10 @@
 import interactions
+import matplotlib.pyplot as plt
 from interactions.models import discord
 
 import fastf1
 from fastf1.ergast import Ergast
+import fastf1.plotting
 
 import pandas as pd
 import plotly
@@ -16,13 +18,6 @@ COLOUR = util.FORMULA1_COLOUR
 CURRENT_SEASON = util.CURRENT_F1_SEASON
 
 
-def get_driver_standings(year):
-    """ Gets the driver standings """
-    ergast = Ergast()
-    standings = ergast.get_driver_standings(season=year)
-    return standings.content[0]
-
-
 def get_driver_positions(year, session):
     """ Gets all positions of a driver """
     ergast = Ergast()
@@ -32,9 +27,9 @@ def get_driver_positions(year, session):
     driver_map = {}  # Contains DriverCode and Fullname NameShort : NameLong
     team_map = {}  # Contains Team with its drivers TeamName : [NameShort]
 
-    if session == "sprint":
+    if session == "S":
         func = ergast.get_sprint_results
-    elif session == "qualifying":
+    elif session == "Q":
         func = ergast.get_qualifying_results
     else:
         func = ergast.get_race_results
@@ -79,10 +74,9 @@ def get_driver_positions(year, session):
     return result_map, driver_map, team_map
 
 
-def avg(year):
-    """ Return the avg finish position"""
-    # TODO Make a graphic
-    driver_positions = get_driver_positions(year, "race")
+def average_position(year, session):
+    """ Return the average finish position"""
+    driver_positions = get_driver_positions(year, session)
     result_map = {}
 
     for driver in driver_positions[0]:
@@ -97,6 +91,7 @@ def avg(year):
     # Sort the map
     result_map = {k: v for k, v in sorted(result_map.items(), key=lambda item: item[1])}
 
+    '''
     result_string = "```"
     result_string += "Platz".ljust(6) + "Name".center(30) + "Avg. Pos.".rjust(10) + "\n"
 
@@ -107,8 +102,40 @@ def avg(year):
         i += 1
 
     result_string += "```"
-
+    
+    
     return util.uwuify_by_chance(result_string)
+    '''
+    team_order = list()
+    team_map = driver_positions[2]
+    for key in result_map:
+        for team in team_map:
+            if key in team_map.get(team):
+                team_order.append(team)
+                break
+
+    team_colours = list()
+    for team in team_order: team_colours.append(fastf1.plotting.team_color(team))
+
+    fig, ax = plt.subplots()
+    ax.barh(range(len(result_map)), result_map.values,
+            color=team_colours, edgecolor='grey')
+    ax.set_yticks(range(len(result_map)))
+    ax.set_ytickslabels(result_map.keys)
+    ax.invert_yaxis()
+
+    ax.set_axisbelow(True)
+    ax.xaxis.grid(True, which='major', linestyle='--', color='grey', zorder=-1000)
+
+    fig.set_facecolor('black')
+    ax.set_facecolor('black')
+
+    plt.title(f"Average {session} Finish Position {year}")
+
+    plt.savefig("Resources/averagefin.png")
+    file = discord.File("Resources/averagefin.png", file_name="image.png")
+
+    return file
 
 
 def compare_positions(driver1_positions, driver2_positions):
@@ -122,23 +149,25 @@ def compare_positions(driver1_positions, driver2_positions):
     return driver1_points, driver2_points
 
 
-def h2h(year):
+def h2h(year, session):
     """ Return all the Head2Head Results"""
-    # TODO Activate Qualifying and Sprint as well
-    race_positions = get_driver_positions(year, "race")
-    # qualifying_positions = get_driver_positions(year, "qualifying")
-    # sprint_positions = get_driver_positions(year, "sprint")
-    embed = interactions.Embed(title="", color=COLOUR)
+    race_positions = get_driver_positions(year, session)
+
+    match session:
+        case "R": sess = "Renn"
+        case "Q": sess = "Qualifikations"
+        case _: sess = "Sprint"
+    result_string = f"```Head2Head-{sess}-Vergleich der Fahrer im Jahr {year}"
+
     for team in race_positions[2]:
         drivers = race_positions[2].get(team)
         if len(drivers) < 2:
-            embed.add_field(name=f"{team}", value="Zu wenige Fahrer fürs Vergleichen ?:O")
+            result_string += f"{team}: Zu wenige Fahrer fürs Vergleichen ?:O\n"
         elif len(drivers) == 2:
             driver1_positions, driver2_positions = race_positions[0].get(drivers[0]), race_positions[0].get(drivers[1])
             driver1_points, driver2_points = compare_positions(driver1_positions, driver2_positions)
-            embed.add_field(name=f"{team}: {race_positions[1].get(drivers[0])} "
-                                 f"gegen {race_positions[1].get(drivers[1])}",
-                            value=f"Rennvergleich: {driver1_points}:{driver2_points}")
+            result_string += (f"{team}: {race_positions[1].get(drivers[0])} {driver1_points}:"
+                              f"{driver2_points} {race_positions[1].get(drivers[1])}\n")
         elif len(drivers) == 3:
             # Drivers getting added into race_positions in order of appearance
             driver1_positions = race_positions[0].get(drivers[0])  # driver 1
@@ -154,21 +183,19 @@ def h2h(year):
             else:
                 driver_1or2 = drivers[1]
                 driver1b_points, driver2b_points = compare_positions(driver2_positions, driver3_positions)
-
-            embed.add_field(
-                name=f"{team}: {race_positions[1].get(drivers[0])} gegen {race_positions[1].get(drivers[1])}"
-                     f" und {race_positions[1].get(driver_1or2)} gegen {race_positions[1].get(drivers[2])}",
-                value=f"Rennvergleich: {driver1a_points}:{driver2a_points}"
-                      f" und {driver1b_points}:{driver2b_points}")
+            result_string += (f"{team}: {race_positions[1].get(drivers[0])} {driver1a_points}:"
+                              f"{driver2a_points} {race_positions[1].get(drivers[1])}\n")
+            result_string += " "*(len(team)+2) + (f"{race_positions[1].get(driver_1or2)} {driver1b_points}:"
+                                                  f"{driver2b_points} {race_positions[1].get(drivers[2])}\n")
         else:
             driver1_positions, driver2_positions = race_positions[0].get(drivers[0]), race_positions[0].get(drivers[1])
             driver1_points, driver2_points = compare_positions(driver1_positions, driver2_positions)
-            embed.add_field(name=f"{team}: {race_positions[1].get(drivers[0])} gegen "
-                                 f"{race_positions[1].get(drivers[1])}"
-                                 f" Rest unvergleichbar aufgrund Wechselfiesta",
-                            value=f"Rennvergleich: {driver1_points}:{driver2_points}")
+            result_string += (f"{team}: {race_positions[1].get(drivers[0])} {driver1_points}:"
+                              f"{driver2_points} {race_positions[1].get(drivers[1])}\n")
+            result_string += " "*(len(team)+2) + "Rest unvergleichbar aufgrund Wecheselfiesta\n"
 
-    return util.uwuify_by_chance(embed)
+    result_string += "```"
+    return util.uwuify_by_chance(result_string)
 
 
 def heatmap(year):
@@ -239,35 +266,46 @@ def heatmap(year):
     fig.update_layout(xaxis=dict(side='top'))  # x-axis on top
     fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))  # Remove border margins
 
-    with open("../../Resources/plot.png", 'wb') as f:
+    with open("Resources/plot.png", 'wb') as f:
         f.write(plotly.io.to_image(fig, format="png"))
 
-    file = discord.File("../../Resources/plot.png", file_name="image.png")
+    file = discord.File("Resources/plot.png", file_name="image.png")
 
     return file
 
 
-def table(year):
-    """ Returns a table of the standings"""
-    table = "```"
-    table += "Platz".ljust(6) + "Name".center(30) + "Punkte".rjust(10) + "\n"
-    driver_standings = get_driver_standings(year)
-    for i, _ in enumerate(driver_standings.iterrows()):
-        driver = driver_standings.loc[i]
-        table += str(driver['position']).ljust(6)
-        table += f"{driver['givenName']} {driver['familyName']}".center(30)
-        table += str(driver['points']).rjust(10)
-        table += "\n"
-    table += "```"
+def table(year, driver_champ):
+    """ Returns a table of the driver or constructor standings"""
+    tabelle = "```"
+    tabelle += "#".ljust(3) + "Name".center(20) + "Punkte".rjust(5) + "\n"
+    ergast = Ergast()
+    if driver_champ:
+        driver_standings = ergast.get_driver_standings(season=year).content[0]
+        for i, _ in enumerate(driver_standings.iterrows()):
+            driver = driver_standings.loc[i]
+            tabelle += str(driver['position']).ljust(3)
+            tabelle += f"{driver['givenName']} {driver['familyName']}".center(20)
+            tabelle += str(driver['points']).rjust(5)
+            tabelle += "\n"
+    else:
+        constructor_standings = ergast.get_constructor_standings(season=year).content[0]
+        for i, _ in enumerate(constructor_standings.iterrows()):
+            team = constructor_standings.loc[i]
+            tabelle += str(team['position']).ljust(3)
+            tabelle += str(team['constructorName']).center(20)
+            tabelle += str(team['points']).rjust(5)
+            tabelle += "\n"
 
-    return util.uwuify_by_chance(table)
+    tabelle += "```"
+
+    return util.uwuify_by_chance(tabelle)
 
 
 def whocanwin():
     """ Returns standings and if driver can still win championship """
     embed = interactions.Embed(title="Kann Fahrer x noch gewinnen?", color=COLOUR)
-
-    driver_standings = get_driver_standings(CURRENT_SEASON)
+    ergast = Ergast()
+    driver_standings = ergast.get_driver_standings(CURRENT_SEASON).content[0]
     # Calculate max points for remaining season
     points_for_sprint = 8 + 25 + 1  # Winning the sprint, race and fastest lap
     points_for_conventional = 25 + 1  # Winning the race and fastest lap

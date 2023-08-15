@@ -1,3 +1,4 @@
+import datetime
 import random
 
 import interactions
@@ -6,13 +7,19 @@ from interactions.models import discord
 import uwuifier
 
 UWUCHANCE = 5  # D-De chance dat a commyand wesponse gets u-u-uwuified
+
 FORMULA1_COLOUR = discord.Color.from_rgb(255, 24, 1)  # Formula1 Red
 FOOTBALL_COLOUR = discord.Color.from_rgb(29, 144, 83)  # Werder Bremen Green
+
 SPORTS_CHANNEL_ID = open('./config.txt').readlines()[1]
+
+# Todo Make them cooler
 WRONG_CHANNEL_MESSAGE = "Falscher Channel, Bro"
 LIMIT_REACHED_MESSAGE = "Zu viele Commands, Bro"
-CURRENT_F1_SEASON = 2023
-CURRENT_FOOTBALL_SEASON = 2023
+FAULTY_VALUE_MESSAGE = "Deine Werte passen iwie nicht, Bro"
+
+CURRENT_F1_SEASON = datetime.datetime.now().year  # An F1 Season starts and ends within one year
+CURRENT_FOOTBALL_SEASON = 2023  # 2023/2024 -> 2023
 COMPETITION_LIST = ["2. Bundesliga", "League Cup", "Frauen-WM"]  # List of League interested in
 
 
@@ -33,6 +40,8 @@ def _uwuify_embed(embed):
 
 
 def germanise(msg):
-    """ Fixes formatting errors concerning the German letters """
+    """ Fixes formatting errors concerning the German letters and makes string unbreakable"""
     char_map = {ord('Ã'): '', ord('¼'): 'ü', ord('¶'): 'ö', ord('¤'): 'ä', ord('Ÿ'): 'ß'}
-    return msg.translate(char_map)
+    msg = msg.translate(char_map)
+    msg = msg.replace(" ", "\u00A0")  # TODO fix when not working
+    return msg
