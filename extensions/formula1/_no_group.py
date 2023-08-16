@@ -21,6 +21,7 @@ def result(year, gp, session):
     results = sess.results
 
     ranking = "```"
+    ranking += f"Ergebnisse {sess.event['EventName']} {sess.name}\n".center(30)
     ranking += "#".ljust(3) + "Name".center(20)
     if session == "Q" or "SS":
         ranking += "Zeit".rjust(10) + "\n"

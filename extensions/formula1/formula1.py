@@ -109,6 +109,7 @@ def auto_result():
 
     try:
         result_string = _no_group.result(CURRENT_SEASON, result_gp, result_session)
+        result_string = "||" + result_string + "||"  # Make Spoiler
         current_gp = result_gp
         current_session = result_session
     except DataNotLoadedError: result_string = ""
@@ -155,17 +156,13 @@ async def check_if_restricted(ctx):
 
 def session_get_current(year, gp, session):
     """ Checks if sessions are ok or gets latest session """
-    temp_gp, temp_session = current_gp, current_session
-    if gp == "": gp = temp_gp
-    if session == "": session = temp_session
-
     # If only gp is given, session cause problems
     # If only session is given, try current_gp. If it fails, try the gp before that
     try:  # Try getting the session
         session = fastf1.get_session(year, gp, session)
         return gp, session
     except DataNotLoadedError:
-        gp = temp_gp - 1
+        gp = current_gp - 1
         # Try getting it again with gp before that
         session = fastf1.get_session(year, gp, session)
         return gp, session
@@ -223,6 +220,22 @@ def session_slash_option(all_sessions):
             required=False,
             opt_type=OptionType.STRING,
             choices=choices
+        )(func)
+
+    return wrapper
+
+
+def driver_slash_option(number=1):
+    """ Number: A number if more than one driver is needed in the command """
+
+    def wrapper(func):
+        return slash_option(
+            name=f"driver{number}_option",
+            description=f"Fahrerkürzel des {number}. Fahrers",
+            required=True,
+            opt_type=OptionType.STRING,
+            min_length=3,
+            max_length=3
         )(func)
 
     return wrapper
@@ -287,7 +300,8 @@ class Formula1(Extension):
     @grandprix_slash_option()
     @session_slash_option(True)
     async def laps_function(self, ctx: SlashContext,
-                            year_option: int = CURRENT_SEASON, gp_option: str = "", session_option: str = ""):
+                            year_option: int = CURRENT_SEASON, gp_option: int = current_gp,
+                            session_option: int = current_session):
         try: gp_option, session_option = session_get_current(year_option, gp_option, session_option)
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
@@ -301,27 +315,14 @@ class Formula1(Extension):
         sub_cmd_description="Vergleiche die schnellste Runde der beiden Fahrer in der Session miteinander "
                             "(Standard: Zuletzt gefahrene Session)"
     )
-    @slash_option(
-        name="driver1_option",
-        description="Erster Fahrer (Kürzel)",
-        required=True,
-        opt_type=OptionType.STRING,
-        min_length=3,
-        max_length=3
-    )
-    @slash_option(
-        name="driver2_option",
-        description="Zweiter Fahrer (Kürzel)",
-        required=True,
-        opt_type=OptionType.STRING,
-        min_length=3,
-        max_length=3
-    )
+    @driver_slash_option(1)
+    @driver_slash_option(2)
     @year_slash_option(2018)
     @grandprix_slash_option()
     @session_slash_option(True)
     async def compare_function(self, ctx: SlashContext, driver1_option, driver2_option,
-                               year_option: int = CURRENT_SEASON, gp_option: str = "", session_option: str = "race"):
+                               year_option: int = CURRENT_SEASON, gp_option: int = get_last_finished_gp(),
+                               session_option: str = "race"):
         try: gp_option, session_option = session_get_current(year_option, gp_option, session_option)
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
@@ -333,21 +334,14 @@ class Formula1(Extension):
     @laps_function.subcommand(
         sub_cmd_name="scatterplot",
         sub_cmd_description="Erstellt ein Scatterplot der Runden des Fahrers "
-                            "(Standard: Zuletzt gefahrene Session (S,Q,R))"
+                            "(Standard: Zuletzt gefahrene Session)"
     )
-    @slash_option(
-        name="driver_option",
-        description="Fahrerkürzel",
-        required=False,
-        opt_type=OptionType.STRING,
-        min_length=3,
-        max_length=3
-    )
+    @driver_slash_option()
     @year_slash_option(2018)
     @grandprix_slash_option()
     @session_slash_option(True)
     async def scatterplot_function(self, ctx: SlashContext, driver1_option, year_option: int = CURRENT_SEASON,
-                                   gp_option: str = "", session_option: str = ""):
+                                   gp_option: int = current_gp, session_option: int = current_session):
         try: gp_option, session_option = session_get_current(year_option, gp_option, session_option)
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
@@ -355,6 +349,49 @@ class Formula1(Extension):
         if check_if_restricted(ctx): return
         await ctx.defer()
         await ctx.send(file=_laps.scatterplot(year_option, gp_option, session_option, driver1_option))
+
+    @laps_function.subcommand(
+        sub_cmd_name="telemetry",
+        sub_cmd_description="Erstellt eine Graphik mit den Telemetriedaten der schnellsten Runden der Fahrer "
+                            "(Standard: Zuletzt gefahrene Session)"
+    )
+    @driver_slash_option(1)
+    @driver_slash_option(2)
+    @year_slash_option(2018)
+    @grandprix_slash_option()
+    @session_slash_option(True)
+    async def track_dominance_function(self, ctx: SlashContext, driver1_option, driver2_option,
+                                       year_option: int = CURRENT_SEASON, gp_option: int = current_gp,
+                                       session_option: int = current_gp):
+        try: gp_option, session_option = session_get_current(year_option, gp_option, session_option)
+        except DataNotLoadedError:
+            await ctx.send(FAULTY_VALUE_MESSAGE)
+            return
+        if check_if_restricted(ctx): return
+        await ctx.defer()
+        await ctx.send(file=_laps.telemetry(year_option, gp_option, session_option, driver1_option, driver2_option))
+
+    @laps_function.subcommand(
+        sub_cmd_name="track_dominance",
+        sub_cmd_description="Erstellt eine Trackdominance mit den schnellsten Runden der Fahrer "
+                            "(Standard: Zuletzt gefahrene Session)"
+    )
+    @driver_slash_option(1)
+    @driver_slash_option(2)
+    @year_slash_option(2018)
+    @grandprix_slash_option()
+    @session_slash_option(True)
+    async def track_dominance_function(self, ctx: SlashContext, driver1_option, driver2_option,
+                                       year_option: int = CURRENT_SEASON, gp_option: int = current_gp,
+                                       session_option: int = current_gp):
+        try: gp_option, session_option = session_get_current(year_option, gp_option, session_option)
+        except DataNotLoadedError:
+            await ctx.send(FAULTY_VALUE_MESSAGE)
+            return
+        if check_if_restricted(ctx): return
+        await ctx.defer()
+        await ctx.send(
+            file=_laps.track_dominance(year_option, gp_option, session_option, driver1_option, driver2_option))
 
     ''' ######################
     Commands in RACEINFO group

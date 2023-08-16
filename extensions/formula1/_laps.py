@@ -1,19 +1,18 @@
 import fastf1
 import fastf1.plotting
+import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 from fastf1.core import Laps
 from interactions.models import discord
 from timple.timedelta import strftimedelta
 
+import util
+
 """ All methods for the fastest command"""
 
-
-# TODO Track Dominance https://github.com/F1-Buddy/f1buddy-python/blob/main/images/trackdominance.png
-#                      https://github.com/F1-Buddy/f1buddy-python/blob/main/cogs/speed.py
-# TODO Telemetry https://github.com/F1-Buddy/f1buddy-python/blob/main/images/telemetry.png
-#                https://github.com/F1-Buddy/f1buddy-python/blob/main/cogs/telemetry.py
 
 def overview_fastest_laps(year, gp, session):
     """ Returns an overview of the fastest laps """
@@ -165,4 +164,290 @@ def scatterplot(year, gp, session, driver):
     plt.savefig('Resources/sp.png')
     file = discord.File("Resources/sp.png", file_name="image.png")
 
+    return file
+
+
+def telemetry(year, gp, session, driver1, driver2):
+    """ Return a file with telemetry graphs """
+    # pyplot setup
+    fastf1.plotting.setup_mpl()
+
+    fig, ax = plt.subplots(3, figsize=(13, 9))
+    fig.set_facecolor('black')
+    plt.xlabel('Lap Percentage', fontproperties='bold', labelpad=10)
+    ax[1].set_ylim([0, 105])
+    # ax[0].set_ylim([0, 360])
+    ax[2].set_ylim([0, 1.1])
+    ax[0].set_facecolor('black')
+    ax[1].set_facecolor('black')
+    ax[2].set_facecolor('black')
+    plt.subplots_adjust(left=0.07, right=0.98, top=0.89, hspace=0.8)
+
+    race = fastf1.get_session(year, gp, session)
+    race.load(laps=True, telemetry=True, weather=False, messages=False)
+
+    d1_laps = race.laps.pick_driver(driver1)
+    d1_fastest = d1_laps.pick_fastest()
+    d1_number = d1_laps.iloc[0].loc['DriverNumber']
+    d1_name = driver1
+
+    d2_laps = race.laps.pick_driver(driver2)
+    # print(d2_laps)
+    d2_fastest = d2_laps.pick_fastest()
+    # print(d2_fastest)
+    d2_number = d2_laps.iloc[0].loc['DriverNumber']
+    d2_name = driver2
+    d1_fl = (race.laps.pick_driver(d1_number).pick_fastest()["LapTime"])
+    d2_fl = (race.laps.pick_driver(d2_number).pick_fastest()["LapTime"])
+
+    throttle_string = ""
+    brake_string = ""
+
+    # get lap telemetry
+    d1_tel = d1_fastest.get_telemetry()
+    d2_tel = d2_fastest.get_telemetry()
+
+    # set graph limit based on data
+    ax[0].set_ylim([0, max(max(d1_tel['Speed']), max(d2_tel['Speed'])) + 10])
+
+    # get maximum index of dataframe
+    d1_max_index = max(d1_tel.index)
+    d2_max_index = max(d2_tel.index)
+
+    # convert (probably) mismatched dataframe indices to a scale of 0 to 1
+    d1_index_list = (d1_tel.index / d1_max_index).to_list()
+    d2_index_list = (d2_tel.index / d2_max_index).to_list()
+
+    # get speed, throttle, and brake data
+    d1_speed_list = d1_tel['Speed'].to_list()
+    d2_speed_list = d2_tel['Speed'].to_list()
+
+    d1_throttle_list = d1_tel['Throttle'].to_list()
+    d2_throttle_list = d2_tel['Throttle'].to_list()
+
+    d1_brake_list = d1_tel['Brake'].to_list()
+    d2_brake_list = d2_tel['Brake'].to_list()
+
+    # get driver color
+    if year == util.CURRENT_F1_SEASON:
+        d1_color = fastf1.plotting.driver_color(d1_name)
+        d2_color = fastf1.plotting.driver_color(d2_name)
+    else:
+        d1_color = f"#{race.results.loc[str(d1_number), 'TeamColor']}"
+        d2_color = f"#{race.results.loc[str(d2_number), 'TeamColor']}"
+
+    if d1_color == d2_color:
+        table = str.maketrans("0123456789abcdef", "fedcba987654321")
+        d2_color = d2_color.translate(table)
+        # d2_color = 'white'
+
+    # graph labelling
+    ax[2].set_yticks(ticks=[0, 1], labels=['Off', 'On'])
+    ax[0].set_ylabel('Speed (km/h)', fontproperties='normal', labelpad=8)
+    ax[0].set_title("Speed", fontproperties='bold', fontsize=15)
+    ax[1].set_ylabel('Throttle %', fontproperties='normal', labelpad=8)
+    ax[1].set_title("Throttle", fontproperties='bold', fontsize=15)
+    ax[2].set_title("Brake", fontproperties='bold', fontsize=15)
+
+    # plot the data
+    ax[0].plot(d1_index_list, d1_speed_list, color=d1_color)
+    ax[0].plot(d2_index_list, d2_speed_list, color=d2_color)
+
+    ax[1].plot(d1_index_list, d1_throttle_list, color=d1_color)
+    ax[1].plot(d2_index_list, d2_throttle_list, color=d2_color)
+
+    ax[2].plot(d1_index_list, d1_brake_list, color=d1_color)
+    ax[2].plot(d2_index_list, d2_brake_list, color=d2_color)
+
+    total = len(d1_tel)
+    for i in range(3):
+        ax[i].xaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(xmax=1, decimals=0))
+        ax[i].xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(base=0.1))
+        ax[i].set_xlim([0, 1])
+        for label in ax[i].get_xticklabels(): label.set_fontproperties('normal')
+        for label in ax[i].get_yticklabels(): label.set_fontproperties('bold')
+
+    d1_throttle_percent = 0
+    d2_throttle_percent = 0
+    d1_brake_percent = 0
+    d2_brake_percent = 0
+
+    for c in d1_tel.index:
+        if d1_tel.loc[c, 'Throttle'] >= 99: d1_throttle_percent += 1
+        if d1_tel.loc[c, 'Brake'] == 1: d1_brake_percent += 1
+        if d2_tel.loc[c, 'Throttle'] >= 99: d2_throttle_percent += 1
+        if d2_tel.loc[c, 'Brake'] == 1: d2_brake_percent += 1
+
+    d1_throttle_percent = d1_throttle_percent / total * 100
+    d2_throttle_percent = d2_throttle_percent / total * 100
+    d1_brake_percent = d1_brake_percent / total * 100
+    d2_brake_percent = d2_brake_percent / total * 100
+
+    throttle_string += f"{d1_name} was on full throttle for {d1_throttle_percent:.2f}% of the lap\n"
+    throttle_string += f"{d2_name} was on full throttle for {d2_throttle_percent:.2f}% of the lap\n"
+    brake_string += f"{d1_name} was on brakes for {d1_brake_percent:.2f}% of the lap\n"
+    brake_string += f"{d2_name} was on brakes for {d2_brake_percent:.2f}% of the lap\n"
+
+    ax[1].annotate(throttle_string, xy=(1.0, -0.2), xycoords='axes fraction', ha='right', va='center', fontsize=6)
+    ax[2].annotate(brake_string, xy=(1.0, -0.2), xycoords='axes fraction', ha='right', va='center', fontsize=6)
+
+    plt.title(f"Lap Telemetry\n{year} {str(race.event.EventName)}\n{d1_name} vs {d2_name}",
+              fontdict={'fontsize': 'small'})
+    plt.grid(visible=False, which='both')
+    # set up legend
+    d1_patch = matplotlib.patches.Patch(color=d1_color, label=f"{d1_name} {d1_fl}")
+    d2_patch = matplotlib.patches.Patch(color=d2_color, label=f"{d2_name} {d2_fl}")
+    plt.legend(handles=[d1_patch, d2_patch], bbox_to_anchor=(1.01, 5.2), loc='upper right', prop='normal')
+
+    plt.rcParams['savefig.dpi'] = 300
+    plt.savefig("Resources/telemetry.png")
+    file = discord.File("Resource/telemetry.png", file_name="image.png")
+
+    return file
+
+
+def track_dominance(year, gp, session, driver1, driver2):
+    """ Returns a trackdominace graph """
+    # pyplot setup
+    fastf1.plotting.setup_mpl()
+    fig, ax = plt.subplots(figsize=(7.5, 6))
+    fig.set_facecolor('black')
+    ax.set_facecolor('black')
+    ax.axis('equal')
+    ax.axis('off')
+    # get session using given args
+    race = fastf1.get_session(year, gp, session)
+
+    race.load(laps=True, telemetry=True, weather=False, messages=False)
+    # get driver data for their fastest lap during the session
+    d1_laps = race.laps.pick_driver(driver1)
+    d1_fastest = d1_laps.pick_fastest()
+    d1_number = d1_laps.iloc[0].loc['DriverNumber']
+    d1_name = driver1
+
+    d2_laps = race.laps.pick_driver(driver2)
+    d2_fastest = d2_laps.pick_fastest()
+    d2_number = d2_laps.iloc[0].loc['DriverNumber']
+    d2_name = driver2
+    # get driver telemetry
+    d1_telemetry_data = d1_fastest.get_telemetry()
+    d2_telemetry_data = d2_fastest.get_telemetry()
+
+    # get driver color
+    if year == util.CURRENT_F1_SEASON:
+        # fastf1.plotting.driver_color() only supports current season
+        d1_color = fastf1.plotting.driver_color(d1_name)
+        d2_color = fastf1.plotting.driver_color(d2_name)
+    else:
+        # otherwise use team color
+        d1_color = f"#{race.results.loc[str(d1_number), 'TeamColor']}"
+        d2_color = f"#{race.results.loc[str(d2_number), 'TeamColor']}"
+    if d1_color == d2_color:
+        # if comparing teammates, reverse colour (if resulting colour is black, change it to grey)
+        table = str.maketrans("0123456789abcdef", "fedcba987654321")
+        d2_color = d2_color.translate(table)
+        if d2_color == '#000000': d2_color = 'grey'
+
+    # We want 25 mini-sectors
+    num_minisectors = 25
+
+    # What is the total distance of a lap?
+    total_distance = max(d1_telemetry_data['Distance'])
+
+    # Generate equally sized mini-sectors
+    minisector_length = total_distance / num_minisectors
+
+    minisectors = [0]
+
+    for i in range(0, (num_minisectors - 1)):
+        minisectors.append(minisector_length * (i + 1))
+
+    # add columns for minisector number and minisector average speed
+    d1_telemetry_data['Minisector'] = d1_telemetry_data['Distance'].apply(
+        lambda z: (
+                minisectors.index(
+                    min(minisectors, key=lambda x: abs(x - z))) + 1
+        )
+    )
+    avg_speeds1 = d1_telemetry_data.groupby("Minisector")["Speed"].mean()
+    d1_telemetry_data["Minisector_Speed"] = d1_telemetry_data["Minisector"].map(avg_speeds1)
+
+    d2_telemetry_data['Minisector'] = d2_telemetry_data['Distance'].apply(
+        lambda z: (
+                minisectors.index(
+                    min(minisectors, key=lambda x: abs(x - z))) + 1
+        )
+    )
+    avg_speeds2 = d2_telemetry_data.groupby("Minisector")["Speed"].mean()
+    d2_telemetry_data["Minisector_Speed"] = d2_telemetry_data["Minisector"].map(avg_speeds2)
+
+    # add another column for driver color
+    d1_telemetry_data['Driver_Color'] = d1_color
+    d2_telemetry_data['Driver_Color'] = d2_color
+
+    # get the greatest average speed per minisector
+    d1_avg_speeds = d1_telemetry_data.groupby("Minisector")["Minisector_Speed"].max()
+    d2_avg_speeds = d2_telemetry_data.groupby("Minisector")["Minisector_Speed"].max()
+    max_avg_speeds = []
+    for i in d1_avg_speeds.index:
+        if d1_avg_speeds[i] >= d2_avg_speeds[i]: max_avg_speeds.append(d1_avg_speeds[i])
+        else: max_avg_speeds.append(d2_avg_speeds[i])
+    # Create a new dataframe combining the "X", "Y", "Minisector", and "Minisector_Speed" columns from both dataframes
+    combined_data = pd.concat([d1_telemetry_data[['X', 'Y', 'Minisector', 'Minisector_Speed', 'Driver_Color']],
+                               d2_telemetry_data[['X', 'Y', 'Minisector', 'Minisector_Speed', 'Driver_Color']]])
+    df_list = []
+    for i in range(25):
+        df_list.append(combined_data.loc[combined_data['Minisector_Speed'] == max_avg_speeds[i]])
+    filtered_df = pd.concat(df_list)
+    # remove duplicate rows
+    filtered_df = filtered_df.loc[filtered_df.groupby(filtered_df.index)['Minisector_Speed'].idxmax()]
+
+    # create color array for each segment of line
+    color_array = []
+
+    # compare speed in each sector and add faster driver's color to color_array
+    x = filtered_df["X"].to_list()
+    y = filtered_df["Y"].to_list()
+    x = d1_telemetry_data["X"].to_list()
+    y = d1_telemetry_data["Y"].to_list()
+    for i in filtered_df.index:
+        try:
+            row_color = filtered_df.loc[i, "Driver_Color"]
+            # use faster driver's color
+            if (type(row_color)) == str:
+                if row_color == d1_color: color_array.append(1)
+                elif row_color == d2_color: color_array.append(2)
+        # when there is no data for either driver for a sector, make the color black
+        except Exception as e:
+            # traceback.print_exc()
+            color_array.append(None)
+            print(i)
+
+    # some numpy fuckery to turn x and y lists to coords, IDK how this works
+    points = np.array([x, y]).T.reshape(-1, 1, 2)
+    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+
+    # colormap
+    cmap = matplotlib.colors.ListedColormap([d1_color, d2_color])
+    # setup LineCollection
+    lc = matplotlib.collection.LineCollection(segments, cmap=cmap)
+    lc.set_array(color_array)
+    lc.set_linewidth(2)
+    # plot line
+    plt.gca().add_collection(lc)
+    plt.gca().axis('equal')
+    # more plot setup
+    plt.title(
+        f"{d1_name} vs {d2_name}\n{str(race.date.year)} {str(race.event.EventName)} {race.name.capitalize()}\n"
+        f"Track Dominance on Fastest Lap", fontproperties='bold')
+    plt.grid(visible=False, which='both')
+    # set up legend
+    d1_patch = matplotlib.patches.Patch(color=d1_color, label=d1_name)
+    d2_patch = matplotlib.patches.Patch(color=d2_color, label=d2_name)
+    plt.legend(handles=[d1_patch, d2_patch], prop='bold')
+    # save plot
+    plt.rcParams['savefig.dpi'] = 300
+
+    plt.savefig("Resources/trackdom.png")
+    file = discord.File("Resources/trackdom.png", file_name="image.png")
     return file
