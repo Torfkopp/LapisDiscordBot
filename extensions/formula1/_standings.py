@@ -17,6 +17,7 @@ import util
 
 COLOUR = util.FORMULA1_COLOUR
 CURRENT_SEASON = util.CURRENT_F1_SEASON
+matplotlib.rcParams['font.family'] = 'Formula1'
 
 
 def get_driver_positions(year, session):

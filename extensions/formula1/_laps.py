@@ -12,6 +12,7 @@ from timple.timedelta import strftimedelta
 import util
 
 """ All methods for the fastest command"""
+matplotlib.rcParams['font.family'] = 'Formula1'
 
 
 def overview_fastest_laps(year, gp, session):

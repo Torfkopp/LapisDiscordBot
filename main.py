@@ -3,6 +3,7 @@ import datetime
 import interactions
 from interactions import Client, Intents, listen, Task, IntervalTrigger, DateTrigger
 from interactions.client.errors import HTTPException
+from matplotlib import font_manager
 
 from core.extensions_loader import load_extensions
 from extensions.football import football
@@ -80,6 +81,7 @@ async def on_startup():
     #    task = Task(formula1_result, DateTrigger(start_time))
     #    task.start()
 
+    for font in font_manager.findSystemFonts(["Resources/font"]): font_manager.fontManager.addfont(font)
     # games_in_progress.start()  # For testing purposes
 
 

@@ -1,4 +1,5 @@
 import fastf1.plotting
+import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 from interactions.models import discord
@@ -8,6 +9,7 @@ from interactions.models import discord
 
 # enabling misc_mpl_mods will turn on minor grid lines that clutters the plot
 fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False)
+matplotlib.rcParams['font.family'] = 'Formula1'
 
 
 def position_change(year, gp):
@@ -46,10 +48,10 @@ def position_change(year, gp):
     plt.tight_layout()
 
     # Add title
-    plt.title(f"{session.event['EventName']} Position Changes")
+    plt.title(f"{session.event['EventName']} {year} Position Changes")
 
     # Save the figure and let Discord load it
-    plt.savefig('Resources/pc.png')
+    plt.savefig('Resources/pc.png', bbox_inches="tight", dpi=300)
     file = discord.File("Resources/pc.png", file_name="image.png")
 
     return file

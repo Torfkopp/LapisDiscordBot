@@ -240,7 +240,7 @@ def driver_slash_option(number=1):
 
     return wrapper
 
-# TODO ADAPT EVERYONE TO THIS
+
 async def command_function(ctx, func, *args):
     """ Function for the commands """
     restricted, msg = check_if_restricted(ctx.channel_id)
@@ -284,13 +284,6 @@ class Formula1(Extension):
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
         await command_function(ctx, _no_group.result, year_option, gp_option, session_option)
-        '''restricted, msg = check_if_restricted(ctx.channel_id)
-        if restricted:
-            await ctx.send(msg)
-            return
-        await ctx.defer()
-        try: await ctx.send(_no_group.result(year_option, gp_option, session_option))
-        except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)'''
 
     @f1_function.subcommand(
         sub_cmd_name="next",
@@ -305,13 +298,6 @@ class Formula1(Extension):
     async def next_function(self, ctx: SlashContext, allnext_option: bool = False):
         if allnext_option: await command_function(ctx, _no_group.remaining_races)
         else: await command_function(ctx, _no_group.next_race)
-
-        '''restricted, msg = check_if_restricted(ctx.channel_id)
-        if restricted:
-            await ctx.send(msg)
-            return
-        if allnext_option: await ctx.send(_no_group.remaining_races())
-        else: await ctx.send(embed=_no_group.next_race())'''
 
     ''' ######################
     Commands in LAPS group
@@ -332,12 +318,7 @@ class Formula1(Extension):
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
-        restricted, msg = check_if_restricted(ctx.channel_id)
-        if restricted:
-            await ctx.send(msg)
-            return
-        await ctx.defer()
-        await ctx.send(file=_laps.overview_fastest_laps(year_option, gp_option, session_option))
+        await command_function(ctx, _laps.overview_fastest_laps, year_option, gp_option, session_option)
 
     @laps_function.subcommand(
         sub_cmd_name="compare",
@@ -356,13 +337,8 @@ class Formula1(Extension):
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
-        restricted, msg = check_if_restricted(ctx.channel_id)
-        if restricted:
-            await ctx.send(msg)
-            return
-        await ctx.defer()
-        await ctx.send(file=_laps.compare_laps(year_option, gp_option, session_option,
-                                               driver1_option.upper(), driver2_option.upper()))
+        await command_function(ctx, _laps.compare_laps, year_option, gp_option, session_option,
+                               driver1_option.upper(), driver2_option.upper())
 
     @laps_function.subcommand(
         sub_cmd_name="scatterplot",
@@ -378,12 +354,8 @@ class Formula1(Extension):
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
-        restricted, msg = check_if_restricted(ctx.channel_id)
-        if restricted:
-            await ctx.send(msg)
-            return
-        await ctx.defer()
-        await ctx.send(file=_laps.scatterplot(year_option, gp_option, session_option, str.upper(driver1_option)))
+        await command_function(ctx, _laps.scatterplot, year_option, gp_option, session_option,
+                               str.upper(driver1_option))
 
     @laps_function.subcommand(
         sub_cmd_name="telemetry",
@@ -402,13 +374,8 @@ class Formula1(Extension):
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
-        restricted, msg = check_if_restricted(ctx.channel_id)
-        if restricted:
-            await ctx.send(msg)
-            return
-        await ctx.defer()
-        await ctx.send(file=_laps.telemetry(year_option, gp_option, session_option,
-                                            driver1_option.upper(), driver2_option.upper()))
+        await command_function(ctx, _laps.telemetry, year_option, gp_option, session_option,
+                               driver1_option.upper(), driver2_option.upper())
 
     @laps_function.subcommand(
         sub_cmd_name="track_dominance",
@@ -426,14 +393,8 @@ class Formula1(Extension):
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
-        restricted, msg = check_if_restricted(ctx.channel_id)
-        if restricted:
-            await ctx.send(msg)
-            return
-        await ctx.defer()
-        await ctx.send(
-            file=_laps.track_dominance(year_option, gp_option, session_option,
-                                       driver1_option.upper(), driver2_option.upper()))
+        await command_function(ctx, _laps.track_dominance, year_option, gp_option, session_option,
+                               driver1_option.upper(), driver2_option.upper())
 
     ''' ######################
     Commands in RACEINFO group
@@ -449,13 +410,7 @@ class Formula1(Extension):
     @grandprix_slash_option()
     async def raceinfo_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, gp_option: int = 0):
         if gp_option == 0: gp_option = get_last_finished_gp()
-        restricted, msg = check_if_restricted(ctx.channel_id)
-        if restricted:
-            await ctx.send(msg)
-            return
-        await ctx.defer()
-        try: await ctx.send(file=_race_info.position_change(year_option, gp_option))
-        except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
+        await command_function(ctx, _race_info.position_change, year_option, gp_option)
 
     @raceinfo_function.subcommand(
         sub_cmd_name="ltd",
@@ -465,13 +420,7 @@ class Formula1(Extension):
     @grandprix_slash_option()
     async def ltd_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, gp_option: int = 0):
         if gp_option == 0: gp_option = get_last_finished_gp()
-        restricted, msg = check_if_restricted(ctx.channel_id)
-        if restricted:
-            await ctx.send(msg)
-            return
-        await ctx.defer()
-        try: await ctx.send(file=_race_info.lap_time_distribution(year_option, gp_option))
-        except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
+        await command_function(ctx, _race_info.lap_time_distribution, year_option, gp_option)
 
     @raceinfo_function.subcommand(
         sub_cmd_name="tyre",
@@ -481,13 +430,7 @@ class Formula1(Extension):
     @grandprix_slash_option()
     async def tyre_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, gp_option: int = 0):
         if gp_option == 0: gp_option = get_last_finished_gp()
-        restricted, msg = check_if_restricted(ctx.channel_id)
-        if restricted:
-            await ctx.send(msg)
-            return
-        await ctx.defer()
-        try: await ctx.send(file=_race_info.strategy(year_option, gp_option))
-        except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
+        await command_function(ctx, _race_info.strategy, year_option, gp_option)
 
     ''' #######################
     Commands in STANDINGS group
@@ -512,12 +455,7 @@ class Formula1(Extension):
     )
     async def standings_function(self, ctx: SlashContext,
                                  year_option: int = CURRENT_SEASON, championship_option: bool = True):
-        restricted, msg = check_if_restricted(ctx.channel_id)
-        if restricted:
-            await ctx.send(msg)
-            return
-        try: await ctx.send(_standings.table(year_option, championship_option))
-        except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
+        await command_function(ctx, _standings.table, year_option, championship_option)
 
     @standings_function.subcommand(
         sub_cmd_name="average",
@@ -536,13 +474,7 @@ class Formula1(Extension):
         ]
     )
     async def average_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, session_option: str = "R"):
-        restricted, msg = check_if_restricted(ctx.channel_id)
-        if restricted:
-            await ctx.send(msg)
-            return
-        await ctx.defer()
-        try: await ctx.send(file=_standings.average_position(year_option, session_option))
-        except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
+        await command_function(ctx, _standings.average_position, year_option, session_option)
 
     @standings_function.subcommand(
         sub_cmd_name="h2h",
@@ -561,13 +493,7 @@ class Formula1(Extension):
         ]
     )
     async def h2h_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, session_option: str = "R"):
-        restricted, msg = check_if_restricted(ctx.channel_id)
-        if restricted:
-            await ctx.send(msg)
-            return
-        await ctx.defer()
-        try: await ctx.send(_standings.h2h(year_option, session_option))
-        except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
+        await command_function(ctx, _standings.h2h, year_option, session_option)
 
     @standings_function.subcommand(
         sub_cmd_name="heatmap",
@@ -575,22 +501,11 @@ class Formula1(Extension):
     )
     @year_slash_option(1950)
     async def heatmap_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON):
-        restricted, msg = check_if_restricted(ctx.channel_id)
-        if restricted:
-            await ctx.send(msg)
-            return
-        await ctx.defer()
-        try: await ctx.send(file=_standings.heatmap(year_option))
-        except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
+        await command_function(ctx, _standings.heatmap, year_option)
 
     @standings_function.subcommand(
         sub_cmd_name="winnable",
         sub_cmd_description="Für welchen Fahrer ist die Meisterschaft noch gewinnbar?"
     )
     async def winnable_function(self, ctx: SlashContext):
-        restricted, msg = check_if_restricted(ctx.channel_id)
-        if restricted:
-            await ctx.send(msg)
-            return
-        await ctx.defer()
-        await ctx.send(embed=_standings.whocanwin())
+        await command_function(ctx, _standings.whocanwin())
