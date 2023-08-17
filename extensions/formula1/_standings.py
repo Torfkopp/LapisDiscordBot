@@ -1,4 +1,5 @@
 import interactions
+import matplotlib
 import matplotlib.pyplot as plt
 from interactions.models import discord
 
@@ -76,6 +77,7 @@ def get_driver_positions(year, session):
 
 def average_position(year, session):
     """ Return the average finish position"""
+    fastf1.plotting.setup_mpl()
     driver_positions = get_driver_positions(year, session)
     result_map = {}
 
@@ -118,18 +120,37 @@ def average_position(year, session):
     for team in team_order: team_colours.append(fastf1.plotting.team_color(team))
 
     fig, ax = plt.subplots()
-    ax.barh(range(len(result_map)), result_map.values,
-            color=team_colours, edgecolor='grey')
-    ax.set_yticks(range(len(result_map)))
-    ax.set_ytickslabels(result_map.keys)
-    ax.invert_yaxis()
 
-    ax.set_axisbelow(True)
-    ax.xaxis.grid(True, which='major', linestyle='--', color='grey', zorder=-1000)
+    avg_positions = list(result_map.values())
+    bars = ax.barh(range(len(result_map)), avg_positions, color=team_colours)
+
+    for i in range(len(bars)):
+        plt.text(bars[i].get_width() + 0.5, bars[i].get_y() + (bars[i].get_height()/2), avg_positions[i],
+                 color="white", va="center")
+
+    ax.set_ylim(-0.8, len(result_map) - 0.25)
+    ax.set_yticks(range(len(result_map)))
+    ax.set_yticklabels(result_map.keys())
+
+    ax.invert_yaxis()
+    ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(1))
 
     fig.set_facecolor('black')
     ax.set_facecolor('black')
 
+    # remove all lines, bar the x-axis grid lines
+    ax.yaxis.grid(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.minorticks_off()
+
+    ax.set_xlabel("Position")
+    match session:
+        case "R": session = "Race"
+        case "Q": session = "Qualifying"
+        case "S": session = "Sprint"
     plt.title(f"Average {session} Finish Position {year}")
 
     plt.savefig("Resources/averagefin.png")
@@ -157,17 +178,26 @@ def h2h(year, session):
         case "R": sess = "Renn"
         case "Q": sess = "Qualifikations"
         case _: sess = "Sprint"
-    result_string = f"```Head2Head-{sess}-Vergleich der Fahrer im Jahr {year}"
+    result_string = f"```Head2Head-{sess}-Vergleich der Fahrer im Jahr {year}\n\n"
+
+    def add_to_string(team_str, driver1, points1, points2, driver2):
+        string = team_str.ljust(16)
+        string += str(driver1).ljust(20)
+        string += f"{points1}:{points2}"
+        string += str(driver2).rjust(20)
+        string += "\n"
+        return string
 
     for team in race_positions[2]:
         drivers = race_positions[2].get(team)
         if len(drivers) < 2:
-            result_string += f"{team}: Zu wenige Fahrer fürs Vergleichen ?:O\n"
+            result_string += team.ljust(16)
+            result_string += "Zu wenige Fahrer fürs Vergleichen ?:O" + "\n"
         elif len(drivers) == 2:
             driver1_positions, driver2_positions = race_positions[0].get(drivers[0]), race_positions[0].get(drivers[1])
             driver1_points, driver2_points = compare_positions(driver1_positions, driver2_positions)
-            result_string += (f"{team}: {race_positions[1].get(drivers[0])} {driver1_points}:"
-                              f"{driver2_points} {race_positions[1].get(drivers[1])}\n")
+            result_string += add_to_string(team, race_positions[1].get(drivers[0]), driver1_points,
+                                           driver2_points, race_positions[1].get(drivers[1]))
         elif len(drivers) == 3:
             # Drivers getting added into race_positions in order of appearance
             driver1_positions = race_positions[0].get(drivers[0])  # driver 1
@@ -183,16 +213,17 @@ def h2h(year, session):
             else:
                 driver_1or2 = drivers[1]
                 driver1b_points, driver2b_points = compare_positions(driver2_positions, driver3_positions)
-            result_string += (f"{team}: {race_positions[1].get(drivers[0])} {driver1a_points}:"
-                              f"{driver2a_points} {race_positions[1].get(drivers[1])}\n")
-            result_string += " "*(len(team)+2) + (f"{race_positions[1].get(driver_1or2)} {driver1b_points}:"
-                                                  f"{driver2b_points} {race_positions[1].get(drivers[2])}\n")
+            result_string += add_to_string(team, race_positions[1].get(drivers[0]), driver1a_points,
+                                           driver2a_points, race_positions[1].get(drivers[0]))
+            result_string += add_to_string(" ", race_positions[1].get(driver_1or2), driver1b_points,
+                                           driver2b_points, race_positions[1].get(drivers[2]))
         else:
             driver1_positions, driver2_positions = race_positions[0].get(drivers[0]), race_positions[0].get(drivers[1])
             driver1_points, driver2_points = compare_positions(driver1_positions, driver2_positions)
-            result_string += (f"{team}: {race_positions[1].get(drivers[0])} {driver1_points}:"
-                              f"{driver2_points} {race_positions[1].get(drivers[1])}\n")
-            result_string += " "*(len(team)+2) + "Rest unvergleichbar aufgrund Wecheselfiesta\n"
+            result_string += add_to_string(team, race_positions[1].get(drivers[0]), driver1_points,
+                                           driver2_points, race_positions[1].get(drivers[1]))
+            result_string += " ".ljust(16)
+            result_string += "Rest unvergleichbar aufgrund Wecheselfiesta" + "\n"
 
     result_string += "```"
     return util.uwuify_by_chance(result_string)
@@ -249,22 +280,24 @@ def heatmap(year):
         text_auto=True,
         aspect='auto',  # Automatically adjust the aspect ratio
         # https://plotly.com/python/builtin-colorscales/
-        color_continuous_scale=px.colors.sequential.Blues,
+        color_continuous_scale=px.colors.sequential.Hot,
         labels={'x': 'Race',
                 'y': 'Driver',
                 'color': 'Points'}  # Change hover texts
     )
-    fig.update_xaxes(title_text='')  # Remove axis titles
+    fig.update_xaxes(title_text=f"Heatmap of {year}")  # Remove axis titles
     fig.update_yaxes(title_text='')
+
     fig.update_yaxes(tickmode='linear')  # Show all ticks, i.e. driver names
-    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey',
-                     showline=False,
-                     tickson='boundaries')  # Show horizontal grid only
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='White',
+                     showline=False, tickson='boundaries')  # Show horizontal grid only
     fig.update_xaxes(showgrid=False, showline=False)  # And remove vertical grid
-    fig.update_layout(plot_bgcolor='rgba(0,0,0,0)')  # White background
+    fig.update_layout(plot_bgcolor='black')  # Black plot background
     fig.update_layout(coloraxis_showscale=False)  # Remove legend
     fig.update_layout(xaxis=dict(side='top'))  # x-axis on top
     fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))  # Remove border margins
+    fig.update_layout(paper_bgcolor="black")  # Black background
+    fig.update_layout(font_color="White")
 
     with open("Resources/plot.png", 'wb') as f:
         f.write(plotly.io.to_image(fig, format="png"))

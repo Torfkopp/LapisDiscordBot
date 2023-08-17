@@ -69,22 +69,23 @@ async def on_startup():
     """ Is called when the bot starts up """
     command_call_limit.start()
     # football_schedule = football.create_schedule()
-    formula1_schedule, embed = formula1.create_schedule()
-    if isinstance(embed, interactions.Embed): await SPORT_CHANNEL.send(embed=embed)
+    # formula1_schedule, embed = formula1.create_schedule()
+    # if isinstance(embed, interactions.Embed): await SPORT_CHANNEL.send(embed=embed)
     # print("Starting times of today's games: " + str(football_schedule))
     # print("Today's formula1 sessions: " + str(formula1_schedule))
     # for start_time in football_schedule:
     #    task = Task(start_gip, DateTrigger(start_time))
     #    task.start()
-    for start_time in formula1_schedule:
-        task = Task(formula1_result, DateTrigger(start_time))
-        task.start()
+    # for start_time in formula1_schedule:
+    #    task = Task(formula1_result, DateTrigger(start_time))
+    #    task.start()
 
     # games_in_progress.start()  # For testing purposes
 
 
 # load all extensions in the ./extensions folder
 load_extensions(bot=bot)
+bot.reload_extension("extensions.formula1.formula1")
 
 with open('config.txt') as f: token = f.readline()
 

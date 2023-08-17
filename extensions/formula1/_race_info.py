@@ -14,7 +14,7 @@ def position_change(year, gp):
     """ Returns the place changes during the race"""
     # Load the session
     session = fastf1.get_session(year, gp, 'R')
-    session.load(telemetry=False, weather=False)
+    session.load(telemetry=False, weather=False, messages=False)
 
     # Create plot
     fig, ax = plt.subplots(figsize=(8.0, 4.9))
@@ -59,7 +59,7 @@ def lap_time_distribution(year, gp):
     """ Returns the drivers' lap time distribution during the race """
     # Load the race session
     race = fastf1.get_session(year, gp, 'R')
-    race.load()
+    race.load(weather=False, messages=False)
 
     # Get all laps for point finishers only. Filter out slow laps
     point_finishers = race.drivers[:10]
@@ -121,7 +121,7 @@ def strategy(year, gp):
     """ Returns the tyre strategies during the race """
     # Load the race session
     session = fastf1.get_session(year, gp, 'R')
-    session.load()
+    session.load(messages=False)
     laps = session.laps
 
     # Get the list of driver numbers

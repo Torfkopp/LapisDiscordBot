@@ -53,7 +53,7 @@ def create_schedule():
             start_times.add(time)
 
     start_times = sorted(start_times)
-    return start_times
+    return list(start_times)
 
 
 def get_live(content=""):

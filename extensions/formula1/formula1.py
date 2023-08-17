@@ -6,6 +6,7 @@ import interactions
 import pytz
 from fastf1.core import DataNotLoadedError
 from interactions import Extension, slash_command, SlashContext, slash_option, OptionType, SlashCommandChoice
+from interactions.models import discord
 
 import util
 from extensions.formula1 import _standings, _race_info, _laps, _no_group
@@ -32,12 +33,37 @@ def setup(bot): Formula1(bot)
 
 '''
 ##################################################
-COMMAND PART
+LIVE PART
 ##################################################
 '''
 
-# The last finished session and its Grand Prix
-global current_gp, current_session
+
+def get_current():
+    """ Gets the current gp and session """
+    event_schedule = fastf1.get_events_remaining()
+    next_event = event_schedule.iloc[0]
+    date_today = datetime.datetime.today()
+
+    session_list = [next_event['Session1Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
+                    next_event['Session2Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
+                    next_event['Session3Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
+                    next_event['Session4Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
+                    next_event['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)]
+
+    latest_finished_session = 5
+    for i in range(0, len(session_list)):  # A session should be finished 2 hours after the start
+        if session_list[i] >= (date_today + datetime.timedelta(hours=2)): latest_finished_session = i + 1
+
+    current_gp = next_event['RoundNumber'] - 1
+    current_session = 5
+
+    # If a session of the 'next event' has finished,
+    # set the next_event as current_gp and the finished session as current_session
+    if latest_finished_session < 5:
+        current_gp = next_event['RoundNumber']
+        current_session = latest_finished_session
+
+    return current_gp, current_session
 
 
 def create_schedule():
@@ -78,40 +104,19 @@ def create_schedule():
     # On friday of every race weekend, send the schedule to the channel
     if (date_today.weekday() == 4) and ((session_list[1] - date_today).days == 0): embed = _no_group.next_race()
 
-    # Set current gp and session to the last race
-    global current_gp, current_session
-    current_gp = next_event['RoundNumber'] - 1
-    current_session = 5
+    for i in range(0, len(session_list)):  # A session should be finished 2 hours after the start
+        if session_list[i].date() == date_today.date(): start_times.add(session_list[i] + datetime.timedelta(hours=2))
 
-    latest_finished_session = 5
-    for i in range(0, len(session_list)):
-        session = session_list[i]  # A session should be finished 2 hours after the start
-        if session.date() == date_today.date(): start_times.add(session + datetime.timedelta(hours=2))
-        if session >= (date_today + datetime.timedelta(hours=2)): latest_finished_session = i + 1
-
-    # If a session of the 'next event' has finished,
-    # set the next_event as current_gp and the finished session as current_session
-    if latest_finished_session < 5:
-        current_gp = next_event['RoundNumber']
-        current_session = latest_finished_session
-
-    return start_times, embed
+    return list(start_times), embed
 
 
 def auto_result():
     """ Returns the result of the latest session and sets the current paras to it """
-    global current_gp, current_session
-    result_gp, result_session = current_gp, (current_session + 1)
-
-    if result_session > 5:
-        result_gp += 1
-        result_session = 1
+    result_gp, result_session = get_current()
 
     try:
         result_string = _no_group.result(CURRENT_SEASON, result_gp, result_session)
         result_string = "||" + result_string + "||"  # Make Spoiler
-        current_gp = result_gp
-        current_session = result_session
     except DataNotLoadedError: result_string = ""
 
     return util.uwuify_by_chance(result_string)
@@ -140,37 +145,37 @@ def increment_command_calls():
     if command_calls > COMMAND_LIMIT: limit_reached = True
 
 
-async def check_if_restricted(ctx):
+def check_if_restricted(channel_id):
     """ Checks if the command is restricted (returns True) due to limit or wrong channel
         or good to go (False)"""
-    if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
-        await ctx.send(WRONG_CHANNEL_MESSAGE)
-        return True
-    elif limit_reached:
-        await ctx.send(LIMIT_REACHED_MESSAGE)
-        return True
+    if str(channel_id) != SPORTS_CHANNEL_ID: return True, WRONG_CHANNEL_MESSAGE
+    elif limit_reached: return True, LIMIT_REACHED_MESSAGE
 
     increment_command_calls()
-    return False
+    return False, ""
 
 
-def session_get_current(year, gp, session):
-    """ Checks if sessions are ok or gets latest session """
+def get_current_and_check_input(year, gp, session):
+    """ Checks if inputs are ok or gets latest session """
+    temp_gp, temp_session = get_current()
+    if gp == "": gp = temp_gp
+    if session == "": session = temp_session
     # If only gp is given, session cause problems
     # If only session is given, try current_gp. If it fails, try the gp before that
     try:  # Try getting the session
-        session = fastf1.get_session(year, gp, session)
+        fastf1.get_session(year, gp, session)
         return gp, session
     except DataNotLoadedError:
-        gp = current_gp - 1
+        gp = temp_gp - 1
         # Try getting it again with gp before that
-        session = fastf1.get_session(year, gp, session)
+        fastf1.get_session(year, gp, session)
         return gp, session
 
 
 def get_last_finished_gp():
     """ Gets the last gp with a finished race """
-    return current_gp if current_session == 5 else (current_gp - 1)
+    gp, session = get_current()
+    return gp if session == 5 else (gp - 1)
 
 
 def year_slash_option(min_year):
@@ -199,27 +204,22 @@ def grandprix_slash_option():
     return wrapper
 
 
-def session_slash_option(all_sessions):
+def session_slash_option():
     def wrapper(func):
-        choices = [
-            SlashCommandChoice(name="Rennen", value="R"),
-            SlashCommandChoice(name="Qualifikation", value="Q"),
-            SlashCommandChoice(name="Sprint", value="S"),
-
-        ]
-        if all_sessions:
-            choices.append([
-                SlashCommandChoice(name="Sprint Shootout", value="SS"),
-                SlashCommandChoice(name="FP3 ", value="FP3"),
-                SlashCommandChoice(name="FP2", value="FP2"),
-                SlashCommandChoice(name="FP1", value="FP1")])
-
         return slash_option(
             name="session_option",
             description="Session",
             required=False,
             opt_type=OptionType.STRING,
-            choices=choices
+            choices=[
+                SlashCommandChoice(name="Rennen", value="R"),
+                SlashCommandChoice(name="Qualifikation", value="Q"),
+                SlashCommandChoice(name="Sprint", value="S"),
+                SlashCommandChoice(name="Sprint Shootout", value="SS"),
+                SlashCommandChoice(name="FP3 ", value="FP3"),
+                SlashCommandChoice(name="FP2", value="FP2"),
+                SlashCommandChoice(name="FP1", value="FP1")
+            ]
         )(func)
 
     return wrapper
@@ -239,6 +239,22 @@ def driver_slash_option(number=1):
         )(func)
 
     return wrapper
+
+# TODO ADAPT EVERYONE TO THIS
+async def command_function(ctx, func, *args):
+    """ Function for the commands """
+    restricted, msg = check_if_restricted(ctx.channel_id)
+    if restricted:
+        await ctx.send(msg)
+        return
+    await ctx.defer()
+    try:
+        result = func(*args)
+        if isinstance(result, interactions.Embed): await ctx.send(embed=result)
+        elif isinstance(result, discord.File): await ctx.send(file=result)
+        else: await ctx.send(result)
+    except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
+    return
 
 
 class Formula1(Extension):
@@ -260,12 +276,21 @@ class Formula1(Extension):
     )
     @year_slash_option(1950)
     @grandprix_slash_option()
-    @session_slash_option(True)
+    @session_slash_option()
     async def result_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON,
-                              gp_option: int = current_gp, session_option: int = current_session):
-        if check_if_restricted(ctx): return
+                              gp_option: str = "", session_option: str = ""):
+        try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
+        except DataNotLoadedError:
+            await ctx.send(FAULTY_VALUE_MESSAGE)
+            return
+        await command_function(ctx, _no_group.result, year_option, gp_option, session_option)
+        '''restricted, msg = check_if_restricted(ctx.channel_id)
+        if restricted:
+            await ctx.send(msg)
+            return
+        await ctx.defer()
         try: await ctx.send(_no_group.result(year_option, gp_option, session_option))
-        except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
+        except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)'''
 
     @f1_function.subcommand(
         sub_cmd_name="next",
@@ -278,120 +303,137 @@ class Formula1(Extension):
         required=False
     )
     async def next_function(self, ctx: SlashContext, allnext_option: bool = False):
-        if check_if_restricted(ctx): return
+        if allnext_option: await command_function(ctx, _no_group.remaining_races)
+        else: await command_function(ctx, _no_group.next_race)
+
+        '''restricted, msg = check_if_restricted(ctx.channel_id)
+        if restricted:
+            await ctx.send(msg)
+            return
         if allnext_option: await ctx.send(_no_group.remaining_races())
-        else: await ctx.send(embed=_no_group.next_race())
+        else: await ctx.send(embed=_no_group.next_race())'''
 
     ''' ######################
     Commands in LAPS group
     ####################### '''
 
-    # TODO Track Dominance https://github.com/F1-Buddy/f1buddy-python/blob/main/images/trackdominance.png
-    #                      https://github.com/F1-Buddy/f1buddy-python/blob/main/cogs/speed.py
-    # TODO Telemetry https://github.com/F1-Buddy/f1buddy-python/blob/main/images/telemetry.png
-    #                https://github.com/F1-Buddy/f1buddy-python/blob/main/cogs/telemetry.py
     @f1_function.subcommand(
         group_name="laps",
         group_description="Alle Befehle, die mit einzelnen Runden zu tun haben",
         sub_cmd_name="overview",
-        sub_cmd_description="Übersicht der schnellsten Runden der Session (Standard: zuletzt gefahrene Session)"
+        sub_cmd_description="Übersicht der schnellsten Runden der Session (Standard: Zuletzt gefahrene Session)"
     )
     @year_slash_option(2018)
     @grandprix_slash_option()
-    @session_slash_option(True)
-    async def laps_function(self, ctx: SlashContext,
-                            year_option: int = CURRENT_SEASON, gp_option: int = current_gp,
-                            session_option: int = current_session):
-        try: gp_option, session_option = session_get_current(year_option, gp_option, session_option)
+    @session_slash_option()
+    async def laps_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON,
+                            gp_option: str = "", session_option: str = ""):
+        try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
-        if check_if_restricted(ctx): return
+        restricted, msg = check_if_restricted(ctx.channel_id)
+        if restricted:
+            await ctx.send(msg)
+            return
         await ctx.defer()
         await ctx.send(file=_laps.overview_fastest_laps(year_option, gp_option, session_option))
 
     @laps_function.subcommand(
         sub_cmd_name="compare",
-        sub_cmd_description="Vergleiche die schnellste Runde der beiden Fahrer in der Session miteinander "
-                            "(Standard: Zuletzt gefahrene Session)"
+        sub_cmd_description="Vergleicht die schnellsten Runden der Fahrer in der Session (Standard: Zuletzt gefahrene "
+                            "Session)"
     )
     @driver_slash_option(1)
     @driver_slash_option(2)
     @year_slash_option(2018)
     @grandprix_slash_option()
-    @session_slash_option(True)
+    @session_slash_option()
     async def compare_function(self, ctx: SlashContext, driver1_option, driver2_option,
-                               year_option: int = CURRENT_SEASON, gp_option: int = get_last_finished_gp(),
-                               session_option: str = "race"):
-        try: gp_option, session_option = session_get_current(year_option, gp_option, session_option)
+                               year_option: int = CURRENT_SEASON,
+                               gp_option: str = "", session_option: str = ""):
+        try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
-        if check_if_restricted(ctx): return
+        restricted, msg = check_if_restricted(ctx.channel_id)
+        if restricted:
+            await ctx.send(msg)
+            return
         await ctx.defer()
-        await ctx.send(file=_laps.compare_laps(year_option, gp_option, session_option, driver1_option, driver2_option))
+        await ctx.send(file=_laps.compare_laps(year_option, gp_option, session_option,
+                                               driver1_option.upper(), driver2_option.upper()))
 
     @laps_function.subcommand(
         sub_cmd_name="scatterplot",
-        sub_cmd_description="Erstellt ein Scatterplot der Runden des Fahrers "
-                            "(Standard: Zuletzt gefahrene Session)"
+        sub_cmd_description="Zeigt Scatterplot der Runden des Fahrers (Standard: Zuletzt gefahrene Session)"
     )
     @driver_slash_option()
     @year_slash_option(2018)
     @grandprix_slash_option()
-    @session_slash_option(True)
+    @session_slash_option()
     async def scatterplot_function(self, ctx: SlashContext, driver1_option, year_option: int = CURRENT_SEASON,
-                                   gp_option: int = current_gp, session_option: int = current_session):
-        try: gp_option, session_option = session_get_current(year_option, gp_option, session_option)
+                                   gp_option: str = "", session_option: str = ""):
+        try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
-        if check_if_restricted(ctx): return
+        restricted, msg = check_if_restricted(ctx.channel_id)
+        if restricted:
+            await ctx.send(msg)
+            return
         await ctx.defer()
-        await ctx.send(file=_laps.scatterplot(year_option, gp_option, session_option, driver1_option))
+        await ctx.send(file=_laps.scatterplot(year_option, gp_option, session_option, str.upper(driver1_option)))
 
     @laps_function.subcommand(
         sub_cmd_name="telemetry",
-        sub_cmd_description="Erstellt eine Graphik mit den Telemetriedaten der schnellsten Runden der Fahrer "
-                            "(Standard: Zuletzt gefahrene Session)"
+        sub_cmd_description="Zeigt Telemetriedaten der schnellsten Runden der Fahrer (Standard: Zuletzt gefahrene "
+                            "Session)"
     )
     @driver_slash_option(1)
     @driver_slash_option(2)
     @year_slash_option(2018)
     @grandprix_slash_option()
-    @session_slash_option(True)
-    async def track_dominance_function(self, ctx: SlashContext, driver1_option, driver2_option,
-                                       year_option: int = CURRENT_SEASON, gp_option: int = current_gp,
-                                       session_option: int = current_gp):
-        try: gp_option, session_option = session_get_current(year_option, gp_option, session_option)
+    @session_slash_option()
+    async def telemetry_function(self, ctx: SlashContext, driver1_option, driver2_option,
+                                 year_option: int = CURRENT_SEASON,
+                                 gp_option: str = "", session_option: str = ""):
+        try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
-        if check_if_restricted(ctx): return
+        restricted, msg = check_if_restricted(ctx.channel_id)
+        if restricted:
+            await ctx.send(msg)
+            return
         await ctx.defer()
-        await ctx.send(file=_laps.telemetry(year_option, gp_option, session_option, driver1_option, driver2_option))
+        await ctx.send(file=_laps.telemetry(year_option, gp_option, session_option,
+                                            driver1_option.upper(), driver2_option.upper()))
 
     @laps_function.subcommand(
         sub_cmd_name="track_dominance",
-        sub_cmd_description="Erstellt eine Trackdominance mit den schnellsten Runden der Fahrer "
-                            "(Standard: Zuletzt gefahrene Session)"
+        sub_cmd_description="Vergleicht Streckendominanz der Fahrer (Standard: Zuletzt gefahrene Session)"
     )
     @driver_slash_option(1)
     @driver_slash_option(2)
     @year_slash_option(2018)
     @grandprix_slash_option()
-    @session_slash_option(True)
+    @session_slash_option()
     async def track_dominance_function(self, ctx: SlashContext, driver1_option, driver2_option,
-                                       year_option: int = CURRENT_SEASON, gp_option: int = current_gp,
-                                       session_option: int = current_gp):
-        try: gp_option, session_option = session_get_current(year_option, gp_option, session_option)
+                                       year_option: int = CURRENT_SEASON,
+                                       gp_option: str = "", session_option: str = ""):
+        try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
-        if check_if_restricted(ctx): return
+        restricted, msg = check_if_restricted(ctx.channel_id)
+        if restricted:
+            await ctx.send(msg)
+            return
         await ctx.defer()
         await ctx.send(
-            file=_laps.track_dominance(year_option, gp_option, session_option, driver1_option, driver2_option))
+            file=_laps.track_dominance(year_option, gp_option, session_option,
+                                       driver1_option.upper(), driver2_option.upper()))
 
     ''' ######################
     Commands in RACEINFO group
@@ -405,9 +447,12 @@ class Formula1(Extension):
     )
     @year_slash_option(2018)
     @grandprix_slash_option()
-    async def raceinfo_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON,
-                                gp_option: int = get_last_finished_gp()):
-        if check_if_restricted(ctx): return
+    async def raceinfo_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, gp_option: int = 0):
+        if gp_option == 0: gp_option = get_last_finished_gp()
+        restricted, msg = check_if_restricted(ctx.channel_id)
+        if restricted:
+            await ctx.send(msg)
+            return
         await ctx.defer()
         try: await ctx.send(file=_race_info.position_change(year_option, gp_option))
         except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
@@ -418,9 +463,12 @@ class Formula1(Extension):
     )
     @year_slash_option(2018)
     @grandprix_slash_option()
-    async def ltd_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON,
-                           gp_option: int = get_last_finished_gp()):
-        if check_if_restricted(ctx): return
+    async def ltd_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, gp_option: int = 0):
+        if gp_option == 0: gp_option = get_last_finished_gp()
+        restricted, msg = check_if_restricted(ctx.channel_id)
+        if restricted:
+            await ctx.send(msg)
+            return
         await ctx.defer()
         try: await ctx.send(file=_race_info.lap_time_distribution(year_option, gp_option))
         except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
@@ -431,9 +479,12 @@ class Formula1(Extension):
     )
     @year_slash_option(2018)
     @grandprix_slash_option()
-    async def tyre_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON,
-                            gp_option: int = get_last_finished_gp()):
-        if check_if_restricted(ctx): return
+    async def tyre_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, gp_option: int = 0):
+        if gp_option == 0: gp_option = get_last_finished_gp()
+        restricted, msg = check_if_restricted(ctx.channel_id)
+        if restricted:
+            await ctx.send(msg)
+            return
         await ctx.defer()
         try: await ctx.send(file=_race_info.strategy(year_option, gp_option))
         except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
@@ -453,7 +504,7 @@ class Formula1(Extension):
         name="championship_option",
         description="Meisterschaftsart",
         required=False,
-        opt_type=OptionType.STRING,
+        opt_type=OptionType.BOOLEAN,
         choices=[
             SlashCommandChoice(name="Fahrer-WM", value=True),
             SlashCommandChoice(name="Konstrukteurs-WM", value=False)
@@ -461,18 +512,34 @@ class Formula1(Extension):
     )
     async def standings_function(self, ctx: SlashContext,
                                  year_option: int = CURRENT_SEASON, championship_option: bool = True):
-        if check_if_restricted(ctx): return
+        restricted, msg = check_if_restricted(ctx.channel_id)
+        if restricted:
+            await ctx.send(msg)
+            return
         try: await ctx.send(_standings.table(year_option, championship_option))
         except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
 
     @standings_function.subcommand(
         sub_cmd_name="average",
-        sub_cmd_description="Durschnittliche Position im Sessiontyp (Standard: Derzeitige Situation in den Rennen)"
+        sub_cmd_description="Durchschnittliche Position im Sessiontyp (Standard: Derzeitige Situation in den Rennen)"
     )
     @year_slash_option(1950)
-    @session_slash_option(False)
+    @slash_option(
+        name="session_option",
+        description="Session",
+        required=False,
+        opt_type=OptionType.STRING,
+        choices=[
+            SlashCommandChoice(name="Rennen", value="R"),
+            SlashCommandChoice(name="Qualifikation", value="Q"),
+            SlashCommandChoice(name="Sprint", value="S")
+        ]
+    )
     async def average_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, session_option: str = "R"):
-        if check_if_restricted(ctx): return
+        restricted, msg = check_if_restricted(ctx.channel_id)
+        if restricted:
+            await ctx.send(msg)
+            return
         await ctx.defer()
         try: await ctx.send(file=_standings.average_position(year_option, session_option))
         except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
@@ -482,11 +549,24 @@ class Formula1(Extension):
         sub_cmd_description="Head2Head-Vergleich im Sessiontyp (Standard: Derzeitige Situation in den Rennen)"
     )
     @year_slash_option(1950)
-    @session_slash_option(False)
+    @slash_option(
+        name="session_option",
+        description="Session",
+        required=False,
+        opt_type=OptionType.STRING,
+        choices=[
+            SlashCommandChoice(name="Rennen", value="R"),
+            SlashCommandChoice(name="Qualifikation", value="Q"),
+            SlashCommandChoice(name="Sprint", value="S")
+        ]
+    )
     async def h2h_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, session_option: str = "R"):
-        if check_if_restricted(ctx): return
+        restricted, msg = check_if_restricted(ctx.channel_id)
+        if restricted:
+            await ctx.send(msg)
+            return
         await ctx.defer()
-        try: await ctx.send(embed=_standings.h2h(year_option, session_option))
+        try: await ctx.send(_standings.h2h(year_option, session_option))
         except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
 
     @standings_function.subcommand(
@@ -495,7 +575,10 @@ class Formula1(Extension):
     )
     @year_slash_option(1950)
     async def heatmap_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON):
-        if check_if_restricted(ctx): return
+        restricted, msg = check_if_restricted(ctx.channel_id)
+        if restricted:
+            await ctx.send(msg)
+            return
         await ctx.defer()
         try: await ctx.send(file=_standings.heatmap(year_option))
         except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
@@ -505,6 +588,9 @@ class Formula1(Extension):
         sub_cmd_description="Für welchen Fahrer ist die Meisterschaft noch gewinnbar?"
     )
     async def winnable_function(self, ctx: SlashContext):
-        if check_if_restricted(ctx): return
+        restricted, msg = check_if_restricted(ctx.channel_id)
+        if restricted:
+            await ctx.send(msg)
+            return
         await ctx.defer()
         await ctx.send(embed=_standings.whocanwin())
