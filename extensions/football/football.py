@@ -7,7 +7,7 @@ from interactions import (
 import util
 from extensions.football import _live, _commands
 
-""" Main method for the football commands """
+""" Main file for the football commands """
 
 locale.setlocale(locale.LC_ALL, 'de_DE')  # Changes local to Deutsch for time display
 

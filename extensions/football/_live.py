@@ -9,7 +9,7 @@ from util import germanise
 
 """ All methods for the football live scoring """
 
-COMPETITION_LIST = ["2. Bundesliga", "League Cup", "Frauen-WM"]  # List of League interested in
+COMPETITION_LIST = ["Bundesliga", "2. Bundesliga", "DFB-Pokal"]  # List of League interested in
 COLOUR = util.FOOTBALL_COLOUR
 
 
@@ -49,7 +49,7 @@ def create_schedule():
         for match in league['matches']:
             time = datetime.datetime.fromisoformat(match['scheduledStartTime'])
             time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
-            #  Maybe time = datetime.timedelta(minutes=2) to ensure a start at 0'
+            time -= datetime.timedelta(minutes=2)
             start_times.add(time)
 
     start_times = sorted(start_times)
@@ -118,7 +118,7 @@ def get_live(content=""):
             new_name = f"```{team1:<30} {score1:^3}:{score2:^4}{penalty_score} {team2:>30}```"
             new_value = f"```{str(minute).zfill(2)}```"
             # If the score changes in the new message, get the goalscorers and put them as the new value
-            if not content == "":
+            if not content == "" and not minute.startswith("Startet"):
                 old_embed = content[0]
                 for em in content[1:]:  # Get correct embed
                     if em.title == embed.title: old_embed = em
@@ -134,7 +134,7 @@ def get_live(content=""):
                 else:
                     new_value = new_value.split(' ')[0] + " " + ' '.join(old_value.split(' ')[1:])
             embed.add_field(name=new_name, value=new_value)
-            if match['isLive']: one_game_still_live = True
+            if match['isLive'] or match['matchInfo']['matchTime'] < 90: one_game_still_live = True
 
         embeds.append(embed)
 

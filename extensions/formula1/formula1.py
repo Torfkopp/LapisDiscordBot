@@ -11,7 +11,7 @@ from interactions.models import discord
 import util
 from extensions.formula1 import _standings, _race_info, _laps, _no_group
 
-""" Main method for the formula1 commands """
+""" Main file for the formula1 commands """
 
 #  Inspiration and Similar:
 #  https://docs.fastf1.dev/examples_gallery/ https://github.com/F1-Buddy/f1buddy-python/

@@ -11,6 +11,7 @@ UWUCHANCE = 5  # D-De chance dat a commyand wesponse gets u-u-uwuified
 FORMULA1_COLOUR = discord.Color.from_rgb(255, 24, 1)  # Formula1 Red
 FOOTBALL_COLOUR = discord.Color.from_rgb(29, 144, 83)  # Werder Bremen Green
 
+
 SPORTS_CHANNEL_ID = open('./config.txt').readlines()[1]
 
 # Todo Make them cooler
@@ -20,7 +21,6 @@ FAULTY_VALUE_MESSAGE = "Deine Werte passen iwie nicht, Bro"
 
 CURRENT_F1_SEASON = datetime.datetime.now().year  # An F1 Season starts and ends within one year
 CURRENT_FOOTBALL_SEASON = 2023  # 2023/2024 -> 2023
-COMPETITION_LIST = ["2. Bundesliga", "League Cup", "Frauen-WM"]  # List of League interested in
 
 
 def uwuify_by_chance(obj):

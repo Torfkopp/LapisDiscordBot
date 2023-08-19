@@ -1,6 +1,5 @@
 import datetime
 
-import interactions
 from interactions import Client, Intents, listen, Task, IntervalTrigger, DateTrigger
 from interactions.client.errors import HTTPException
 from matplotlib import font_manager
@@ -33,7 +32,9 @@ async def live_scoring():
             await LIVE_SCORE_MESSAGE.edit(embeds=embeds)
         except HTTPException:
             LIVE_SCORE_MESSAGE = await SPORT_CHANNEL.send(embeds=embeds)
-        if not still_going: current_task.stop()  # current_task is a task when this is called, thus ignorable
+        if not still_going:
+            current_task.stop()  # current_task is a task when this is called, thus ignorable
+            print("Live scoring stops")
 
 
 async def start_gip():
@@ -43,9 +44,11 @@ async def start_gip():
     if current_task is None:
         current_task = Task(live_scoring, IntervalTrigger(minutes=2))
         current_task.start()
+        print("Live scoring begins")
         return
     if not current_task.running:
         current_task.start()
+        print("Live scoring begins")
 
 
 async def formula1_result():
@@ -69,20 +72,25 @@ async def on_ready():
 async def on_startup():
     """ Is called when the bot starts up """
     command_call_limit.start()
-    # football_schedule = football.create_schedule()
+    # FOOTBALL LIVE SCORING PART
+    football_schedule = football.create_schedule()
+    print("Starting times of today's games: " + str(football_schedule))
+    for start_time in football_schedule:
+        # When the start time was less than 90 minutes ago, start the live scoring automatically
+        if start_time - datetime.datetime.now() > datetime.timedelta(minutes=-90): await start_gip()
+        task = Task(start_gip, DateTrigger(start_time))
+        task.start()
+
+    # FORMULA 1 AUTOMATIC RESULTS PART
     # formula1_schedule, embed = formula1.create_schedule()
     # if isinstance(embed, interactions.Embed): await SPORT_CHANNEL.send(embed=embed)
-    # print("Starting times of today's games: " + str(football_schedule))
     # print("Today's formula1 sessions: " + str(formula1_schedule))
-    # for start_time in football_schedule:
-    #    task = Task(start_gip, DateTrigger(start_time))
-    #    task.start()
     # for start_time in formula1_schedule:
     #    task = Task(formula1_result, DateTrigger(start_time))
     #    task.start()
 
+    # Loads the Formula1 font
     for font in font_manager.findSystemFonts(["Resources/font"]): font_manager.fontManager.addfont(font)
-    # games_in_progress.start()  # For testing purposes
 
 
 # load all extensions in the ./extensions folder
