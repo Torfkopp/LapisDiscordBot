@@ -49,7 +49,6 @@ def create_schedule():
         for match in league['matches']:
             time = datetime.datetime.fromisoformat(match['scheduledStartTime'])
             time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
-            time -= datetime.timedelta(minutes=2)
             start_times.add(time)
 
     start_times = sorted(start_times)
@@ -107,7 +106,7 @@ def get_live(content=""):
             minute = "Startet um " + datetime.datetime.fromisoformat(match['scheduledStartTime']).strftime(
                 "%H:%M") + " Uhr"
             # If match has begun, get the minutes
-            if 'matchTime' in match['matchInfo']: minute = str(match['matchInfo']['matchTime']) + "' "
+            if 'matchTime' in match['matchInfo'] and match['isLive']: minute = str(match['matchInfo']['matchTime']) + "' "
             # If match has ended, put in the END
             if match['period'] == "FULL_TIME": minute = "END "
             # If match has gone to the penalties, add the score after the penalties after the normal score
@@ -134,7 +133,7 @@ def get_live(content=""):
                 else:
                     new_value = new_value.split(' ')[0] + " " + ' '.join(old_value.split(' ')[1:])
             embed.add_field(name=new_name, value=new_value)
-            if match['isLive'] or match['matchInfo']['matchTime'] < 90: one_game_still_live = True
+            if match['isLive']: one_game_still_live = True
 
         embeds.append(embed)
 
