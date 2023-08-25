@@ -20,7 +20,7 @@ LIMIT_REACHED_MESSAGE = util.LIMIT_REACHED_MESSAGE
 
 CURRENT_SEASON = util.CURRENT_FOOTBALL_SEASON
 
-COMMAND_LIMIT = 3
+COMMAND_LIMIT = 3  # Limit of consecutive calls in a short time (~60 calls per hour possible with a limit of 3)
 
 
 # Sets up this extension
@@ -68,7 +68,8 @@ limit_reached = False
 
 
 def reduce_command_calls():
-    """ Used to reduce the command_calls counter """
+    """ Used to reduce the command_calls counter
+    Called regularly in main """
     global command_calls, limit_reached
     if command_calls > 0: command_calls -= 1
     if command_calls == 0: limit_reached = False

@@ -28,7 +28,7 @@ COLOUR = util.FORMULA1_COLOUR
 
 CURRENT_SEASON = util.CURRENT_F1_SEASON
 
-COMMAND_LIMIT = 3
+COMMAND_LIMIT = 3  # Limit of consecutive calls in a short time (~60 calls per hour possible with a limit of 3)
 
 
 def setup(bot): Formula1(bot)
@@ -136,7 +136,8 @@ limit_reached = False
 
 
 def reduce_command_calls():
-    """ Used to reduce the command_calls counter """
+    """ Used to reduce the command_calls counter
+    Called regularly in main """
     global command_calls, limit_reached
     if command_calls > 0: command_calls -= 1
     if command_calls == 0: limit_reached = False
