@@ -5,6 +5,7 @@ from interactions.client.errors import HTTPException
 from matplotlib import font_manager
 
 from core.extensions_loader import load_extensions
+from extensions import freegames
 from extensions.football import football
 from extensions.formula1 import formula1
 
@@ -91,6 +92,11 @@ async def on_startup():
 
     # Loads the Formula1 font
     for font in font_manager.findSystemFonts(["Resources/font"]): font_manager.fontManager.addfont(font)
+    # AUTOMATIC FREE GAMES PART
+    '''
+    if datetime.datetime.now().weekday() == 4:
+        await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=freegames.get_giveaways())
+    '''
 
 
 # load all extensions in the ./extensions folder
