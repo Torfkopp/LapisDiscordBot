@@ -1,5 +1,4 @@
 import datetime
-import json
 
 import interactions
 import pytz
@@ -17,13 +16,13 @@ COMMAND_LIMIT = 3
 LEAGUE_DICT = {
     # "WORLDS": "98767975604431411",
     # "MSI": "98767991325878492",
+    # "ALL-STAR": "98767991295297326",
     "LEC": "98767991302996019",
     "PRIME": "105266091639104326",
     "LCK": "98767991310872058",
     "EMEA": "100695891328981122",
     "LPL": "98767991314006698",
     "LCS": "98767991299243165",
-    "ALL-STAR": "98767991295297326",
 }
 STANDARD = LEAGUE_DICT.get("LEC")
 
@@ -154,11 +153,12 @@ def get_upcoming(league):
         record2 = f"{team2['record']['wins']}-{team2['record']['losses']}"
         start_time = datetime.datetime.fromisoformat(event['startTime'])
         start_time = start_time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
+        start_time = datetime.datetime.strftime(start_time, "%d.%m %H:%M")
         league = event['league']['name']
         block = event['blockName']
-        bo_format = event['match']['strategy']['type'] + str(event['match']['strategy']['count'])
-        embed.add_field(name=f"{start_time} ({record1}) {team1['name']} gegen {team2['name']} ({record2})",
-                        value=f"{league}, {block} {bo_format}")
+        bo_format = f"{(event['match']['strategy']['type']).capitalize()} {event['match']['strategy']['count']}"
+        embed.add_field(name=f"({record1}) {team1['name']} gegen {team2['name']} ({record2})",
+                        value=f"{start_time} | {league} {block} {bo_format}")
 
     embed.set_footer(f"Für mehr: https://lolesports.com/schedule?leagues={events[0]['league']['slug']}")
 
@@ -189,10 +189,11 @@ def get_results(league):
         wins2 = team2['result']['gameWins']
         start_time = datetime.datetime.fromisoformat(event['startTime'])
         start_time = start_time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
+        start_time = datetime.datetime.strftime(start_time, "%d.%m %H:%M")
         league = event['league']['name']
         block = event['blockName']
         embed.add_field(name=f"({record1}) {team1['name']} {wins1}:{wins2} {team2['name']} ({record2})",
-                        value=f"{league}, {block} {start_time}")
+                        value=f"{start_time} | {league} {block}", inline=True)
 
     embed.set_footer(f"Für mehr: https://lolesports.com/schedule?leagues={events[0]['league']['slug']}")
 
@@ -201,7 +202,7 @@ def get_results(league):
 
 def get_standings(league):
     """ Get the standings """
-    url = "https://esports-api.lolesports.com/persisted/gw/getTournamentForLeague"
+    url = "https://esports-api.lolesports.com/persisted/gw/getTournamentsForLeague"
     querystring = {"hl": "de-DE", "leagueId": league}
 
     payload = ""
@@ -213,18 +214,21 @@ def get_standings(league):
         "Referer": "https://lolesports.com/",
         "x-api-key": "0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z",
         "Origin": "https://lolesports.com",
+        "Connection": "keep-alive",
         "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Mode": "no-cors",
         "Sec-Fetch-Site": "same-site",
         "DNT": "1",
         "Sec-GPC": "1",
+        "Pragma": "no-cache",
+        "Cache-Control": "no-cache",
         "TE": "trailers"
     }
 
     response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
     response = response.json()
 
-    response = response['leagues'][0]['tournaments'][0]
+    response = response['data']['leagues'][0]['tournaments'][0]
     tournament_id = response['id']
 
     url = "https://esports-api.lolesports.com/persisted/gw/getStandingsV3"
