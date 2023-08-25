@@ -1,11 +1,13 @@
 import locale
 
+import interactions
 from interactions import (
     Extension, OptionType, slash_option, slash_command, SlashContext, SlashCommandChoice
 )
 
+import extensions.football._commands as commands
+import extensions.football._live as live
 import util
-from extensions.football import _live, _commands
 
 """ Main file for the football commands """
 
@@ -34,18 +36,18 @@ LIVE SCORE PART
 
 def create_schedule():
     """ Returns Schedule based on the starting time of that day's games """
-    return _live.create_schedule()
+    return live.create_schedule()
 
 
 def get_live(content=""):
     """ Returns a list of embeds - one for every league - with an embed for every game of that league
         content -- old message's content, "" if no old message exists, otherwise the message's embeds """
-    return _live.get_live(content)
+    return live.get_live(content)
 
 
 def get_match_goals(match_id):
     """ Get the match's goalscorers """
-    return _live.get_match_goals(match_id)
+    return live.get_match_goals(match_id)
 
 
 '''
@@ -106,6 +108,20 @@ def season_slash_option():  # call with @season_option
     return wrapper
 
 
+async def command_function(ctx, func, *args):
+    """ Function for the commands """
+    if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
+        await ctx.send(WRONG_CHANNEL_MESSAGE)
+        return
+    elif limit_reached:
+        await ctx.send(LIMIT_REACHED_MESSAGE)
+        return
+    increment_command_calls()
+    result = func(*args)
+    if isinstance(result, interactions.Embed): await ctx.send(embed=result)
+    else: await ctx.send(result)
+
+
 class Football(Extension):
     @slash_command(name="football", description="Football command base",
                    sub_cmd_name="goalgetter",
@@ -114,14 +130,7 @@ class Football(Extension):
     @season_slash_option()
     async def goalgetter_function(self, ctx: SlashContext, liga_option: str = LEAGUE_CHOICES[0].value,
                                   saison_option: int = CURRENT_SEASON):
-        if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
-            await ctx.send(WRONG_CHANNEL_MESSAGE)
-            return
-        elif limit_reached:
-            await ctx.send(LIMIT_REACHED_MESSAGE)
-            return
-        increment_command_calls()
-        await ctx.send(embed=_commands.goalgetter(liga_option, saison_option))
+        await command_function(ctx, commands.goalgetter, liga_option, saison_option)
 
     @goalgetter_function.subcommand(sub_cmd_name="matchday",
                                     sub_cmd_description="Gibtn Spieltag der Liga zur Saison "
@@ -136,16 +145,8 @@ class Football(Extension):
         min_value=1
     )
     async def matchday_function(self, ctx: SlashContext, liga_option: str = LEAGUE_CHOICES[0].value,
-                                saison_option: int = CURRENT_SEASON,
-                                day_option: int = 0):
-        if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
-            await ctx.send(WRONG_CHANNEL_MESSAGE)
-            return
-        elif limit_reached:
-            await ctx.send(LIMIT_REACHED_MESSAGE)
-            return
-        increment_command_calls()
-        await ctx.send(embed=_commands.matchday(liga_option, saison_option, day_option))
+                                saison_option: int = CURRENT_SEASON, day_option: int = 0):
+        await command_function(ctx, commands.matchday, liga_option, saison_option, day_option)
 
     @goalgetter_function.subcommand(sub_cmd_name="matches",
                                     sub_cmd_description="Alle Spiele des Teams von vor y und bis in x Wochen"
@@ -174,14 +175,7 @@ class Football(Extension):
     )
     async def matches_function(self, ctx: SlashContext, team_option: str = "Werder Bremen", past_option: int = 2,
                                future_option: int = 2):
-        if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
-            await ctx.send(WRONG_CHANNEL_MESSAGE)
-            return
-        elif limit_reached:
-            await ctx.send(LIMIT_REACHED_MESSAGE)
-            return
-        increment_command_calls()
-        await ctx.send(embed=_commands.matches(team_option, past_option, future_option))
+        await command_function(ctx, commands.matches, team_option, past_option, future_option)
 
     @goalgetter_function.subcommand(sub_cmd_name="table",
                                     sub_cmd_description="Tabelle der Liga zur Saison (Standard: Jetzige Bundesliga)")
@@ -189,11 +183,4 @@ class Football(Extension):
     @season_slash_option()
     async def table_function(self, ctx: SlashContext, liga_option: str = LEAGUE_CHOICES[0].value,
                              saison_option: int = CURRENT_SEASON):
-        if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
-            msg = WRONG_CHANNEL_MESSAGE
-        elif limit_reached:
-            msg = LIMIT_REACHED_MESSAGE
-        else:
-            msg = _commands.table(liga_option, saison_option)
-            increment_command_calls()
-        await ctx.send(msg)
+        await command_function(ctx, commands.table, liga_option, saison_option)

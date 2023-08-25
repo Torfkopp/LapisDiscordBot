@@ -8,8 +8,11 @@ from fastf1.core import DataNotLoadedError
 from interactions import Extension, slash_command, SlashContext, slash_option, OptionType, SlashCommandChoice
 from interactions.models import discord
 
+import extensions.formula1._laps as laps
+import extensions.formula1._no_group as no_group
+import extensions.formula1._race_info as race_info
+import extensions.formula1._standings as standings
 import util
-from extensions.formula1 import _standings, _race_info, _laps, _no_group
 
 """ Main file for the formula1 commands """
 
@@ -102,7 +105,8 @@ def create_schedule():
         embed.set_image(url=image_url)
 
     # On friday of every race weekend, send the schedule to the channel
-    if (date_today.weekday() == 4) and ((session_list[1] - date_today).days == 0): embed = _no_group.next_race()
+    if (date_today.weekday() == 4) and (
+            (session_list[1] - date_today).days == 0): embed = no_group.next_race()
 
     for i in range(0, len(session_list)):  # A session should be finished 2 hours after the start
         if session_list[i].date() == date_today.date(): start_times.add(session_list[i] + datetime.timedelta(hours=2))
@@ -115,7 +119,7 @@ def auto_result():
     result_gp, result_session = get_current()
 
     try:
-        result_string = _no_group.result(CURRENT_SEASON, result_gp, result_session)
+        result_string = no_group.result(CURRENT_SEASON, result_gp, result_session)
         result_string = "||" + result_string + "||"  # Make Spoiler
     except DataNotLoadedError: result_string = ""
 
@@ -283,7 +287,7 @@ class Formula1(Extension):
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
-        await command_function(ctx, _no_group.result, year_option, gp_option, session_option)
+        await command_function(ctx, no_group.result, year_option, gp_option, session_option)
 
     @f1_function.subcommand(
         sub_cmd_name="next",
@@ -296,8 +300,8 @@ class Formula1(Extension):
         required=False
     )
     async def next_function(self, ctx: SlashContext, allnext_option: bool = False):
-        if allnext_option: await command_function(ctx, _no_group.remaining_races)
-        else: await command_function(ctx, _no_group.next_race)
+        if allnext_option: await command_function(ctx, no_group.remaining_races)
+        else: await command_function(ctx, no_group.next_race)
 
     ''' ######################
     Commands in LAPS group
@@ -318,7 +322,8 @@ class Formula1(Extension):
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
-        await command_function(ctx, _laps.overview_fastest_laps, year_option, gp_option, session_option)
+        await command_function(ctx, laps.overview_fastest_laps, year_option, gp_option,
+                               session_option)
 
     @laps_function.subcommand(
         sub_cmd_name="compare",
@@ -337,7 +342,7 @@ class Formula1(Extension):
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
-        await command_function(ctx, _laps.compare_laps, year_option, gp_option, session_option,
+        await command_function(ctx, laps.compare_laps, year_option, gp_option, session_option,
                                driver1_option.upper(), driver2_option.upper())
 
     @laps_function.subcommand(
@@ -354,7 +359,7 @@ class Formula1(Extension):
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
-        await command_function(ctx, _laps.scatterplot, year_option, gp_option, session_option,
+        await command_function(ctx, laps.scatterplot, year_option, gp_option, session_option,
                                str.upper(driver1_option))
 
     @laps_function.subcommand(
@@ -374,7 +379,7 @@ class Formula1(Extension):
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
-        await command_function(ctx, _laps.telemetry, year_option, gp_option, session_option,
+        await command_function(ctx, laps.telemetry, year_option, gp_option, session_option,
                                driver1_option.upper(), driver2_option.upper())
 
     @laps_function.subcommand(
@@ -393,7 +398,7 @@ class Formula1(Extension):
         except DataNotLoadedError:
             await ctx.send(FAULTY_VALUE_MESSAGE)
             return
-        await command_function(ctx, _laps.track_dominance, year_option, gp_option, session_option,
+        await command_function(ctx, laps.track_dominance, year_option, gp_option, session_option,
                                driver1_option.upper(), driver2_option.upper())
 
     ''' ######################
@@ -410,7 +415,7 @@ class Formula1(Extension):
     @grandprix_slash_option()
     async def raceinfo_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, gp_option: int = 0):
         if gp_option == 0: gp_option = get_last_finished_gp()
-        await command_function(ctx, _race_info.position_change, year_option, gp_option)
+        await command_function(ctx, race_info.position_change, year_option, gp_option)
 
     @raceinfo_function.subcommand(
         sub_cmd_name="ltd",
@@ -420,7 +425,7 @@ class Formula1(Extension):
     @grandprix_slash_option()
     async def ltd_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, gp_option: int = 0):
         if gp_option == 0: gp_option = get_last_finished_gp()
-        await command_function(ctx, _race_info.lap_time_distribution, year_option, gp_option)
+        await command_function(ctx, race_info.lap_time_distribution, year_option, gp_option)
 
     @raceinfo_function.subcommand(
         sub_cmd_name="tyre",
@@ -430,7 +435,7 @@ class Formula1(Extension):
     @grandprix_slash_option()
     async def tyre_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, gp_option: int = 0):
         if gp_option == 0: gp_option = get_last_finished_gp()
-        await command_function(ctx, _race_info.strategy, year_option, gp_option)
+        await command_function(ctx, race_info.strategy, year_option, gp_option)
 
     ''' #######################
     Commands in STANDINGS group
@@ -455,7 +460,7 @@ class Formula1(Extension):
     )
     async def standings_function(self, ctx: SlashContext,
                                  year_option: int = CURRENT_SEASON, championship_option: bool = True):
-        await command_function(ctx, _standings.table, year_option, championship_option)
+        await command_function(ctx, standings.table, year_option, championship_option)
 
     @standings_function.subcommand(
         sub_cmd_name="average",
@@ -474,7 +479,7 @@ class Formula1(Extension):
         ]
     )
     async def average_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, session_option: str = "R"):
-        await command_function(ctx, _standings.average_position, year_option, session_option)
+        await command_function(ctx, standings.average_position, year_option, session_option)
 
     @standings_function.subcommand(
         sub_cmd_name="h2h",
@@ -493,7 +498,7 @@ class Formula1(Extension):
         ]
     )
     async def h2h_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, session_option: str = "R"):
-        await command_function(ctx, _standings.h2h, year_option, session_option)
+        await command_function(ctx, standings.h2h, year_option, session_option)
 
     @standings_function.subcommand(
         sub_cmd_name="heatmap",
@@ -501,11 +506,11 @@ class Formula1(Extension):
     )
     @year_slash_option(1950)
     async def heatmap_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON):
-        await command_function(ctx, _standings.heatmap, year_option)
+        await command_function(ctx, standings.heatmap, year_option)
 
     @standings_function.subcommand(
         sub_cmd_name="winnable",
         sub_cmd_description="Für welchen Fahrer ist die Meisterschaft noch gewinnbar?"
     )
     async def winnable_function(self, ctx: SlashContext):
-        await command_function(ctx, _standings.whocanwin())
+        await command_function(ctx, standings.whocanwin())
