@@ -6,6 +6,8 @@ from interactions import (
 )
 
 """ File for all quoty commands """
+
+
 def setup(bot): Quotes(bot)
 
 
@@ -47,6 +49,7 @@ def get_advice(term):
     if term != "":
         url_theme = url + f"/search/{term}"
         response = requests.request("GET", url_theme, data=payload)
+        print("Api-Call quotes: " + url)
         response = response.json()
 
         advices = response['slips']
@@ -55,6 +58,7 @@ def get_advice(term):
         else: rat = advices[random.randint(0, len(advices) - 1)]['advice']
     if rat == "":
         response = requests.request("GET", url, data=payload)
+        print("Api-Call quotes: " + url)
         response = response.json()
         rat = response['slip']['advice']
 
@@ -69,6 +73,7 @@ def get_anime(title, char):
     payload = ""
 
     response = requests.request("GET", url, data=payload)
+    print("Api-Call quotes: " + url)
     response = response.json()
 
     result = "Anime: " + response['anime'] + "\n"

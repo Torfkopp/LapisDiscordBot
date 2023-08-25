@@ -40,7 +40,7 @@ def UwUifyWords(wowd):
         for vocaw in {'A', 'E', 'I', 'O', 'U'}:
             wowd = wowd.replace(f"{consonyant}{vocaw}", f"{consonyant}Y{vocaw}")
 
-     # If yowouwu awe hawdcowowe enowouwugh x3
+    # If yowouwu awe hawdcowowe enowouwugh x3
     if HAWDCOWE_MYODE:
         wowd = wowd.replace("u", "uwu")
         wowd = wowd.replace("o", "owo")

@@ -15,6 +15,7 @@ def goalgetter(liga, saison):
     """ Method for the goalgetter command """
     url = f"https://api.openligadb.de/getgoalgetters/{liga}/{saison}"
     response = requests.get(url)
+    print("Api-Call Football: " + url)
     data = response.json()
 
     embed = interactions.Embed(title=f"Torjäger der Liga {liga}", color=COLOUR)
@@ -30,6 +31,7 @@ def get_current_spieltag(liga):
     """ Gets the current Spieltag """
     url = f'https://api.openligadb.de/getcurrentgroup/{liga}'
     response = requests.get(url)
+    print("Api-Call Football: " + url)
     data = response.json()
     return data['groupOrderID']
 
@@ -40,6 +42,7 @@ def matchday(liga, saison, spieltag):
 
     url = f"https://api.openligadb.de/getmatchdata/{liga}/{saison}/{spieltag}"
     response = requests.get(url)
+    print("Api-Call Football: " + url)
     jsondata = response.json()
 
     embed = interactions.Embed(title=f"{germanise(jsondata[0]['leagueName'])} Spieltag {spieltag}", color=COLOUR)
@@ -64,6 +67,7 @@ def matches(team, past, future):
     """ Method for the matches command """
     url = f"https://api.openligadb.de/getmatchesbyteam/{team}/{past}/{future}"
     response = requests.get(url)
+    print("Api-Call Football: " + url)
     data = response.json()
 
     embed = interactions.Embed(title=f"Spiele von {team} in den letzten {past} und den nächsten {future} Wochen",
@@ -95,6 +99,7 @@ def table(liga, saison):
     """ Method for the table command """
     url = f"https://api.openligadb.de/getbltable/{liga}/{saison}"
     response = requests.get(url)
+    print("Api-Call Football: " + url)
     data = response.json()
 
     tabelle = "```"

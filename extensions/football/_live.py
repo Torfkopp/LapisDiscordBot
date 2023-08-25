@@ -39,6 +39,7 @@ def create_schedule():
     }
 
     response = requests.request("GET", url, data=payload, headers=headers)
+    print("Api-Call Football: " + url)
     data = response.json()
     data = data['content']
     # Iterate over every league
@@ -84,6 +85,7 @@ def get_live(content=""):
     }
 
     response = requests.request("GET", url, data=payload, headers=headers)
+    print("Api-Call Football: " + url)
     data = response.json()
     data = data['content']
 
@@ -106,7 +108,8 @@ def get_live(content=""):
             minute = "Startet um " + datetime.datetime.fromisoformat(match['scheduledStartTime']).strftime(
                 "%H:%M") + " Uhr"
             # If match has begun, get the minutes
-            if 'matchTime' in match['matchInfo'] and match['isLive']: minute = str(match['matchInfo']['matchTime']) + "' "
+            if 'matchTime' in match['matchInfo'] and match['isLive']: minute = str(
+                match['matchInfo']['matchTime']) + "' "
             # If match has ended, put in the END
             if match['period'] == "FULL_TIME": minute = "END "
             # If match has gone to the penalties, add the score after the penalties after the normal score
@@ -164,6 +167,7 @@ def get_match_goals(match_id):
     }
 
     response = requests.request("GET", url, data=payload, headers=headers)
+    print("Api-Call Football: " + url)
     match_info = response.json()
 
     return_string = " "

@@ -1,15 +1,13 @@
+import fastf1
+import fastf1.plotting
 import interactions
 import matplotlib
 import matplotlib.pyplot as plt
-from interactions.models import discord
-
-import fastf1
-from fastf1.ergast import Ergast
-import fastf1.plotting
-
 import pandas as pd
 import plotly
 import plotly.express as px
+from fastf1.ergast import Ergast
+from interactions.models import discord
 
 import util
 
@@ -126,7 +124,7 @@ def average_position(year, session):
     bars = ax.barh(range(len(result_map)), avg_positions, color=team_colours)
 
     for i in range(len(bars)):
-        plt.text(bars[i].get_width() + 0.5, bars[i].get_y() + (bars[i].get_height()/2), avg_positions[i],
+        plt.text(bars[i].get_width() + 0.5, bars[i].get_y() + (bars[i].get_height() / 2), avg_positions[i],
                  color="white", va="center")
 
     ax.set_ylim(-0.8, len(result_map) - 0.25)
@@ -238,7 +236,6 @@ def heatmap(year):
 
     # For each race in the season
     for rnd, race in races['raceName'].items():
-
         # Get results. Note that we use the round no. + 1, because the round no.
         # starts from one (1) instead of zero (0)
         temp = ergast.get_race_results(season=year, round=rnd + 1)

@@ -21,6 +21,7 @@ def get_giveaways():
     payload = ""
 
     response = requests.request("GET", url, data=payload)
+    print("Api-Call Freegames: " + url)
     response = response.json()
 
     embed = interactions.Embed(title="Free Games", color=util.FREE_GAMES_COLOUR)

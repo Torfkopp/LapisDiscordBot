@@ -129,6 +129,7 @@ def get_schedule(league):
     }
 
     response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
+    print("Api-Call lolesports: " + url)
     response = response.json()
     events = response['data']['schedule']['events']
 
@@ -227,6 +228,7 @@ def get_standings(league):
     }
 
     response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
+    print("Api-Call lolesports: " + url)
     response = response.json()
 
     response = response['data']['leagues'][0]['tournaments'][0]

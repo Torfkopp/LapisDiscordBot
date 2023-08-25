@@ -58,7 +58,7 @@ def overview_fastest_laps(year, gp, session):
     for i in range(len(bars)):
         string = strftimedelta(fastest_laps['LapTimeDelta'][i], '+%s.%ms')
         if string == "+00.000": string = "Pole"
-        plt.text(text_position, bars[i].get_y() + (bars[i].get_height()/2), string, color="white", va="center")
+        plt.text(text_position, bars[i].get_y() + (bars[i].get_height() / 2), string, color="white", va="center")
 
     ax.set_yticks(fastest_laps.index)
     ax.set_yticklabels(fastest_laps['Driver'])
@@ -337,7 +337,6 @@ def track_dominance(year, gp, session, driver1, driver2):
     ax.axis('off')
     # get session using given args
     race = fastf1.get_session(year, gp, session)
-
     race.load(laps=True, telemetry=True, weather=False, messages=False)
     # get driver data for their fastest lap during the session
     d1_laps = race.laps.pick_driver(driver1)

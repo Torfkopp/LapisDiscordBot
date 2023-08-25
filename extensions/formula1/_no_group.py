@@ -80,7 +80,7 @@ def next_race():
     sessions = "```"
     for i in range(0, len(session_list)):
         session = str(session_list[i]).split()  # Split to get the date and time separately
-        sessions += ((next_event[f"Session{i+1}"] + ":").ljust(16)
+        sessions += ((next_event[f"Session{i + 1}"] + ":").ljust(16)
                      + session[0].center(12) + session[1].rjust(12)) + "\n"
 
     sessions += "```"

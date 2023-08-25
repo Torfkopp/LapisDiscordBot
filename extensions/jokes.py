@@ -33,15 +33,17 @@ def get_dad_joke(term):
     if term != "":
         url_term = url + f"search?term={term}"
         response = requests.request("GET", url_term, data=payload, headers=headers)
+        print("Api-Call Jokes: " + url)
         response = response.json()
 
         jokes = response['results']
         if len(jokes) == 0: joke = ""
         elif len(jokes) == 1: joke = jokes[0]['joke']
-        else: joke = jokes[random.randint(0, len(jokes)-1)]['joke']
+        else: joke = jokes[random.randint(0, len(jokes) - 1)]['joke']
 
     if joke == "":
         response = requests.request("GET", url, data=payload, headers=headers)
+        print("Api-Call Jokes: " + url)
 
         joke = response.json()
         joke = joke["joke"]

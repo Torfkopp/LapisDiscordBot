@@ -35,6 +35,7 @@ def get_insult(lang):
 
     payload = ""
     response = requests.request("GET", url, data=payload, params=querystring)
+    print("Api-Call Insults: " + url)
 
     response = response.json()
     insult = response['insult']
