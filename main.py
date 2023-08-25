@@ -4,6 +4,7 @@ from interactions import Client, Intents, listen, Task, IntervalTrigger, DateTri
 from interactions.client.errors import HTTPException
 from matplotlib import font_manager
 
+import util
 from core.extensions_loader import load_extensions
 from extensions import freegames
 from extensions.football import football
@@ -22,6 +23,7 @@ def command_call_limit():
     formula1.reduce_command_calls()
 
 
+# noinspection PyUnresolvedReferences
 async def live_scoring():
     """ Sends the live scoring to the channel and keeps it updated until all live games have ended """
     global LIVE_SCORE_MESSAGE
@@ -34,7 +36,7 @@ async def live_scoring():
         except HTTPException:
             LIVE_SCORE_MESSAGE = await SPORT_CHANNEL.send(embeds=embeds)
         if not still_going:
-            current_task.stop()  # current_task is a task when this is called, thus ignorable
+            current_task.stop()  # current_task is a task when this is called, thus PyUnresolvedReferences ignorable
             print("Live scoring stops")
 
 
@@ -66,14 +68,17 @@ async def on_ready():
     print("Ready")
     print(f"This bot is owned by {bot.owner}")
     global SPORT_CHANNEL
-    SPORT_CHANNEL = bot.get_channel(open('config.txt').readlines()[1])
+    SPORT_CHANNEL = bot.get_channel(util.SPORTS_CHANNEL_ID)
+    # Loads the Formula1 font
+    for font in font_manager.findSystemFonts(["Resources/font"]): font_manager.fontManager.addfont(font)
 
 
 @listen()
 async def on_startup():
-    """ Is called when the bot starts up """
+    """ Is called when the bot starts up (used for schedule things) """
     command_call_limit.start()
     # FOOTBALL LIVE SCORING PART
+    '''
     football_schedule = football.create_schedule()
     print("Starting times of today's games: " + str(football_schedule))
     for start_time in football_schedule:
@@ -81,17 +86,18 @@ async def on_startup():
         if start_time - datetime.datetime.now() > datetime.timedelta(minutes=-90): await start_gip()
         task = Task(start_gip, DateTrigger(start_time))
         task.start()
+    '''
 
     # FORMULA 1 AUTOMATIC RESULTS PART
-    # formula1_schedule, embed = formula1.create_schedule()
-    # if isinstance(embed, interactions.Embed): await SPORT_CHANNEL.send(embed=embed)
-    # print("Today's formula1 sessions: " + str(formula1_schedule))
-    # for start_time in formula1_schedule:
-    #    task = Task(formula1_result, DateTrigger(start_time))
-    #    task.start()
+    '''
+    formula1_schedule, embed = formula1.create_schedule()
+    if isinstance(embed, interactions.Embed): await SPORT_CHANNEL.send(embed=embed)
+    print("Today's formula1 sessions: " + str(formula1_schedule))
+    for start_time in formula1_schedule:
+        task = Task(formula1_result, DateTrigger(start_time))
+        task.start()
+    '''
 
-    # Loads the Formula1 font
-    for font in font_manager.findSystemFonts(["Resources/font"]): font_manager.fontManager.addfont(font)
     # AUTOMATIC FREE GAMES PART
     '''
     if datetime.datetime.now().weekday() == 4:
@@ -101,7 +107,7 @@ async def on_startup():
 
 # load all extensions in the ./extensions folder
 load_extensions(bot=bot)
-bot.reload_extension("extensions.formula1.formula1")
+bot.reload_extension("extensions.lolesport")
 
 with open('config.txt') as f: token = f.readline()
 

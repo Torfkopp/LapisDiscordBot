@@ -10,9 +10,11 @@ UWUCHANCE = 5  # D-De chance dat a commyand wesponse gets u-u-uwuified
 
 FORMULA1_COLOUR = discord.Color.from_rgb(255, 24, 1)  # Formula1 Red
 FOOTBALL_COLOUR = discord.Color.from_rgb(29, 144, 83)  # Werder Bremen Green
-
+LOLESPORTS_COLOUR = discord.Color.from_rgb(200, 155, 60)  # League Gold
+FREE_GAMES_COLOUR = discord.BrandColors.WHITE
 
 SPORTS_CHANNEL_ID = open('./config.txt').readlines()[1]
+LABAR_CHANNEL_ID = open('./config.txt').readlines()[1]  # TODO TEMPORARY
 
 # Todo Make them cooler
 WRONG_CHANNEL_MESSAGE = "Falscher Channel, Bro"
@@ -43,5 +45,5 @@ def germanise(msg):
     """ Fixes formatting errors concerning the German letters and makes string unbreakable"""
     char_map = {ord('Ã'): '', ord('¼'): 'ü', ord('¶'): 'ö', ord('¤'): 'ä', ord('Ÿ'): 'ß'}
     msg = msg.translate(char_map)
-    msg = msg.replace(" ", "\u00A0")  # TODO fix when not working
+    msg = msg.replace(" ", "\u00A0")
     return msg
