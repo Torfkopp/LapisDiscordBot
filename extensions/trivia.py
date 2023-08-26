@@ -59,7 +59,7 @@ class Trivia(Extension):
     components = ActionRow()
     right = ""
 
-    @slash_command(name="trivia", description="Erhalte eine Trivia Frage", scopes=[1134856890669613210])
+    @slash_command(name="trivia", description="Erhalte eine Trivia Frage")
     @slash_option(
         name="category_option",
         description="Kategorie der Frage",
@@ -124,6 +124,7 @@ def get_trivia(category, difficulty):
 
     question = f"Category: {trivia['category']}\n"
     question += f"Difficulty: {trivia['difficulty']}\n"
+    question += "\n"
     question += f"Question: {trivia['question']}"
     question = question.replace("&quot;", '"')
 

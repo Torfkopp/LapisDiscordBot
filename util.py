@@ -14,7 +14,7 @@ LOLESPORTS_COLOUR = discord.Color.from_rgb(200, 155, 60)  # League Gold
 FREE_GAMES_COLOUR = discord.BrandColors.WHITE
 
 SPORTS_CHANNEL_ID = open('./config.txt').readlines()[1]
-LABAR_CHANNEL_ID = open('./config.txt').readlines()[1]  # TODO TEMPORARY
+LABAR_CHANNEL_ID = open('./config.txt').readlines()[2]
 
 # Todo Make them cooler
 WRONG_CHANNEL_MESSAGE = "Falscher Channel, Bro"
