@@ -3,6 +3,8 @@ from interactions import (
     Extension, OptionType, slash_option, slash_command, SlashContext, SlashCommandChoice
 )
 
+import util
+
 """ File for the insult commands """
 
 
@@ -42,4 +44,4 @@ def get_insult(lang):
 
     if lang != "en" and response['comment'] != "": insult += f" (Translation: {response['comment']}"
 
-    return insult
+    return util.uwuify_by_chance(insult)

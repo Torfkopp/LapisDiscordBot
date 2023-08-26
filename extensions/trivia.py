@@ -7,6 +7,9 @@ from interactions import (
 )
 from interactions.api.events import Component
 
+import util
+import uwuifier
+
 
 def setup(bot):
     Trivia(bot)
@@ -128,5 +131,10 @@ def get_trivia(category, difficulty):
     correct = trivia['correct_answer']
     answers.append(correct)
     random.shuffle(answers)
+
+    if random.randint(0, 5) < util.UWUCHANCE:
+        question = uwuifier.UwUify(question)
+        answers = [uwuifier.UwUifyWords(k) for k in answers]
+        correct = uwuifier.UwUifyWords(correct)
 
     return question, answers, correct

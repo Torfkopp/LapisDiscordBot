@@ -5,6 +5,8 @@ from interactions import (
     Extension, OptionType, slash_option, slash_command, SlashContext
 )
 
+import util
+
 """ File for the joke commands """
 
 
@@ -48,4 +50,4 @@ def get_dad_joke(term):
         joke = response.json()
         joke = joke["joke"]
 
-    return joke
+    return util.uwuify_by_chance(joke)

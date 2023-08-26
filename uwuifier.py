@@ -98,4 +98,4 @@ def UwUifySpaces(msg):
 
         wowds += wowd + " "
 
-    return wowds
+    return wowds.strip()

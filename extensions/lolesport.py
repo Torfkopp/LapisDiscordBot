@@ -155,7 +155,7 @@ def get_upcoming(league):
 
     embed.set_footer(f"Für mehr: https://lolesports.com/schedule?leagues={events[0]['league']['slug']}")
 
-    return embed
+    return util.uwuify_by_chance(embed)
 
 
 def get_results(league):
@@ -190,7 +190,7 @@ def get_results(league):
 
     embed.set_footer(f"Für mehr: https://lolesports.com/schedule?leagues={events[0]['league']['slug']}")
 
-    return embed
+    return util.uwuify_by_chance(embed)
 
 
 def get_standings(league):
@@ -268,4 +268,4 @@ def get_standings(league):
 
     embed.set_footer(f"Für mehr: https://lolesports.com/standings/{league}")
 
-    return embed
+    return util.uwuify_by_chance(embed)

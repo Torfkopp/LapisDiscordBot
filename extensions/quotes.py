@@ -5,6 +5,8 @@ from interactions import (
     Extension, OptionType, slash_option, slash_command, SlashContext
 )
 
+import util
+
 """ File for all quoty commands """
 
 
@@ -45,4 +47,4 @@ def get_advice(term):
         response = response.json()
         rat = response['slip']['advice']
 
-    return rat
+    return util.uwuify_by_chance(rat)

@@ -5,6 +5,8 @@ from interactions import (
     Extension, slash_command, SlashContext, slash_option, OptionType, SlashCommandChoice
 )
 
+import util
+
 
 def setup(bot): Anime(bot)
 
@@ -68,7 +70,7 @@ def get_quote():
     result += "Character: " + response['character'] + "\n"
     result += "Quote: " + response['english']
 
-    return result
+    return util.uwuify_by_chance(result)
 
 
 def get_image(theme):
