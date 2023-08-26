@@ -3,6 +3,7 @@ import datetime
 import interactions
 from interactions import Client, Intents, listen, Task, IntervalTrigger, DateTrigger
 from interactions.client.errors import HTTPException
+from interactions.models import discord
 from matplotlib import font_manager
 
 import util
@@ -21,6 +22,14 @@ FORMULA1_AUTO_RESULT_ON = True
 FREE_GAMES_AUTO_ON = True
 
 
+async def change_activity(activity):
+    """ Changes the bot's presence accordingly
+    activity: the activity the Bot should do (note "Watching" comes before the string) """
+    await bot.change_presence(status=discord.Status.IDLE,
+                              activity=discord.activity.Activity.create(name=activity,
+                                                                        type=discord.activity.ActivityType.WATCHING))
+
+
 @Task.create(IntervalTrigger(minutes=1))
 def reduce_command_calls():
     """ Task to regularly call the extension's command calls reduction """
@@ -32,6 +41,7 @@ def reduce_command_calls():
 # noinspection PyUnresolvedReferences
 async def live_scoring():
     """ Sends the live scoring to the channel and keeps it updated until all live games have ended """
+    await change_activity("sich Fußball an")
     global LIVE_SCORE_MESSAGE
     if LIVE_SCORE_MESSAGE == "":
         LIVE_SCORE_MESSAGE = await SPORT_CHANNEL.send(embeds=football.get_live()[0])
@@ -44,6 +54,7 @@ async def live_scoring():
         if not still_going:
             current_task.stop()  # current_task is a task when this is called, thus PyUnresolvedReferences ignorable
             print("Live scoring stops")
+            await change_activity("sich wieder Bücher an")
 
 
 async def start_gip():
@@ -62,6 +73,7 @@ async def start_gip():
 
 async def formula1_result():
     """ When called, sends in the result of the latest Formula1 session"""
+    await change_activity("sich Formel1 Highlights an")
     result = formula1.auto_result()
     # If getting result fails, try again in an hour
     if result == "": Task(formula1_result, DateTrigger(datetime.datetime.now() + datetime.timedelta(hours=1))).start()
@@ -73,11 +85,11 @@ async def on_ready():
     """ Is called when the bot is ready """
     print("Ready")
     print(f"This bot is owned by {bot.owner}")
+    await change_activity("sich Bücher an")
     global SPORT_CHANNEL
     SPORT_CHANNEL = bot.get_channel(util.SPORTS_CHANNEL_ID)
     # Loads the Formula1 font
     for font in font_manager.findSystemFonts(["Resources/font"]): font_manager.fontManager.addfont(font)
-    # TODO client.activity
 
 
 @listen()
