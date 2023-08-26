@@ -63,15 +63,6 @@ async def command_function(ctx, func, *args):
     else: await ctx.send(result)
 
 
-'''[
-                SlashCommandChoice(name="LEC", value=league_dict.get("LEC")),
-                SlashCommandChoice(name="PRIME", value=league_dict.get("PRIME")),
-                SlashCommandChoice(name="LCK", value=league_dict.get("LCK")),
-                # SlashCommandChoice(name="WORLDS", value=league_dict.get("WORLDS")),
-                # SlashCommandChoice(name="MSI", value=league_dict.get("MSI"))
-            ]'''
-
-
 def league_slash_option():
     def wrapper(func):
         choices = []

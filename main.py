@@ -111,7 +111,6 @@ async def on_startup():
 
 # load all extensions in the ./extensions folder
 load_extensions(bot=bot)
-bot.reload_extension("extensions.lolesport")
 
 with open('config.txt') as f: token = f.readline()
 
