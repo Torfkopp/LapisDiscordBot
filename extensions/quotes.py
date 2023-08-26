@@ -34,13 +34,14 @@ def get_advice(term):
     if term != "":
         url_theme = url + f"/search/{term}"
         response = requests.request("GET", url_theme, data=payload)
-        print("Api-Call quotes: " + url)
+        print("Api-Call quotes: " + url_theme)
         response = response.json()
 
-        advices = response['slips']
-        if len(advices) == 0: rat = ""
-        elif len(advices) == 1: rat = advices[0]['advice']
-        else: rat = advices[random.randint(0, len(advices) - 1)]['advice']
+        try: advices = response['slips']
+        except KeyError: rat = ""
+        else:
+            if len(advices) == 1: rat = advices[0]['advice']
+            else: rat = advices[random.randint(0, len(advices) - 1)]['advice']
     if rat == "":
         response = requests.request("GET", url, data=payload)
         print("Api-Call quotes: " + url)

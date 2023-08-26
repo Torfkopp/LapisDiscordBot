@@ -1,4 +1,5 @@
 import datetime
+import json
 import random
 
 import interactions
@@ -13,8 +14,10 @@ FOOTBALL_COLOUR = discord.Color.from_rgb(29, 144, 83)  # Werder Bremen Green
 LOLESPORTS_COLOUR = discord.Color.from_rgb(200, 155, 60)  # League Gold
 FREE_GAMES_COLOUR = discord.BrandColors.WHITE
 
-SPORTS_CHANNEL_ID = open('./config.txt').readlines()[1]
-LABAR_CHANNEL_ID = open('./config.txt').readlines()[2]
+with open("config.json") as f: lines = json.load(f)
+TOKEN = lines['token']
+SPORTS_CHANNEL_ID = lines['sport_channel_id']
+LABAR_CHANNEL_ID = lines['labar_channel_id']
 
 # Todo Make them cooler
 WRONG_CHANNEL_MESSAGE = "Falscher Channel, Bro"

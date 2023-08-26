@@ -77,6 +77,7 @@ async def on_ready():
     SPORT_CHANNEL = bot.get_channel(util.SPORTS_CHANNEL_ID)
     # Loads the Formula1 font
     for font in font_manager.findSystemFonts(["Resources/font"]): font_manager.fontManager.addfont(font)
+    # TODO client.activity
 
 
 @listen()
@@ -112,6 +113,4 @@ async def on_startup():
 # load all extensions in the ./extensions folder
 load_extensions(bot=bot)
 
-with open('config.txt') as f: token = f.readline()
-
-bot.start(token)
+bot.start(util.TOKEN)

@@ -105,8 +105,10 @@ def get_live(content=""):
             if 'homeScore' in match: score1 = match['homeScore']
             if 'awayScore' in match: score2 = match['awayScore']
             # Game starting time
-            minute = "Startet um " + datetime.datetime.fromisoformat(match['scheduledStartTime']).strftime(
-                "%H:%M") + " Uhr"
+            time = datetime.datetime.fromisoformat(match['scheduledStartTime'])
+            time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None).strftime(
+                "%H:%M")
+            minute = "Startet um " + time + " Uhr"
             # If match has begun, get the minutes
             if 'matchTime' in match['matchInfo'] and match['isLive']: minute = str(
                 match['matchInfo']['matchTime']) + "' "
@@ -127,14 +129,14 @@ def get_live(content=""):
                 old = old_embed.fields[0]
                 for field in old_embed.fields[1:]:  # Get correct field
                     if field.name[0:20] == new_name[0:20]: old = field
-                old_name = old.name
-                old_value = old.value
                 # Get the match's goalscorers if a goal happened (old and new names differ)
                 # or the score doesn't align with the amount of goalscorers
-                if new_name != old_name or (score1 + score2) != (old_value.count("'") - 1):
+                count = old.value.count("'")  # Counts amount of ' to get the amount of goals
+                if "'" in minute: count -= 1  # Reduce count by one if the game time has one '
+                if new_name != old.name or (score1 + score2) != count:
                     new_value = new_value.split(' ')[0] + get_match_goals(match['id'])
                 else:
-                    new_value = new_value.split(' ')[0] + " " + ' '.join(old_value.split(' ')[1:])
+                    new_value = new_value.split(' ')[0] + " " + ' '.join(old.value.split(' ')[1:])
             embed.add_field(name=new_name, value=new_value)
             if match['isLive']: one_game_still_live = True
 

@@ -52,7 +52,7 @@ class Anime(Extension):
                  SlashCommandChoice(name="Neko", value="sfwNeko"),
                  ]
     )
-    async def image_function(self, ctx: SlashContext, theme_option: str = "waifu"):
+    async def image_function(self, ctx: SlashContext, theme_option: str = "sfw"):
         await ctx.send(image=get_image(theme_option))
 
 

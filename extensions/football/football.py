@@ -45,9 +45,9 @@ def get_live(content=""):
     return live.get_live(content)
 
 
-def get_match_goals(match_id):
+'''def get_match_goals(match_id):
     """ Get the match's goalscorers """
-    return live.get_match_goals(match_id)
+    return live.get_match_goals(match_id)'''
 
 
 '''
