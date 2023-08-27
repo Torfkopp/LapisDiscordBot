@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from interactions.models import discord
 
+import util
+
 """ Methods for the race info command"""
 # all three methods part of the fastf1 docs examples
 
@@ -31,10 +33,10 @@ def position_change(year, gp):
         drv_laps = session.laps.pick_driver(drv)
 
         abb = drv_laps['Driver'].iloc[0]
-        color = fastf1.plotting.driver_color(abb)
-
+        try: colour = fastf1.plotting.driver_color(abb)
+        except KeyError: colour = util.random_colour_generator()
         ax.plot(drv_laps['LapNumber'], drv_laps['Position'],
-                label=abb, color=color)
+                label=abb, color=colour)
 
     # Finalise the plot by setting y-limits that invert the y-axis
     # so that position one is at the top, set custom tick positions and axis labels.
@@ -72,6 +74,7 @@ def lap_time_distribution(year, gp):
     finishing_order = [race.get_driver(i)["Abbreviation"] for i in point_finishers]
 
     # Modify Driver_colors palette. For that, change key from full name to Abbreviation.
+    # TODO Fehler bei Fahrern, die nicht zu den 20 Aktuellen gehören
     driver_colors = {abv: fastf1.plotting.DRIVER_COLORS[driver] for abv, driver in
                      fastf1.plotting.DRIVER_TRANSLATE.items()}
 
@@ -163,7 +166,7 @@ def strategy(year, gp):
             previous_stint_end += row["StintLength"]
 
     # Make plot more readable and intuitive ('OfficialEventName' possible as well)
-    plt.title(f"{year} {session.event['EventName']} Strategies")
+    plt.title(f"{year} {session.event['EventName']}\n Tyre Strategies")
     plt.xlabel("Lap Number")
     plt.grid(False)
 

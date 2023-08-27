@@ -28,6 +28,18 @@ CURRENT_F1_SEASON = datetime.datetime.now().year  # An F1 Season starts and ends
 CURRENT_FOOTBALL_SEASON = 2023  # 2023/2024 -> 2023
 
 
+def random_colour_generator():
+    """ Generates a random colour that is distinguishable from black """
+    while True:
+        r = random.randint(0, 255)
+        g = random.randint(0, 255)
+        b = random.randint(0, 255)
+        greyscale = r * 0.299 + g * 0.587 + b * 0.114  # NTSC Formula
+        if greyscale > 10: break
+
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
 def uwuify_by_chance(obj):
     """ UwUifies words only by chance """
     if not random.randint(0, 100) < UWUCHANCE: return obj

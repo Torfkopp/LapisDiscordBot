@@ -106,8 +106,10 @@ def compare_laps(year, gp, session, driver1, driver2):
     dr2_tel = dr2_lap.get_car_data().add_distance()
 
     # Create plot and plot both speed traces. Colour lines according to the driver's team colours
-    dr1_color = fastf1.plotting.driver_color(driver1)
-    dr2_color = fastf1.plotting.driver_color(driver2)
+    try: dr1_color = fastf1.plotting.driver_color(driver1)
+    except KeyError: dr1_color = util.random_colour_generator()
+    try: dr2_color = fastf1.plotting.driver_color(driver2)
+    except KeyError: dr2_color = util.random_colour_generator()
 
     if dr1_color == dr2_color:
         table = str.maketrans("0123456789abcdef", "fedcba987654321")
@@ -247,14 +249,16 @@ def telemetry(year, gp, session, driver1, driver2):
 
     # get driver color
     if year == util.CURRENT_F1_SEASON:
-        d1_color = fastf1.plotting.driver_color(d1_name)
-        d2_color = fastf1.plotting.driver_color(d2_name)
+        try: d1_color = fastf1.plotting.driver_color(d1_name)
+        except KeyError: d1_color = util.random_colour_generator()
+        try: d2_color = fastf1.plotting.driver_color(d2_name)
+        except KeyError: d2_color = util.random_colour_generator()
     else:
         d1_color = f"#{race.results.loc[str(d1_number), 'TeamColor']}"
         d2_color = f"#{race.results.loc[str(d2_number), 'TeamColor']}"
 
     if d1_color == d2_color:
-        table = str.maketrans("0123456789abcdef", "fedcba987654321")
+        table = str.maketrans("0123456789abcdef", "fedcba987654321")  # Colour switcheroo
         d2_color = d2_color.translate(table)
         # d2_color = 'white'
 
@@ -355,8 +359,10 @@ def track_dominance(year, gp, session, driver1, driver2):
     # get driver color
     if year == util.CURRENT_F1_SEASON:
         # fastf1.plotting.driver_color() only supports current season
-        d1_color = fastf1.plotting.driver_color(d1_name)
-        d2_color = fastf1.plotting.driver_color(d2_name)
+        try: d1_color = fastf1.plotting.driver_color(d1_name)
+        except KeyError: d1_color = util.random_colour_generator()
+        try: d2_color = fastf1.plotting.driver_color(d2_name)
+        except KeyError: d2_color = util.random_colour_generator()
     else:
         # otherwise use team color
         d1_color = f"#{race.results.loc[str(d1_number), 'TeamColor']}"
