@@ -1,3 +1,6 @@
+import json
+import random
+
 import requests
 from interactions import (
     Extension, OptionType, slash_option, slash_command, SlashContext, SlashCommandChoice
@@ -12,7 +15,7 @@ def setup(bot): Insults(bot)
 
 
 class Insults(Extension):
-    @slash_command(name="insult", description="Gibt eine zufällige Beleidigung zurück")
+    @slash_command(name="insult", description="Erhalte eine zufällige Beleidigung")
     @slash_option(
         name="language_option",
         description="Sprache des Witzes",
@@ -27,6 +30,10 @@ class Insults(Extension):
     )
     async def insult_function(self, ctx: SlashContext, language_option: str = "en"):
         await ctx.send(get_insult(language_option))
+
+    @slash_command(name="yomomma", description="Erhalte einen zufälligen deine Mutter Witz")
+    async def yomomma_function(self, ctx: SlashContext):
+        await ctx.send(get_yomomma())
 
 
 def get_insult(lang):
@@ -45,3 +52,11 @@ def get_insult(lang):
     if lang != "en" and response['comment'] != "": insult += f" (Translation: {response['comment']}"
 
     return util.uwuify_by_chance(insult)
+
+
+def get_yomomma():
+    """ Gets a random yo mamma joke """
+    # Thanks to: https://github.com/beanboi7/yomomma-apiv2/blob/master/jokes.json
+    with open("resources/yomomma.json", encoding="utf-8") as f: yomomma = json.load(f)
+
+    return random.choice(yomomma)

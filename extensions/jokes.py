@@ -2,7 +2,7 @@ import random
 
 import requests
 from interactions import (
-    Extension, OptionType, slash_option, slash_command, SlashContext
+    Extension, OptionType, slash_option, slash_command, SlashContext, SlashCommandChoice
 )
 
 import util
@@ -14,7 +14,7 @@ def setup(bot): Jokes(bot)
 
 
 class Jokes(Extension):
-    @slash_command(name="dad_joke", description="Gibt einen zufälligen Dad Joke zurück")
+    @slash_command(name="dad_joke", description="Erhalte einen zufälligen Dad Joke")
     @slash_option(
         name="theme_option",
         description="Thema des Witzes auf Angelsächsisch (Random, wenn nix gefunden)",
@@ -23,6 +23,38 @@ class Jokes(Extension):
     )
     async def dad_joke_function(self, ctx: SlashContext, theme_option: str = ""):
         await ctx.send(get_dad_joke(theme_option))
+
+    @slash_command(name="joke", description="Erhalte einen zufälligen Witz")
+    @slash_option(
+        name="theme_option",
+        description="Thema des Witzes",
+        required=False,
+        opt_type=OptionType.STRING,
+        choices=[
+            SlashCommandChoice(name="Verschiedenes", value="Miscellaneous"),
+            SlashCommandChoice(name="Programmieren", value="Programming"),
+            SlashCommandChoice(name="Dark", value="Dark"),
+            SlashCommandChoice(name="Pun", value="Pun"),
+            SlashCommandChoice(name="Spooky", value="Spooky"),
+            SlashCommandChoice(name="Weihnachten", value="Christmas")
+        ]
+    )
+    @slash_option(
+        name="lang_option",
+        description="Die Sprache des Witzes",
+        required=False,
+        opt_type=OptionType.STRING,
+        choices=[
+            SlashCommandChoice(name="Deutsch", value="?lang=de"),
+            SlashCommandChoice(name="Englisch", value="")
+        ]
+    )
+    async def joke_function(self, ctx: SlashContext, theme_option: str = "any", lang_option: str = "?lang=de"):
+        await ctx.send(get_joke(theme_option, lang_option))
+
+    @slash_command(name="stammrunde", description="Erhalte einen zufälligen Stammrunden-Witz")
+    async def norris_function(self, ctx: SlashContext):
+        await ctx.send(get_norris())
 
 
 def get_dad_joke(term):
@@ -51,3 +83,34 @@ def get_dad_joke(term):
         joke = joke["joke"]
 
     return util.uwuify_by_chance(joke)
+
+
+def get_joke(theme, lang):
+    """ Returns a random joke considering the theme and language """
+    url = f"https://v2.jokeapi.dev/joke/{theme}{lang}"
+    payload = ""
+    response = requests.request("GET", url, data=payload)
+    print("Api-Call Jokes: " + url)
+    response = response.json()
+    joke = f"Category: {response['category']}\n"
+    if response['type'] == "single":
+        joke += f"Joke: {response['joke']}"
+    elif response['type'] == "twopart":
+        joke += (f"Setup: {response['setup']}\n"
+                 f"Delivery: ||{response['delivery']}||")
+    else: joke += "I don't know how this could happen"
+
+    return joke
+
+
+def get_norris():
+    """ Returns a random Chuck Norris joke with Chuck's name replaced by owner's friend's names """
+    name_list = ["André", "Daniel", "Maik", "Mario", "Rune", "Sönke"]  # .gitignore
+    url = "https://api.chucknorris.io/jokes/random"
+    payload = ""
+    response = requests.request("GET", url, data=payload)
+    print("Api-Call Jokes: " + url)
+    response = response.json()
+    joke = response['value']
+    joke = joke.replace("Chuck Norris", random.choice(name_list))
+    return joke
