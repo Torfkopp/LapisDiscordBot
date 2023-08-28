@@ -53,8 +53,8 @@ def position_change(year, gp):
     plt.title(f"{session.event['EventName']} {year} Position Changes")
 
     # Save the figure and let Discord load it
-    plt.savefig('Resources/pc.png', bbox_inches="tight", dpi=300)
-    file = discord.File("Resources/pc.png", file_name="image.png")
+    plt.savefig('formula1/pc.png', bbox_inches="tight", dpi=300)
+    file = discord.File("formula1/pc.png", file_name="image.png")
 
     return file
 
@@ -116,8 +116,8 @@ def lap_time_distribution(year, gp):
     plt.tight_layout()
 
     # Save the figure and let Discord load it
-    plt.savefig('Resources/ltd.png')
-    file = discord.File("Resources/ltd.png", file_name="image.png")
+    plt.savefig('formula1/ltd.png')
+    file = discord.File("formula1/ltd.png", file_name="image.png")
 
     return file
 
@@ -183,7 +183,7 @@ def strategy(year, gp):
     plt.tight_layout()
 
     # Save the figure and let Discord load it
-    plt.savefig('Resources/strat.png')
-    file = discord.File("Resources/strat.png", file_name="image.png")
+    plt.savefig('formula1/strat.png')
+    file = discord.File("formula1/strat.png", file_name="image.png")
 
     return file

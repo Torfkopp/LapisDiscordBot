@@ -152,8 +152,8 @@ def average_position(year, session):
         case "S": session = "Sprint"
     plt.title(f"Average {session} Finish Position {year}")
 
-    plt.savefig("Resources/averagefin.png")
-    file = discord.File("Resources/averagefin.png", file_name="image.png")
+    plt.savefig("formula1/averagefin.png")
+    file = discord.File("formula1/averagefin.png", file_name="image.png")
 
     return file
 
@@ -297,10 +297,10 @@ def heatmap(year):
     fig.update_layout(paper_bgcolor="black")  # Black background
     fig.update_layout(font_color="White")
 
-    with open("Resources/plot.png", 'wb') as f:
+    with open("formula1/plot.png", 'wb') as f:
         f.write(plotly.io.to_image(fig, format="png"))
 
-    file = discord.File("Resources/plot.png", file_name="image.png")
+    file = discord.File("formula1/plot.png", file_name="image.png")
 
     return file
 

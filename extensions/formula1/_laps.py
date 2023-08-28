@@ -81,8 +81,8 @@ def overview_fastest_laps(year, gp, session):
                  f"Fastest Lap: {lap_time_string} ({pole_lap['Driver']})")
 
     # Save the figure and let Discord load it
-    plt.savefig('Resources/overview.png')
-    file = discord.File("Resources/overview.png", file_name="image.png")
+    plt.savefig('formula1/overview.png')
+    file = discord.File("formula1/overview.png", file_name="image.png")
 
     return file
 
@@ -131,8 +131,8 @@ def compare_laps(year, gp, session, driver1, driver2):
     ax.set_facecolor('black')
 
     # Save the figure and let Discord load it
-    plt.savefig('Resources/compare.png')
-    file = discord.File("Resources/compare.png", file_name="image.png")
+    plt.savefig('formula1/compare.png')
+    file = discord.File("formula1/compare.png", file_name="image.png")
 
     return file
 
@@ -180,8 +180,8 @@ def scatterplot(year, gp, session, driver):
 
     plt.tight_layout()
     # Save the figure and let Discord load it
-    plt.savefig('Resources/sp.png')
-    file = discord.File("Resources/sp.png", file_name="image.png")
+    plt.savefig('formula1/sp.png')
+    file = discord.File("formula1/sp.png", file_name="image.png")
 
     return file
 
@@ -324,8 +324,8 @@ def telemetry(year, gp, session, driver1, driver2):
     plt.legend(handles=[d1_patch, d2_patch], bbox_to_anchor=(1.01, 5.2), loc='upper right')
 
     plt.rcParams['savefig.dpi'] = 300
-    plt.savefig("Resources/telemetry.png")
-    file = discord.File("Resources/telemetry.png", file_name="image.png")
+    plt.savefig("formula1/telemetry.png")
+    file = discord.File("formula1/telemetry.png", file_name="image.png")
 
     return file
 
@@ -475,7 +475,7 @@ def track_dominance(year, gp, session, driver1, driver2):
     # save plot
     plt.rcParams['savefig.dpi'] = 300
 
-    plt.savefig("Resources/trackdom.png")
-    file = discord.File("Resources/trackdom.png", file_name="image.png")
+    plt.savefig("formula1/trackdom.png")
+    file = discord.File("formula1/trackdom.png", file_name="image.png")
 
     return file

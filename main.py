@@ -89,7 +89,7 @@ async def on_ready():
     global SPORT_CHANNEL
     SPORT_CHANNEL = bot.get_channel(util.SPORTS_CHANNEL_ID)
     # Loads the Formula1 font
-    for font in font_manager.findSystemFonts(["Resources/font"]): font_manager.fontManager.addfont(font)
+    for font in font_manager.findSystemFonts(["formula1/font"]): font_manager.fontManager.addfont(font)
 
 
 @listen()
