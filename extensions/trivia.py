@@ -13,7 +13,7 @@ from resources import uwuifier
 
 def setup(bot):
     Trivia(bot)
-    bot.add_listener(on_component)
+    bot.add_listener(on_trivia_component)
 
 
 CATEGORY_OPTIONS = {
@@ -45,8 +45,9 @@ CATEGORY_OPTIONS = {
 
 
 @listen()
-async def on_component(event: Component):
+async def on_trivia_component(event: Component):
     ctx = event.ctx
+    if not ctx.custom_id.startswith("trivia"): return
     for component in Trivia.components.components:
         component.disabled = True
         if component == ctx.component: component.style = ButtonStyle.RED
@@ -66,7 +67,7 @@ class Trivia(Extension):
         required=False,
         opt_type=OptionType.STRING,
         choices=[SlashCommandChoice(name=k, value=CATEGORY_OPTIONS.get(k)) for k in
-                 dict(sorted(CATEGORY_OPTIONS.items()))]
+                 dict(sorted(CATEGORY_OPTIONS.items()))]  # sorted by alphabet
     )
     @slash_option(
         name="difficulty_option",
@@ -83,12 +84,12 @@ class Trivia(Extension):
         question, choices, Trivia.right = get_trivia(category_option, difficulty_option)
         Trivia.components = ActionRow(
             Button(
-                custom_id="A",
+                custom_id="trivia_A",
                 style=ButtonStyle.GREY,
                 label=choices[0],
             ),
             Button(
-                custom_id="B",
+                custom_id="trivia_B",
                 style=ButtonStyle.GREY,
                 label=choices[1]
             ),
@@ -96,12 +97,12 @@ class Trivia(Extension):
         if len(choices) > 2:
             Trivia.components.add_component(
                 Button(
-                    custom_id="C",
+                    custom_id="trivia_C",
                     style=ButtonStyle.GREY,
                     label=choices[2]
                 ),
                 Button(
-                    custom_id="D",
+                    custom_id="trivia_D",
                     style=ButtonStyle.GREY,
                     label=choices[3]
                 )
