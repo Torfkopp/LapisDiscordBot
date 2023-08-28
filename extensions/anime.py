@@ -39,7 +39,7 @@ class Anime(Extension):
         choices=[SlashCommandChoice(name=k.title(), value=k) for k in THEME_OPTIONS]
     )
     async def reaction_function(self, ctx: SlashContext, theme_option: str = random.choice(THEME_OPTIONS)):
-        await ctx.send(image=get_image(theme_option))
+        await ctx.send(get_image(theme_option))
 
     @anime_function.subcommand(sub_cmd_name="image", sub_cmd_description="Zufälliges Anime Bild")
     @slash_option(
@@ -53,7 +53,7 @@ class Anime(Extension):
                  ]
     )
     async def image_function(self, ctx: SlashContext, theme_option: str = "sfw"):
-        await ctx.send(image=get_image(theme_option))
+        await ctx.send(get_image(theme_option))
 
 
 def get_quote():
