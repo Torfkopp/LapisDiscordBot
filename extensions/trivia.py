@@ -8,7 +8,7 @@ from interactions import (
 from interactions.api.events import Component
 
 import util
-import uwuifier
+from resources import uwuifier
 
 
 def setup(bot):
