@@ -5,7 +5,7 @@ import random
 import interactions
 from interactions.models import discord
 
-from resources import uwuifier
+import uwuifier
 
 UWUCHANCE = 5  # D-De chance dat a commyand wesponse gets u-u-uwuified
 
