@@ -256,8 +256,8 @@ def get_standings(league):
                         value = ""
                         for match in cell['matches']:
                             teams = match['teams']
-                            team1 = teams[0]['name']
-                            team2 = teams[1]['name']
+                            team1 = teams[0]['code']
+                            team2 = teams[1]['code']
                             try: wins1 = teams[0]['result']['gameWins']
                             except TypeError: wins1 = 0
                             try: wins2 = teams[1]['result']['gameWins']
