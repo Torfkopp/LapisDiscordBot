@@ -14,7 +14,10 @@ def setup(bot): Jokes(bot)
 
 
 class Jokes(Extension):
-    @slash_command(name="dad_joke", description="Erhalte einen zufälligen Dad Joke")
+    @slash_command(name="joke", description="Joke")
+    async def joke_function(self, ctx: SlashContext): await ctx.send("Joke")
+
+    @joke_function.subcommand(sub_cmd_name="dad_joke", sub_cmd_description="Erhalte einen zufälligen Dad Joke")
     @slash_option(
         name="theme_option",
         description="Thema des Witzes auf Angelsächsisch (Random, wenn nix gefunden)",
@@ -24,7 +27,7 @@ class Jokes(Extension):
     async def dad_joke_function(self, ctx: SlashContext, theme_option: str = ""):
         await ctx.send(get_dad_joke(theme_option))
 
-    @slash_command(name="joke", description="Erhalte einen zufälligen Witz")
+    @joke_function.subcommand(sub_cmd_name="joke", sub_cmd_description="Erhalte einen zufälligen Witz")
     @slash_option(
         name="theme_option",
         description="Thema des Witzes",
@@ -49,10 +52,11 @@ class Jokes(Extension):
             SlashCommandChoice(name="Englisch", value="")
         ]
     )
-    async def joke_function(self, ctx: SlashContext, theme_option: str = "any", lang_option: str = "?lang=de"):
+    async def jokejoke_function(self, ctx: SlashContext, theme_option: str = "any", lang_option: str = "?lang=de"):
         await ctx.send(get_joke(theme_option, lang_option))
 
-    @slash_command(name="stammrunde", description="Erhalte einen zufälligen Stammrunden-Witz")
+    @joke_function.subcommand(sub_cmd_name="stammrunde",
+                              sub_cmd_description="Erhalte einen zufälligen Stammrunden-Witz")
     async def norris_function(self, ctx: SlashContext):
         await ctx.send(get_norris())
 
