@@ -8,12 +8,12 @@ from matplotlib import font_manager
 
 import util
 from core.extensions_loader import load_extensions
-from extensions import freegames, lolesport
+from extensions import freegames, lolesport, lol_patchnotes
 from extensions.football import football
 from extensions.formula1 import formula1
 
 bot = Client(intents=Intents.DEFAULT)
-global SPORT_CHANNEL
+
 LIVE_SCORE_MESSAGE = ""
 current_task = None
 
@@ -44,13 +44,13 @@ async def live_scoring():
     await change_activity("sich Fußball an")
     global LIVE_SCORE_MESSAGE
     if LIVE_SCORE_MESSAGE == "":
-        LIVE_SCORE_MESSAGE = await SPORT_CHANNEL.send(embeds=football.get_live()[0])
+        LIVE_SCORE_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=football.get_live()[0])
     else:
         embeds, still_going = football.get_live(LIVE_SCORE_MESSAGE.embeds)
         try:
             await LIVE_SCORE_MESSAGE.edit(embeds=embeds)
         except HTTPException:
-            LIVE_SCORE_MESSAGE = await SPORT_CHANNEL.send(embeds=embeds)
+            LIVE_SCORE_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=embeds)
         if not still_going:
             current_task.stop()  # current_task is a task when this is called, thus PyUnresolvedReferences ignorable
             print("Live scoring stops")
@@ -77,7 +77,13 @@ async def formula1_result():
     result = formula1.auto_result()
     # If getting result fails, try again in an hour
     if result == "": Task(formula1_result, DateTrigger(datetime.datetime.now() + datetime.timedelta(hours=1))).start()
-    await SPORT_CHANNEL.send(result)
+    await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result)
+
+
+async def update_patchnotes():
+    """ When called, updates the lol_patchnotes and, if need be, sends in the patchnotes """
+    embed = lol_patchnotes.update()
+    if embed: await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=embed)
 
 
 @listen()
@@ -93,9 +99,6 @@ async def on_ready():
 @listen()
 async def on_startup():
     """ Is called when the bot starts up (used for schedule things) """
-    global SPORT_CHANNEL
-    SPORT_CHANNEL = bot.get_channel(util.SPORTS_CHANNEL_ID)
-
     reduce_command_calls.start()
 
     # FOOTBALL LIVE SCORING PART
@@ -111,7 +114,7 @@ async def on_startup():
     # FORMULA 1 AUTOMATIC RESULTS PART
     if FORMULA1_AUTO_RESULT_ON:
         formula1_schedule, embed = formula1.create_schedule()
-        if isinstance(embed, interactions.Embed): await SPORT_CHANNEL.send(embed=embed)
+        if isinstance(embed, interactions.Embed): await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
         print("Today's formula1 sessions: " + str(formula1_schedule))
         for start_time in formula1_schedule:
             task = Task(formula1_result, DateTrigger(start_time))
@@ -121,6 +124,10 @@ async def on_startup():
     if FREE_GAMES_AUTO_ON:
         if datetime.datetime.now().weekday() == 4:
             await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=freegames.get_giveaways())
+
+    # AUTOMATIC LOL_PATCHNOTES PART
+    await update_patchnotes()
+    Task(update_patchnotes, IntervalTrigger(hours=2)).start()
 
 
 # load all extensions in the ./extensions folder
