@@ -86,8 +86,6 @@ async def on_ready():
     print("Ready")
     print(f"This bot is owned by {bot.owner}")
     await change_activity("sich Bücher an")
-    global SPORT_CHANNEL
-    SPORT_CHANNEL = bot.get_channel(util.SPORTS_CHANNEL_ID)
     # Loads the Formula1 font
     for font in font_manager.findSystemFonts(["formula1/font"]): font_manager.fontManager.addfont(font)
 
@@ -95,6 +93,9 @@ async def on_ready():
 @listen()
 async def on_startup():
     """ Is called when the bot starts up (used for schedule things) """
+    global SPORT_CHANNEL
+    SPORT_CHANNEL = bot.get_channel(util.SPORTS_CHANNEL_ID)
+
     reduce_command_calls.start()
 
     # FOOTBALL LIVE SCORING PART
