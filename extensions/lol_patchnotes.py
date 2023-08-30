@@ -105,7 +105,7 @@ class LoLPatchnotes(Extension):
     )
     async def details_function(self, ctx: SlashContext, type_filter_option: int = 0, name_filter_option: str = ""):
         embeds = get_patch_details(type_filter_option, name_filter_option)
-        paginator = Paginator.create_from_embeds(self.bot, *embeds, timeout=300)
+        paginator = Paginator.create_from_embeds(self.bot, *embeds)
         await paginator.send(ctx)
 
 

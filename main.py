@@ -17,9 +17,7 @@ bot = Client(intents=Intents.DEFAULT)
 LIVE_SCORE_MESSAGE = ""
 current_task = None
 
-LIVE_SCORING_ON = True
-FORMULA1_AUTO_RESULT_ON = True
-FREE_GAMES_AUTO_ON = True
+TEST_MODE_ON = False
 
 
 async def change_activity(activity):
@@ -99,31 +97,29 @@ async def on_ready():
 @listen()
 async def on_startup():
     """ Is called when the bot starts up (used for schedule things) """
+    if TEST_MODE_ON: return
     reduce_command_calls.start()
 
     # FOOTBALL LIVE SCORING PART
-    if LIVE_SCORING_ON:
-        football_schedule = football.create_schedule()
-        print("Starting times of today's games: " + str(football_schedule))
-        for start_time in football_schedule:
-            # When the start time was less than 90 minutes ago, start the live scoring automatically
-            if start_time - datetime.datetime.now() > datetime.timedelta(minutes=-90): await start_gip()
-            task = Task(start_gip, DateTrigger(start_time))
-            task.start()
+    football_schedule = football.create_schedule()
+    print("Starting times of today's games: " + str(football_schedule))
+    for start_time in football_schedule:
+        # When the start time was less than 90 minutes ago, start the live scoring automatically
+        if start_time - datetime.datetime.now() > datetime.timedelta(minutes=-90): await start_gip()
+        task = Task(start_gip, DateTrigger(start_time))
+        task.start()
 
     # FORMULA 1 AUTOMATIC RESULTS PART
-    if FORMULA1_AUTO_RESULT_ON:
-        formula1_schedule, embed = formula1.create_schedule()
-        if isinstance(embed, interactions.Embed): await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
-        print("Today's formula1 sessions: " + str(formula1_schedule))
-        for start_time in formula1_schedule:
-            task = Task(formula1_result, DateTrigger(start_time))
-            task.start()
+    formula1_schedule, embed = formula1.create_schedule()
+    if isinstance(embed, interactions.Embed): await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
+    print("Today's formula1 sessions: " + str(formula1_schedule))
+    for start_time in formula1_schedule:
+        task = Task(formula1_result, DateTrigger(start_time))
+        task.start()
 
     # AUTOMATIC FREE GAMES PART
-    if FREE_GAMES_AUTO_ON:
-        if datetime.datetime.now().weekday() == 4:
-            await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=freegames.get_giveaways())
+    if datetime.datetime.now().weekday() == 4:
+        await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=freegames.get_giveaways())
 
     # AUTOMATIC LOL_PATCHNOTES PART
     await update_patchnotes()
