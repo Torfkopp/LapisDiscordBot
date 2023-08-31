@@ -150,16 +150,6 @@ def increment_command_calls():
     if command_calls > COMMAND_LIMIT: limit_reached = True
 
 
-def check_if_restricted(channel_id):
-    """ Checks if the command is restricted (returns True) due to limit or wrong channel
-        or good to go (False)"""
-    if str(channel_id) != SPORTS_CHANNEL_ID: return True, WRONG_CHANNEL_MESSAGE
-    elif limit_reached: return True, LIMIT_REACHED_MESSAGE
-
-    increment_command_calls()
-    return False, ""
-
-
 def get_current_and_check_input(year, gp, session):
     """ Checks if inputs are ok or gets latest session """
     temp_gp, temp_session = get_current()
@@ -232,7 +222,6 @@ def session_slash_option():
 
 def driver_slash_option(number=1):
     """ Number: A number if more than one driver is needed in the command """
-
     def wrapper(func):
         return slash_option(
             name=f"driver{number}_option",
@@ -248,10 +237,13 @@ def driver_slash_option(number=1):
 
 async def command_function(ctx, func, *args):
     """ Function for the commands """
-    restricted, msg = check_if_restricted(ctx.channel_id)
-    if restricted:
-        await ctx.send(msg)
+    if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
+        ctx.send(WRONG_CHANNEL_MESSAGE)
         return
+    elif limit_reached:
+        ctx.send(LIMIT_REACHED_MESSAGE)
+        return
+    increment_command_calls()
     await ctx.defer()
     try:
         result = func(*args)

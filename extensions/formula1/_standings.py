@@ -92,21 +92,6 @@ def average_position(year, session):
     # Sort the map
     result_map = {k: v for k, v in sorted(result_map.items(), key=lambda item: item[1])}
 
-    '''
-    result_string = "```"
-    result_string += "Platz".ljust(6) + "Name".center(30) + "Avg. Pos.".rjust(10) + "\n"
-
-    i = 1
-    for driver in result_map:
-        name = driver_positions[1].get(driver)
-        result_string += str(i).ljust(6) + name.center(30) + str(result_map.get(driver)).rjust(10) + "\n"
-        i += 1
-
-    result_string += "```"
-    
-    
-    return util.uwuify_by_chance(result_string)
-    '''
     team_order = list()
     team_map = driver_positions[2]
     for key in result_map:
