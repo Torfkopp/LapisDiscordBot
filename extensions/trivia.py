@@ -134,7 +134,7 @@ def get_trivia(category, difficulty):
     answers.append(correct)
     random.shuffle(answers)
 
-    if random.randint(0, 100) < util.UWUCHANCE:
+    if util.get_if_uwuify():
         question = uwuifier.UwUify(question)
         answers = [uwuifier.UwUifyWords(k) for k in answers]
         correct = uwuifier.UwUifyWords(correct)

@@ -59,4 +59,4 @@ def get_yomomma():
     # Thanks to: https://github.com/beanboi7/yomomma-apiv2/blob/master/jokes.json
     with open("resources/yomomma.json", encoding="utf-8") as f: yomomma = json.load(f)
 
-    return random.choice(yomomma)
+    return util.uwuify_by_chance(random.choice(yomomma))

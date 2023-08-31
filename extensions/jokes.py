@@ -104,7 +104,7 @@ def get_joke(theme, lang):
                  f"Delivery: ||{response['delivery']}||")
     else: joke += "I don't know how this could happen"
 
-    return joke
+    return util.uwuify_by_chance(joke)
 
 
 def get_norris():
@@ -117,4 +117,5 @@ def get_norris():
     response = response.json()
     joke = response['value']
     joke = joke.replace("Chuck Norris", random.choice(name_list))
-    return joke
+    joke = joke.replace("' ", "'s ")
+    return util.uwuify_by_chance(joke)

@@ -40,14 +40,19 @@ def random_colour_generator():
     return f"#{r:02x}{g:02x}{b:02x}"
 
 
+def get_if_uwuify():
+    """ Returns if you should uwuify"""
+    return not random.randint(0, 100) < UWUCHANCE
+
+
 def uwuify_by_chance(obj):
-    """ UwUifies words only by chance """
+    """ UwUifies only by chance """
     if not random.randint(0, 100) < UWUCHANCE: return obj
-    if isinstance(obj, interactions.Embed): return _uwuify_embed(obj)
+    if isinstance(obj, interactions.Embed): return uwuify_embed(obj)
     return uwuifier.UwUify(obj, False, False)
 
 
-def _uwuify_embed(embed):
+def uwuify_embed(embed):
     """ Uwuifies an embed """
     embed.title = uwuifier.UwUify(embed.title)
     for field in embed.fields:

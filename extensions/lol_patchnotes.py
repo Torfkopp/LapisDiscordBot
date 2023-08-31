@@ -143,7 +143,7 @@ def get_patch_summaries():
     embed = _make_embed()
     for i in range(min(25, len(champ_summaries))):
         embed.add_field(name=champ_names[i].text, value=champ_summaries[i].text, inline=True)
-    return embed
+    return util.uwuify_by_chance(embed)
 
 
 def get_midpatch_update():
@@ -260,5 +260,8 @@ def get_patch_details(type_filter, name_filter):
         embeds += make_embeds(_get_champion_embeds(champion_changes, name_filter), "Championänderungen")
     if type_filter % 2 == 0:  # true for 0 and 2 (all and system only)
         embeds += make_embeds(_get_system_embeds(item_changes, name_filter), "Systemänderungen")
+
+    if util.get_if_uwuify():
+        for i in range(len(embeds)): embeds[i] = util.uwuify_embed(embeds[i])
 
     return embeds
