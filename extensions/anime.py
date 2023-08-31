@@ -1,5 +1,8 @@
+import os
 import random
+import time
 
+import interactions
 import requests
 from interactions import (
     Extension, slash_command, SlashContext, slash_option, OptionType, SlashCommandChoice
@@ -38,8 +41,10 @@ class Anime(Extension):
         opt_type=OptionType.STRING,
         choices=[SlashCommandChoice(name=k.title(), value=k) for k in THEME_OPTIONS]
     )
-    async def reaction_function(self, ctx: SlashContext, theme_option: str = random.choice(THEME_OPTIONS)):
-        await ctx.send(get_image(theme_option))
+    async def reaction_function(self, ctx: SlashContext, theme_option: str = ""):
+        if theme_option == "": theme_option = random.choice(THEME_OPTIONS)
+        await ctx.defer()
+        await ctx.send(embed=get_image(theme_option))
 
     @anime_function.subcommand(sub_cmd_name="image", sub_cmd_description="Zufälliges Anime Bild")
     @slash_option(
@@ -53,7 +58,8 @@ class Anime(Extension):
                  ]
     )
     async def image_function(self, ctx: SlashContext, theme_option: str = "sfw"):
-        await ctx.send(get_image(theme_option))
+        await ctx.defer()
+        await ctx.send(embed=get_image(theme_option))
 
 
 def get_quote():
@@ -86,4 +92,8 @@ def get_image(theme):
 
     image = response['url'][0]
 
-    return image
+    embed = interactions.Embed(title=theme.title())
+    embed.set_image(url=image)
+    embed.set_footer(image)
+    time.sleep(5)  # Very slow loading gifs, so this hopefully helps with it
+    return embed
