@@ -1,3 +1,4 @@
 config.json
 strunt/
 test.py
+extensions/secret.py

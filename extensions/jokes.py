@@ -6,6 +6,7 @@ from interactions import (
 )
 
 import util
+from extensions import secret
 
 """ File for the joke commands """
 
@@ -109,7 +110,8 @@ def get_joke(theme, lang):
 
 def get_norris():
     """ Returns a random Chuck Norris joke with Chuck's name replaced by owner's friend's names """
-    name_list = ["André", "Daniel", "Maik", "Mario", "Rune", "Sönke"]  # .gitignore
+    # TODO API may be down, search for an alternative/ a list of chuck norris jokes
+    name_list = secret.name_list
     url = "https://api.chucknorris.io/jokes/random"
     payload = ""
     response = requests.request("GET", url, data=payload)

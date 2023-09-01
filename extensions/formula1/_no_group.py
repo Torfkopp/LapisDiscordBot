@@ -36,7 +36,7 @@ def result(year, gp, session):
             if position > 15: time = place['Q1']
             ranking += str(time)[11:19].rjust(12)
             ranking += "\n"
-    elif sess == "Race" or "Sprint":
+    elif sess == "Race" or sess == "Sprint":
         ranking += "Punkte".rjust(8) + "\n"
         for i, _ in enumerate(results.iterrows()):
             place = results.iloc[i]
@@ -48,7 +48,7 @@ def result(year, gp, session):
         ranking += "\n"
         for i, _ in enumerate(results.iterrows()):
             place = results.iloc[i]
-            ranking += str(int(place['Position'])).ljust(6)
+            ranking += str(i).ljust(6)
             ranking += place['FullName'].center(20)
             ranking += "\n"
 
