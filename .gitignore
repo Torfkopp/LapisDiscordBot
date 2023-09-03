@@ -2,4 +2,4 @@ config.json
 test.py
 extensions/secret.py
 /strunt/
-/formula1/
+/formula1/*.png
