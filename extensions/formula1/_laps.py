@@ -81,7 +81,7 @@ def overview_fastest_laps(year, gp, session):
                  f"Fastest Lap: {lap_time_string} ({pole_lap['Driver']})")
 
     # Save the figure and let Discord load it
-    plt.savefig('formula1/overview.png')
+    plt.savefig('formula1/overview.png', bbox_inces='tight')
     file = discord.File("formula1/overview.png", file_name="image.png")
 
     return file

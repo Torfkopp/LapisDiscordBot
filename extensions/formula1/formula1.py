@@ -54,8 +54,8 @@ def get_current():
                     next_event['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)]
 
     latest_finished_session = 5
-    for i in range(0, len(session_list)):  # A session should be finished 2 hours after the start
-        if session_list[i] >= (date_today + datetime.timedelta(hours=2)): latest_finished_session = i + 1
+    for i in range(0, len(session_list)):  # A session should be finished 1.5 hours after the start
+        if session_list[i] + datetime.timedelta(hours=1.5) <= date_today: latest_finished_session = i + 1
 
     current_gp = next_event['RoundNumber'] - 1
     current_session = 5
@@ -108,8 +108,8 @@ def create_schedule():
     if (date_today.weekday() == 4) and (
             (session_list[1] - date_today).days == 0): embed = no_group.next_race()
 
-    for i in range(0, len(session_list)):  # A session should be finished 2 hours after the start
-        if session_list[i].date() == date_today.date(): start_times.add(session_list[i] + datetime.timedelta(hours=2))
+    for i in range(0, len(session_list)):  # A session should be finished 1.5 hours after the start
+        if session_list[i].date() == date_today.date(): start_times.add(session_list[i] + datetime.timedelta(hours=1.5))
 
     return list(start_times), embed
 
@@ -117,7 +117,6 @@ def create_schedule():
 def auto_result():
     """ Returns the result of the latest session and sets the current paras to it """
     result_gp, result_session = get_current()
-
     try:
         result_string = no_group.result(CURRENT_SEASON, result_gp, result_session)
         result_string = "||" + result_string + "||"  # Make Spoiler
@@ -238,10 +237,10 @@ def driver_slash_option(number=1):
 async def command_function(ctx, func, *args):
     """ Function for the commands """
     if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
-        ctx.send(WRONG_CHANNEL_MESSAGE)
+        await ctx.send(WRONG_CHANNEL_MESSAGE)
         return
     elif limit_reached:
-        ctx.send(LIMIT_REACHED_MESSAGE)
+        await ctx.send(LIMIT_REACHED_MESSAGE)
         return
     increment_command_calls()
     await ctx.defer()

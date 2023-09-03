@@ -2,9 +2,11 @@ import datetime
 
 import fastf1
 import interactions
+import pandas as pd
 import pytz
 import requests
 from bs4 import BeautifulSoup
+from fastf1.core import Laps
 
 import util
 
@@ -17,39 +19,59 @@ CURRENT_SEASON = util.CURRENT_F1_SEASON
 def result(year, gp, session):
     """ Returns the result of the specified session """
     sess = fastf1.get_session(year, gp, session)
-    sess.load(laps=False, telemetry=False, weather=False, messages=False, livedata=None)
+    sess.load(weather=False)
     results = sess.results
-
     ranking = "```"
     ranking += f"Results {year} {sess.event['EventName']} {sess.name}\n".center(30)
     ranking += "\n"
     ranking += "#".ljust(6) + "Name".center(20)
     if sess.name == "Qualifying":
-        ranking += "Zeit".rjust(12) + "\n"
+        ranking += "Zeit".center(12) + "QX".rjust(6) + "\n"
         for i, _ in enumerate(results.iterrows()):
             place = results.iloc[i]
-            position = int(place['Position'])
+            try: position = int(place['Position'])
+            except ValueError: position = int(i) + 1
             ranking += str(position).ljust(6)
             ranking += place['FullName'].center(20)
-            time = place['Q3']
-            if position > 10: time = place['Q2']
-            if position > 15: time = place['Q1']
-            ranking += str(time)[11:19].rjust(12)
+            q = "Q3"
+            if position > 10: q = "Q2"
+            if position > 15: q = "Q1"
+            time = place[q]
+            ranking += str(time)[11:19].center(12)
+            ranking += q.rjust(6)
             ranking += "\n"
-    elif sess == "Race" or sess == "Sprint":
-        ranking += "Punkte".rjust(8) + "\n"
+    elif sess.name == "Race" or sess.name == "Sprint":
+        ranking += "Zeit".center(12) + "Punkte".rjust(8) + "\n"
         for i, _ in enumerate(results.iterrows()):
             place = results.iloc[i]
-            ranking += str(int(place['Position'])).ljust(6)
+            try: position = int(place['Position'])
+            except ValueError: position = int(i) + 1
+            ranking += str(position).ljust(6)
             ranking += place['FullName'].center(20)
+            time = place['Time']
+            if time is pd.NaT: time = place['Status']
+            else: time = str(time)[7:15]
+            ranking += time.center(12)
             ranking += str(place['Points']).rjust(8)
             ranking += "\n"
     else:
-        ranking += "\n"
-        for i, _ in enumerate(results.iterrows()):
-            place = results.iloc[i]
-            ranking += str(i).ljust(6)
-            ranking += place['FullName'].center(20)
+        ranking += "Zeit".center(12) + "Mischung".rjust(8) + "\n"
+
+        driver_map = {results.iloc[i]['Abbreviation']: results.iloc[i]['FullName'] for i, _ in
+                      enumerate(results.iterrows())}
+        list_fastest_laps = list()
+        for drv in pd.unique(sess.laps['Driver']):
+            drvs_fastest_lap = sess.laps.pick_driver(drv).pick_fastest()
+            # It can happen that a driver has no fastest lap; this prevents the resulting error
+            if drvs_fastest_lap.isnull().sum() == len(drvs_fastest_lap.values): continue
+            list_fastest_laps.append(drvs_fastest_lap)
+        fastest_laps = Laps(list_fastest_laps).sort_values(by='LapTime').reset_index(drop=True)
+
+        for i in fastest_laps.itertuples():
+            ranking += str(i[0] + 1).ljust(6)
+            ranking += driver_map.get(i.Driver).center(20)
+            ranking += str(i.LapTime)[11:19].center(12)
+            ranking += i.Compound.rjust(8)
             ranking += "\n"
 
     ranking += "```"
