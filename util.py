@@ -18,8 +18,9 @@ with open("config.json") as f: lines = json.load(f)
 TOKEN = lines['token']
 SPORTS_CHANNEL_ID = lines['sport_channel_id']
 LABAR_CHANNEL_ID = lines['labar_channel_id']
+STAMMRUNDEN_CHANNEL_ID = lines['stammrunden_channel_id']
 
-# Todo Make them cooler
+# Todo Make them cooler and gifs
 WRONG_CHANNEL_MESSAGE = "Falscher Channel, Bro"
 LIMIT_REACHED_MESSAGE = "Zu viele Commands, Bro"
 FAULTY_VALUE_MESSAGE = "Deine Werte passen iwie nicht, Bro"
@@ -38,6 +39,34 @@ def random_colour_generator():
         if greyscale > 10: break
 
     return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def get_gif(term: str):
+    """ Returns a gif with the term
+    Returns a standard gif, when the term is not found """
+    with open("Resources/gifs.json") as g: gif_db = json.load(g)
+
+    try: gifs = gif_db[term]
+    except KeyError: return gif_db['standard']
+
+    if isinstance(gifs, dict): return random.choice(list(gifs.values()))
+    return gifs
+
+
+def get_error_embed(term: str):
+    embed = interactions.Embed()
+    match term:
+        case "error":
+            embed.title = "Fehler aufgetreten"
+            # embed.description = "Irgendwas ist irgendwo schiefgelaufen"
+            # TODO verbessern
+            embed.set_image(url=get_gif("error"))
+        case _:
+            embed.title = "Standard"
+            embed.description = "Standard"
+            embed.set_image(url=get_gif("standard"))
+
+    return embed
 
 
 def get_if_uwuify():
