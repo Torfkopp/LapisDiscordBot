@@ -110,7 +110,6 @@ def get_joke(theme, lang):
 
 def get_norris():
     """ Returns a random Chuck Norris joke with Chuck's name replaced by owner's friend's names """
-    # TODO API may be down, search for an alternative/ a list of chuck norris jokes
     name_list = secret.name_list
     url = "https://api.chucknorris.io/jokes/random"
     payload = ""
@@ -118,6 +117,7 @@ def get_norris():
     print("Api-Call Jokes: " + url)
     response = response.json()
     joke = response['value']
+    # TODO try catch when API down -> own error message
     joke = joke.replace("Chuck Norris", random.choice(name_list))
     joke = joke.replace("' ", "'s ")
     return util.uwuify_by_chance(joke)
