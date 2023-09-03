@@ -4,6 +4,7 @@ import random
 import fastf1
 import interactions
 import pytz
+import requests
 from fastf1.core import DataNotLoadedError
 from interactions import Extension, slash_command, SlashContext, slash_option, OptionType, SlashCommandChoice
 from interactions.models import discord
@@ -116,13 +117,75 @@ def create_schedule():
 
 def auto_result():
     """ Returns the result of the latest session and sets the current paras to it """
-    result_gp, result_session = get_current()
-    try:
-        result_string = no_group.result(CURRENT_SEASON, result_gp, result_session)
-        result_string = "||" + result_string + "||"  # Make Spoiler
-    except DataNotLoadedError: result_string = ""
+    url = "https://api.sport1.info/v2/de/motorsport/sport/sr:stage:7668/season/sr:stage:1031201/minSportEventsWithSessions"
+    payload = ""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0",
+        "Accept": "*/*",
+        "Accept-Language": "de,en-US;q=0.7,en;q=0.3",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Origin": "https://www.sport1.de",
+        "Connection": "keep-alive",
+        "Referer": "https://www.sport1.de/",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "cross-site",
+        "DNT": "1",
+        "Sec-GPC": "1",
+        "TE": "trailers"
+    }
+    response = requests.request("GET", url, data=payload, headers=headers)
+    print("API Call Formula1: " + url)
+    response = response.json()
 
-    return util.uwuify_by_chance(result_string)
+    current_comp_id = response['currentCompetitionId']
+    current_match_id = ""
+    for compo in response['competitions']:
+        if compo['id'] == current_comp_id: current_match_id = compo['currentMatchId']
+
+    url = f"https://api.sport1.info/v2/de/motorsport/sport/sr:stage:7668/match/{current_match_id}"
+    response = requests.request("GET", url, data=payload, headers=headers)
+    print("API Call Formula1: " + url)
+    response = response.json()
+
+    result = "```"
+    result += f"Ergebnis {util.germanise(response['competition']['name'])} {response['roundTitle']}" + "\n"
+    result += "\n"
+    result += "#".ljust(6) + "Name".center(20)
+    if response['roundType'] == "RACE" or response['roundType'] == "SPRINT":
+        result += "Gesamt".center(14) + "Schnellste".center(14) + "P".rjust(3) + "\n"
+        for position in response['results']:
+            result += str(position['position']).ljust(6)
+            result += f"{position['person']['firstName']} {position['person']['lastName']}".center(20)
+
+            if position['status'] != "FINISHED": result += position['status'].center(14)
+            else: result += str(position['time']).center(14)
+
+            if 'fastestLap' in position: result += str(position['fastestLap']).center(14)
+            else: result += " ".center(14)
+
+            result += str(position['pitStopCount']).rjust(3)
+            result += "\n"
+    elif response['roundType'] == "QUALIFYING" or response['roundType'] == "SPRINT_SHOOTOUT":
+        result += "Schnellste".center(20) + "\n"
+        for position in response['results']:
+            result += str(position['position']).ljust(6)
+            result += f"{position['person']['firstName']} {position['person']['lastName']}".center(20)
+            result += str(position['fastestLap']).center(20)
+            result += "\n"
+    else:
+        result += "Schnellste".center(20) + "Stops".rjust(3) + "\n"
+        for position in response['results']:
+            result += str(position['position']).ljust(6)
+            result += f"{position['person']['firstName']} {position['person']['lastName']}".center(20)
+            result += str(position['fastestLap']).center(20)
+            result += str(position['pitStopCount']).rjust(3)
+            result += "\n"
+
+    result += "```"
+    result = "||" + result + "||"  # Make Spoiler
+
+    return util.uwuify_by_chance(result)
 
 
 '''
@@ -221,6 +284,7 @@ def session_slash_option():
 
 def driver_slash_option(number=1):
     """ Number: A number if more than one driver is needed in the command """
+
     def wrapper(func):
         return slash_option(
             name=f"driver{number}_option",
