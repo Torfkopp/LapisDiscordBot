@@ -1,9 +1,9 @@
-import os
 import random
 import time
 
 import interactions
 import requests
+from bs4 import BeautifulSoup
 from interactions import (
     Extension, slash_command, SlashContext, slash_option, OptionType, SlashCommandChoice
 )
@@ -75,9 +75,24 @@ def get_quote():
     response = response.json()
     response = response['apiResult'][0]
 
+    character = response['character']
     result = "Anime: " + response['anime'] + "\n"
-    result += "Character: " + response['character'] + "\n"
-    result += "Quote: " + response['english']
+    result += "Character: " + character  # + "\n\n"
+    # result += "Quote: " + response['english']
+    quote = "„" + response['english'] + "“"
+
+    url = f"https://myanimelist.net/search/all?cat=all&q={character}"
+    response = requests.get(url)
+    print("Site-Call: " + url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    character_url = soup.find('div', class_="picSurround di-tc thumb").find('a')['href']
+
+    response = requests.get(character_url)
+    print("Site-Call: " + character_url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    picture_url = soup.find('td', class_="borderClass").find('img')['data-src']
+
+    # noinspection PyTypeChecker
     embed = interactions.Embed(title="Anime Quote", description=result, color=COLOUR, thumbnail=picture_url)
     embed.add_field(name=quote, value="\u200b")
 
