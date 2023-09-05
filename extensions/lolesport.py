@@ -121,8 +121,10 @@ def get_schedule(league):
 
     response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
     print("Api-Call lolesports: " + url)
-    response = response.json()
-    events = response['data']['schedule']['events']
+    try:
+        response = response.json()
+        events = response['data']['schedule']['events']
+    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
 
     return events
 
@@ -220,18 +222,21 @@ def get_standings(league):
 
     response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
     print("Api-Call lolesports: " + url)
-    response = response.json()
+    try:
+        response = response.json()
+        response = response['data']['leagues'][0]['tournaments'][0]
+    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
 
-    response = response['data']['leagues'][0]['tournaments'][0]
     tournament_id = response['id']
 
     url = "https://esports-api.lolesports.com/persisted/gw/getStandingsV3"
     querystring = {"hl": "de-DE", "tournamentId": tournament_id}
 
     response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
-    response = response.json()
-
-    standings = response['data']['standings'][0]
+    try:
+        response = response.json()
+        standings = response['data']['standings'][0]
+    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
 
     standings_name = standings['slug'].replace("_", " ").title()
     embed = interactions.Embed(title=f"Standings für {standings_name}", color=COLOUR)

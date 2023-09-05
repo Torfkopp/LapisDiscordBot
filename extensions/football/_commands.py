@@ -16,8 +16,8 @@ def goalgetter(liga, saison):
     url = f"https://api.openligadb.de/getgoalgetters/{liga}/{saison}"
     response = requests.get(url)
     print("Api-Call Football: " + url)
-    data = response.json()
-
+    try: data = response.json()
+    except requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
     embed = interactions.Embed(title=f"Torjäger der Liga {liga}", color=COLOUR)
     for i in range(0, min(len(data), 15)):  # Limit shown scorers to 15
         name = germanise(data[i]['goalGetterName'])
@@ -38,12 +38,15 @@ def get_current_spieltag(liga):
 
 def matchday(liga, saison, spieltag):
     """ Method for the matchday command """
-    if spieltag == 0: spieltag = get_current_spieltag(liga)
+    if spieltag == 0:
+        try: spieltag = get_current_spieltag(liga)
+        except requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
 
     url = f"https://api.openligadb.de/getmatchdata/{liga}/{saison}/{spieltag}"
     response = requests.get(url)
     print("Api-Call Football: " + url)
-    jsondata = response.json()
+    try: jsondata = response.json()
+    except requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
 
     embed = interactions.Embed(title=f"{germanise(jsondata[0]['leagueName'])} Spieltag {spieltag}", color=COLOUR)
     i = 1
@@ -68,8 +71,8 @@ def matches(team, past, future):
     url = f"https://api.openligadb.de/getmatchesbyteam/{team}/{past}/{future}"
     response = requests.get(url)
     print("Api-Call Football: " + url)
-    data = response.json()
-
+    try: data = response.json()
+    except requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
     embed = interactions.Embed(title=f"Spiele von {team} in den letzten {past} und den nächsten {future} Wochen",
                                color=COLOUR)
 
@@ -100,7 +103,8 @@ def table(liga, saison):
     url = f"https://api.openligadb.de/getbltable/{liga}/{saison}"
     response = requests.get(url)
     print("Api-Call Football: " + url)
-    data = response.json()
+    try: data = response.json()
+    except requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
 
     tabelle = "```"
     tabelle += "# | Team".ljust(30) + "Sp Si Un Ni Tore  TD".center(20) + "Pkt".rjust(10) + "\n"

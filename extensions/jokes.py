@@ -14,7 +14,9 @@ from strunt import secret
 
 def setup(bot): Jokes(bot)
 
+
 COLOUR = util.Colour.JOKES.value
+
 
 class Jokes(Extension):
     @slash_command(name="joke", description="Joke")
@@ -75,9 +77,10 @@ def get_dad_joke(term):
         url_term = url + f"search?term={term}"
         response = requests.request("GET", url_term, data=payload, headers=headers)
         print("Api-Call Jokes: " + url)
-        response = response.json()
-
-        jokes = response['results']
+        try:
+            response = response.json()
+            jokes = response['results']
+        except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
         if len(jokes) == 0: joke = ""
         elif len(jokes) == 1: joke = jokes[0]['joke']
         else: joke = jokes[random.randint(0, len(jokes) - 1)]['joke']
@@ -86,8 +89,10 @@ def get_dad_joke(term):
         response = requests.request("GET", url, data=payload, headers=headers)
         print("Api-Call Jokes: " + url)
 
-        joke = response.json()
-        joke = joke["joke"]
+        try:
+            joke = response.json()
+            joke = joke["joke"]
+        except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
 
     embed = interactions.Embed(title=joke, color=COLOUR)
 
@@ -100,8 +105,10 @@ def get_joke(theme, lang):
     payload = ""
     response = requests.request("GET", url, data=payload)
     print("Api-Call Jokes: " + url)
-    response = response.json()
-    joke = f"Category: {response['category']}\n"
+    try:
+        response = response.json()
+        joke = f"Category: {response['category']}\n"
+    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
     if response['type'] == "single":
         joke += f"Joke: {response['joke']}"
     elif response['type'] == "twopart":
@@ -121,8 +128,10 @@ def get_norris():
     payload = ""
     response = requests.request("GET", url, data=payload)
     print("Api-Call Jokes: " + url)
-    response = response.json()
-    joke = response['value']
+    try:
+        response = response.json()
+        joke = response['value']
+    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
     joke = joke.replace("Chuck Norris", random.choice(name_list))
     joke = joke.replace("' ", "'s ")
 

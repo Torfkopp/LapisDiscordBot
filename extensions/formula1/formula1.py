@@ -133,7 +133,10 @@ def auto_result():
     }
     response = requests.request("GET", url, data=payload, headers=headers)
     print("API Call Formula1: " + url)
-    response = response.json()
+    try: response = response.json()
+    except requests.exceptions.JSONDecodeError:
+        print("JSONDecodeError; API may be down")
+        return
 
     current_comp_id = response['currentCompetitionId']
     current_match_id = ""
@@ -143,8 +146,10 @@ def auto_result():
     url = f"https://api.sport1.info/v2/de/motorsport/sport/sr:stage:7668/match/{current_match_id}"
     response = requests.request("GET", url, data=payload, headers=headers)
     print("API Call Formula1: " + url)
-    response = response.json()
-
+    try: response = response.json()
+    except requests.exceptions.JSONDecodeError:
+        print("JSONDecodeError; API may be down")
+        return
     result = "```"
     result += f"Ergebnis {util.germanise(response['competition']['name'])} {response['roundTitle']}" + "\n"
     result += "\n"

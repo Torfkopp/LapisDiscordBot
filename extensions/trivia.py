@@ -125,8 +125,10 @@ def get_trivia(category, difficulty):
 
     response = requests.request("GET", url, data=payload)
     print("Api-Call Trivia: " + url)
-    response = response.json()
-    trivia = response['results'][0]
+    try:
+        response = response.json()
+        trivia = response['results'][0]
+    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
 
     question = f"Category: {trivia['category']}\n"
     question += f"Difficulty: {trivia['difficulty']}\n"

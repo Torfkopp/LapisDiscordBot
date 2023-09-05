@@ -50,8 +50,10 @@ def get_insult(lang):
     response = requests.request("GET", url, data=payload, params=querystring)
     print("Api-Call Insults: " + url)
 
-    response = response.json()
-    insult = response['insult']
+    try:
+        response = response.json()
+        insult = response['insult']
+    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
 
     if lang != "en" and response['comment'] != "": insult += f" (Translation: {response['comment']}"
 

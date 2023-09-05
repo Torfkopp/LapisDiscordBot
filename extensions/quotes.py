@@ -39,18 +39,20 @@ def get_advice(term):
         url_theme = url + f"/search/{term}"
         response = requests.request("GET", url_theme, data=payload)
         print("Api-Call quotes: " + url_theme)
-        response = response.json()
-
-        try: advices = response['slips']
-        except KeyError: rat = ""
+        try:
+            response = response.json()
+            advices = response['slips']
+        except KeyError or requests.exceptions.JSONDecodeError: rat = ""
         else:
             if len(advices) == 1: rat = advices[0]['advice']
             else: rat = advices[random.randint(0, len(advices) - 1)]['advice']
     if rat == "":
         response = requests.request("GET", url, data=payload)
         print("Api-Call quotes: " + url)
-        response = response.json()
-        rat = response['slip']['advice']
+        try:
+            response = response.json()
+            rat = response['slip']['advice']
+        except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
 
     embed = interactions.Embed(title=rat, color=COLOUR)
 
