@@ -15,10 +15,6 @@ SPORTS_CHANNEL_ID = lines['sport_channel_id']
 LABAR_CHANNEL_ID = lines['labar_channel_id']
 STAMMRUNDEN_CHANNEL_ID = lines['stammrunden_channel_id']
 
-# Todo Make them cooler and gifs
-WRONG_CHANNEL_MESSAGE = "Falscher Channel, Bro"
-LIMIT_REACHED_MESSAGE = "Zu viele Commands, Bro"
-FAULTY_VALUE_MESSAGE = "Deine Werte passen iwie nicht, Bro"
 
 # COLOURS
 class Colour(Enum):
@@ -71,19 +67,42 @@ def get_gif(term: str):
 
 
 def get_error_embed(term: str):
-    embed = interactions.Embed()
+    """ Gets an error embed
+    :parameter "error", "wrong_channel", "limit_reached", "faulty_value", "api_down"
+    """
+    embed = interactions.Embed(color=Colour.ERROR.value)
     match term:
         case "error":
             embed.title = "Fehler aufgetreten"
-            # embed.description = "Irgendwas ist irgendwo schiefgelaufen"
-            # TODO verbessern
-            embed.set_image(url=get_gif("error"))
+            embed.description = "Irgendwas ist irgendwo schiefgelaufen. Gomenasorry! (≧﹏ ≦)"
+            embed.set_image(url=get_gif(term))
+        case "wrong_channel":
+            embed.title = "Falscher Channel"
+            embed.description = ("Die Antwort auf diesen Befehl kann ich dir leider "
+                                 "nur in dem passenden Channel geben! \n"
+                                 "Bitte versuche es dort erneut. ^_-")
+            embed.set_image(url=get_gif(term))
+        case "limit_reached":
+            embed.title = "Zu viele Anfragen"
+            embed.description = ("Die angefragte API wurde leider in kürzester Zeit mit "
+                                 "zu vielen Anfragen bombadiert （＞人＜；）, "
+                                 "bitte warte ein paar Minuten, bis sie sich wieder erholt hat.")
+            embed.set_image(url=get_gif(term))
+        case "faulty_value":
+            embed.title = "Fehlerhafte Werte"
+            embed.description = ("Deine eingegeben Werte stehen nicht in meiner Liste <(＿　＿)>. "
+                                 "Sicher, dass es die richtigen sind?")
+            embed.set_image(url=get_gif(term))
+        case "api_down":
+            embed.title = "API down"
+            embed.description = "Die angefragte API ist momentan down und ich kann nix dagegen tun. （；´д｀）ゞ"
+            embed.set_image(url=get_gif(term))
         case _:
-            embed.title = "Standard"
-            embed.description = "Standard"
+            embed.title = "Öhm"
+            embed.description = "Ähm"
             embed.set_image(url=get_gif("standard"))
 
-    return embed
+    return uwuify_by_chance(embed)
 
 
 def get_if_uwuify():

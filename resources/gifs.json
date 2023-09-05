@@ -1,8 +1,47 @@
 {
-  "standard": "STANDARD GIF",
-  "error": "https://media.tenor.com/rnwwyTaGQh0AAAAd/ehe-anime.gif",
-  "test": {
-    "0" : "gif1",
-    "1" : "gif2"
+  "standard": "https://media.tenor.com/qeZTQpK9fCIAAAAC/bocchi-bocchi-the-rock.gif",
+  "error": {
+    "0" : "https://media.tenor.com/rnwwyTaGQh0AAAAd/ehe-anime.gif",
+    "01" : "https://media.tenor.com/rnwwyTaGQh0AAAAd/ehe-anime.gif",
+    "02" : "https://media.tenor.com/rnwwyTaGQh0AAAAd/ehe-anime.gif",
+    "03" : "https://media.tenor.com/rnwwyTaGQh0AAAAd/ehe-anime.gif",
+    "04" : "https://media.tenor.com/rnwwyTaGQh0AAAAd/ehe-anime.gif",
+    "1" : "https://media.tenor.com/iRnmQUtXnIAAAAAC/bocchi-bocchi-the-rock.gif",
+    "2" : "https://media.tenor.com/9wllMjsxqaAAAAAd/bocchi-the-rock-bocchi-the-rock-gif.gif",
+    "3" : "https://media.tenor.com/s3mh97FyKoIAAAAC/bocchi-the-rock-hitori-gotoh.gif",
+    "4" : "https://media.tenor.com/HlIF13WPxucAAAAd/bocchi-the-rock-anime.gif",
+    "5" : "https://media.tenor.com/aSaYnI7L9b0AAAAC/bocchi-the-rock-bocchi.gif"
+  },
+  "hello": {
+    "0" : "https://media.tenor.com/FvthnLepGgAAAAAC/hi-hello.gif",
+    "1" : "https://media.tenor.com/NjsosaK61UIAAAAC/anime-girl.gif",
+    "2" : "https://media.tenor.com/zeJzW4ubYqkAAAAC/nasuno-cat.gif",
+    "3" : "https://media.tenor.com/3jl3emrg-H0AAAAC/hello.gif",
+    "4" : "https://media.tenor.com/uUvx4rPO85AAAAAd/shima-rin-yuru-camp.gif",
+    "5" : "https://media.tenor.com/-KgmJMneKM8AAAAC/hello-anime.gif",
+    "6" : "https://media.tenor.com/3g3D1mECft0AAAAC/anime-hi.gif",
+    "7" : "https://media.tenor.com/NplHmWoUid0AAAAC/anime-girl.gif"
+  },
+  "wrong_channel" : {
+    "0" : "https://media.tenor.com/6Mnp6PY1e4gAAAAC/nadeshiko-anime.gif",
+    "1" : "https://media.tenor.com/KkjBLu0qWoAAAAAC/yui-hirasawa-k-on.gif",
+    "2" : "https://media.tenor.com/f-udqX_N-28AAAAd/bocchi-the-rock-oomfie-bocchi-the-rock.gif"
+  },
+  "limit_reached" : {
+    "0" : "https://media.tenor.com/fT_gwZ3_Y7EAAAAC/tired-dead.gif",
+    "1" : "https://media.tenor.com/DnGyvQ0zH90AAAAC/tired-breathe.gif"
+  },
+  "faulty_values" : {
+    "0" : "https://media.tenor.com/XpwpQKRg-JYAAAAd/minase-nagisa-minase.gif",
+    "1" : "https://media.tenor.com/rGJO11j_8QsAAAAd/kurona-math.gif",
+    "2" : "https://media.tenor.com/wQz-9wuNtl0AAAAd/anime-ore-gairu.gif"
+  },
+  "api_down" : {
+    "0" : "https://media.tenor.com/HItBOocy6ikAAAAC/umaru-sleeping.gif",
+    "1" : "https://media.tenor.com/qlxdd9DVMHUAAAAC/willcore-kon.gif",
+    "2" : "https://media.tenor.com/TvWZtfBFmXsAAAAd/anime-sleeping.gif",
+    "3" : "https://media.tenor.com/M1zdN66fUdkAAAAd/zzz-sleep.gif",
+    "4" : "https://media.tenor.com/3sgB0YbYtkgAAAAC/sleeping-anime.gif",
+    "5" : "https://media.tenor.com/tIuprgLY4c4AAAAC/sleeping-drool.gif"
   }
 }

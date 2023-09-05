@@ -22,9 +22,6 @@ import util
 
 
 SPORTS_CHANNEL_ID = util.SPORTS_CHANNEL_ID
-WRONG_CHANNEL_MESSAGE = util.WRONG_CHANNEL_MESSAGE
-LIMIT_REACHED_MESSAGE = util.LIMIT_REACHED_MESSAGE
-FAULTY_VALUE_MESSAGE = util.FAULTY_VALUE_MESSAGE
 COLOUR = util.Colour.FORMULA1.value
 
 CURRENT_SEASON = util.CURRENT_F1_SEASON
@@ -301,10 +298,10 @@ def driver_slash_option(number=1):
 async def command_function(ctx, func, *args):
     """ Function for the commands """
     if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
-        await ctx.send(WRONG_CHANNEL_MESSAGE)
+        await ctx.send(embed=util.get_error_embed("wrong_channel"))
         return
     elif limit_reached:
-        await ctx.send(LIMIT_REACHED_MESSAGE)
+        await ctx.send(embed=util.get_error_embed("limit_reached"))
         return
     increment_command_calls()
     await ctx.defer()
@@ -313,7 +310,7 @@ async def command_function(ctx, func, *args):
         if isinstance(result, interactions.Embed): await ctx.send(embed=result)
         elif isinstance(result, discord.File): await ctx.send(file=result)
         else: await ctx.send(result)
-    except DataNotLoadedError: await ctx.send(FAULTY_VALUE_MESSAGE)
+    except DataNotLoadedError: await ctx.send(embed=util.get_error_embed("faulty_value"))
     return
 
 
@@ -341,7 +338,7 @@ class Formula1(Extension):
                               gp_option: str = "", session_option: str = ""):
         try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
         except DataNotLoadedError:
-            await ctx.send(FAULTY_VALUE_MESSAGE)
+            await ctx.send(embed=util.get_error_embed("faulty_value"))
             return
         await command_function(ctx, no_group.result, year_option, gp_option, session_option)
 
@@ -375,9 +372,7 @@ class Formula1(Extension):
     async def laps_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON,
                             gp_option: str = "", session_option: str = ""):
         try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
-        except DataNotLoadedError:
-            await ctx.send(FAULTY_VALUE_MESSAGE)
-            return
+        except DataNotLoadedError: return await ctx.send(embed=util.get_error_embed("faulty_value"))
         await command_function(ctx, laps.overview_fastest_laps, year_option, gp_option,
                                session_option)
 
@@ -395,9 +390,7 @@ class Formula1(Extension):
                                year_option: int = CURRENT_SEASON,
                                gp_option: str = "", session_option: str = ""):
         try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
-        except DataNotLoadedError:
-            await ctx.send(FAULTY_VALUE_MESSAGE)
-            return
+        except DataNotLoadedError: return await ctx.send(embed=util.get_error_embed("faulty_value"))
         await command_function(ctx, laps.compare_laps, year_option, gp_option, session_option,
                                driver1_option.upper(), driver2_option.upper())
 
@@ -412,9 +405,7 @@ class Formula1(Extension):
     async def scatterplot_function(self, ctx: SlashContext, driver1_option, year_option: int = CURRENT_SEASON,
                                    gp_option: str = "", session_option: str = ""):
         try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
-        except DataNotLoadedError:
-            await ctx.send(FAULTY_VALUE_MESSAGE)
-            return
+        except DataNotLoadedError: return await ctx.send(embed=util.get_error_embed("faulty_value"))
         await command_function(ctx, laps.scatterplot, year_option, gp_option, session_option,
                                str.upper(driver1_option))
 
@@ -432,9 +423,7 @@ class Formula1(Extension):
                                  year_option: int = CURRENT_SEASON,
                                  gp_option: str = "", session_option: str = ""):
         try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
-        except DataNotLoadedError:
-            await ctx.send(FAULTY_VALUE_MESSAGE)
-            return
+        except DataNotLoadedError: return await ctx.send(embed=util.get_error_embed("faulty_value"))
         await command_function(ctx, laps.telemetry, year_option, gp_option, session_option,
                                driver1_option.upper(), driver2_option.upper())
 
@@ -451,9 +440,7 @@ class Formula1(Extension):
                                        year_option: int = CURRENT_SEASON,
                                        gp_option: str = "", session_option: str = ""):
         try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
-        except DataNotLoadedError:
-            await ctx.send(FAULTY_VALUE_MESSAGE)
-            return
+        except DataNotLoadedError: return await ctx.send(embed=util.get_error_embed("faulty_value"))
         await command_function(ctx, laps.track_dominance, year_option, gp_option, session_option,
                                driver1_option.upper(), driver2_option.upper())
 

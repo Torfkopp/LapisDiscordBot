@@ -122,4 +122,6 @@ def table(liga, saison):
         i += 1
     tabelle += "```"
 
-    return util.uwuify_by_chance(tabelle)
+    embed = interactions.Embed(title="Tabelle", description=tabelle, color=COLOUR)
+
+    return util.uwuify_by_chance(embed)

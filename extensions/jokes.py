@@ -1,12 +1,13 @@
 import random
 
+import interactions
 import requests
 from interactions import (
     Extension, OptionType, slash_option, slash_command, SlashContext, SlashCommandChoice
 )
 
 import util
-from extensions import secret
+from strunt import secret
 
 """ File for the joke commands """
 
@@ -27,7 +28,7 @@ class Jokes(Extension):
         opt_type=OptionType.STRING
     )
     async def dad_joke_function(self, ctx: SlashContext, theme_option: str = ""):
-        await ctx.send(get_dad_joke(theme_option))
+        await ctx.send(embed=get_dad_joke(theme_option))
 
     @joke_function.subcommand(sub_cmd_name="joke", sub_cmd_description="Erhalte einen zufälligen Witz")
     @slash_option(
@@ -55,12 +56,12 @@ class Jokes(Extension):
         ]
     )
     async def jokejoke_function(self, ctx: SlashContext, theme_option: str = "any", lang_option: str = "?lang=de"):
-        await ctx.send(get_joke(theme_option, lang_option))
+        await ctx.send(embed=get_joke(theme_option, lang_option))
 
     @joke_function.subcommand(sub_cmd_name="stammrunde",
                               sub_cmd_description="Erhalte einen zufälligen Stammrunden-Witz")
     async def norris_function(self, ctx: SlashContext):
-        await ctx.send(get_norris())
+        await ctx.send(embed=get_norris())
 
 
 def get_dad_joke(term):
@@ -88,7 +89,9 @@ def get_dad_joke(term):
         joke = response.json()
         joke = joke["joke"]
 
-    return util.uwuify_by_chance(joke)
+    embed = interactions.Embed(title=joke, color=COLOUR)
+
+    return util.uwuify_by_chance(embed)
 
 
 def get_joke(theme, lang):
@@ -106,7 +109,9 @@ def get_joke(theme, lang):
                  f"Delivery: ||{response['delivery']}||")
     else: joke += "I don't know how this could happen"
 
-    return util.uwuify_by_chance(joke)
+    embed = interactions.Embed(title=joke, color=COLOUR)
+
+    return util.uwuify_by_chance(embed)
 
 
 def get_norris():
@@ -118,7 +123,9 @@ def get_norris():
     print("Api-Call Jokes: " + url)
     response = response.json()
     joke = response['value']
-    # TODO try catch when API down -> own error message
     joke = joke.replace("Chuck Norris", random.choice(name_list))
     joke = joke.replace("' ", "'s ")
-    return util.uwuify_by_chance(joke)
+
+    embed = interactions.Embed(title=joke, color=COLOUR)
+
+    return util.uwuify_by_chance(embed)

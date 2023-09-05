@@ -1,5 +1,6 @@
 import random
 
+import interactions
 import requests
 from interactions import (
     Extension, slash_command, SlashContext, listen, ActionRow, Button, ButtonStyle, slash_option, OptionType,
@@ -108,7 +109,9 @@ class Trivia(Extension):
                 )
             )
 
-        await ctx.send(question, components=Trivia.components)
+        embed = interactions.Embed(title="Trivia", description=question, color=util.Colour.TRIVIA.value)
+
+        await ctx.send(embed=embed, components=Trivia.components)
 
 
 def get_trivia(category, difficulty):

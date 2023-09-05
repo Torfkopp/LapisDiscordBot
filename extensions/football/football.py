@@ -15,9 +15,6 @@ locale.setlocale(locale.LC_ALL, 'de_DE')  # Changes local to Deutsch for time di
 
 SPORTS_CHANNEL_ID = util.SPORTS_CHANNEL_ID
 
-WRONG_CHANNEL_MESSAGE = util.WRONG_CHANNEL_MESSAGE
-LIMIT_REACHED_MESSAGE = util.LIMIT_REACHED_MESSAGE
-
 CURRENT_SEASON = util.CURRENT_FOOTBALL_SEASON
 
 COMMAND_LIMIT = 3  # Limit of consecutive calls in a short time (~60 calls per hour possible with a limit of 3)
@@ -112,10 +109,10 @@ def season_slash_option():  # call with @season_option
 async def command_function(ctx, func, *args):
     """ Function for the commands """
     if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
-        await ctx.send(WRONG_CHANNEL_MESSAGE)
+        await ctx.send(embed=util.get_error_embed("wrong_channel"))
         return
     elif limit_reached:
-        await ctx.send(LIMIT_REACHED_MESSAGE)
+        await ctx.send(embed=util.get_error_embed("limit_reached"))
         return
     increment_command_calls()
     result = func(*args)

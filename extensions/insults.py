@@ -1,6 +1,7 @@
 import json
 import random
 
+import interactions
 import requests
 from interactions import (
     Extension, OptionType, slash_option, slash_command, SlashContext, SlashCommandChoice
@@ -32,11 +33,11 @@ class Insults(Extension):
             SlashCommandChoice(name="Franzakisch", value="fr")]
     )
     async def insult_function(self, ctx: SlashContext, language_option: str = "en"):
-        await ctx.send(get_insult(language_option))
+        await ctx.send(embed=get_insult(language_option))
 
     @slash_command(name="yomomma", description="Erhalte einen zufälligen deine Mutter Witz")
     async def yomomma_function(self, ctx: SlashContext):
-        await ctx.send(get_yomomma())
+        await ctx.send(embed=get_yomomma())
 
 
 def get_insult(lang):
@@ -54,7 +55,8 @@ def get_insult(lang):
 
     if lang != "en" and response['comment'] != "": insult += f" (Translation: {response['comment']}"
 
-    return util.uwuify_by_chance(insult)
+    embed = interactions.Embed(title=insult, color=COLOUR)
+    return util.uwuify_by_chance(embed)
 
 
 def get_yomomma():
@@ -62,4 +64,5 @@ def get_yomomma():
     # Thanks to: https://github.com/beanboi7/yomomma-apiv2/blob/master/jokes.json
     with open("resources/yomomma.json", encoding="utf-8") as f: yomomma = json.load(f)
 
-    return util.uwuify_by_chance(random.choice(yomomma))
+    embed = interactions.Embed(title=random.choice(yomomma), color=COLOUR)
+    return util.uwuify_by_chance(embed)

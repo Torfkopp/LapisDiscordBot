@@ -33,7 +33,8 @@ class Anime(Extension):
 
     @anime_function.subcommand(sub_cmd_name="quote", sub_cmd_description="Zufälliges Anime Zitat")
     async def quote_function(self, ctx: SlashContext):
-        await ctx.send(get_quote())
+        await ctx.defer()
+        await ctx.send(embed=get_quote())
 
     @anime_function.subcommand(sub_cmd_name="reaction", sub_cmd_description="Zufälliges Anime (Bewegt-)Reaktion")
     @slash_option(
@@ -77,8 +78,10 @@ def get_quote():
     result = "Anime: " + response['anime'] + "\n"
     result += "Character: " + response['character'] + "\n"
     result += "Quote: " + response['english']
+    embed = interactions.Embed(title="Anime Quote", description=result, color=COLOUR, thumbnail=picture_url)
+    embed.add_field(name=quote, value="\u200b")
 
-    return util.uwuify_by_chance(result)
+    return util.uwuify_by_chance(embed)
 
 
 def get_image(theme):

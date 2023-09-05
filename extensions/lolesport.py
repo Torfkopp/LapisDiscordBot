@@ -52,10 +52,10 @@ def increment_command_calls():
 async def command_function(ctx, func, *args):
     """ Function for the commands """
     if str(ctx.channel_id) != util.SPORTS_CHANNEL_ID:
-        await ctx.send(util.WRONG_CHANNEL_MESSAGE)
+        await ctx.send(util.get_error_embed("wrong_channel"))
         return
     elif limit_reached:
-        await ctx.send(util.LIMIT_REACHED_MESSAGE)
+        await ctx.send(util.get_error_embed("limit_reached"))
         return
     increment_command_calls()
     result = func(*args)

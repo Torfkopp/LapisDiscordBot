@@ -1,5 +1,6 @@
 import random
 
+import interactions
 import requests
 from interactions import (
     Extension, OptionType, slash_option, slash_command, SlashContext
@@ -25,7 +26,7 @@ class Quotes(Extension):
         opt_type=OptionType.STRING
     )
     async def advice_function(self, ctx: SlashContext, theme_option: str = ""):
-        await ctx.send(get_advice(theme_option))
+        await ctx.send(embed=get_advice(theme_option))
 
 
 def get_advice(term):
@@ -51,4 +52,6 @@ def get_advice(term):
         response = response.json()
         rat = response['slip']['advice']
 
-    return util.uwuify_by_chance(rat)
+    embed = interactions.Embed(title=rat, color=COLOUR)
+
+    return util.uwuify_by_chance(embed)
