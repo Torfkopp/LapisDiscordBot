@@ -12,6 +12,7 @@ from matplotlib import font_manager
 import util
 from core.extensions_loader import load_extensions
 from extensions import freegames, lolesport, lol_patchnotes
+from strunt import secret
 from extensions.football import football
 from extensions.formula1 import formula1
 
@@ -39,7 +40,7 @@ class ActivityClass:
 
     async def test_mode(self):
         self.status = discord.Status.DND
-        await self._change_activity("im Test Modus", discord.activity.ActivityType.COMPETING)
+        await self._change_activity("nem Test Modus", discord.activity.ActivityType.COMPETING)
 
     async def rotate_activity(self):
         """ Changes the activity depending on the situation """
@@ -49,7 +50,7 @@ class ActivityClass:
             if datetime.timedelta(minutes=0) < now - time < datetime.timedelta(minutes=100): watches_football = True
         for time in self.formula1_schedule:
             if datetime.timedelta(minutes=0) < now - time < datetime.timedelta(minutes=100): watches_formula1 = True
-        watches_football = True
+
         if watches_football and watches_formula1:
             self.status = discord.Status.DND
             name = "Fußball und Formel 1"
@@ -73,8 +74,7 @@ class ActivityClass:
         return
 
     async def _change_activity(self, activity_name, activity_type):
-        """ Internal method to chance the activity"""
-        print(activity_name, activity_type)
+        """ Internal method to chance the activity""" 
         activity = discord.activity.Activity.create(name=activity_name, type=activity_type)
         await bot.change_presence(status=self.status, activity=activity)
         return
@@ -144,6 +144,7 @@ async def on_ready():
     """ Is called when the bot is ready """
     print("Ready")
     print(f"This bot is owned by {bot.owner}")
+    await secret.main(bot)
     # Loads the Formula1 font
     for font in font_manager.findSystemFonts(["formula1/font"]): font_manager.fontManager.addfont(font)
 

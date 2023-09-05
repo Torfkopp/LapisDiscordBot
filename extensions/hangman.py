@@ -8,6 +8,8 @@ from interactions import (
 )
 from interactions.api.events import Component
 
+import util
+
 """ Hangman based on https://github.com/Sv443/Node-Hangman#readme """
 
 
@@ -28,6 +30,7 @@ async def on_hangman_component(event: Component):
                 break
         if component is not None: break
 
+    # noinspection PyUnresolvedReferences
     if not build_censored_word(component.label):
         component.style = ButtonStyle.RED
         Hangman.stage += 1
@@ -118,7 +121,7 @@ def build_censored_word(letter=None):
 
 def build_embed(win, loss):
     """ Returns an embed """
-    embed = interactions.Embed(title="Galgenmännchen")
+    embed = interactions.Embed(title="Galgenmännchen", color=util.Colour.HANGMAN.value)
     name = ""
     if win: name += "GEWONNEN\n"
     if loss: name += "VERLOREN\n"

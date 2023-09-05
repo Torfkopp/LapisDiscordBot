@@ -40,7 +40,8 @@ def create_schedule():
 
     response = requests.request("GET", url, data=payload, headers=headers)
     print("Api-Call Football: " + url)
-    data = response.json()
+    try: data = response.json()
+    except: return list(start_times)
     data = data['content']
     # Iterate over every league
     for league in data:

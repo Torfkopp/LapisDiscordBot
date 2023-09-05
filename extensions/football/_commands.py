@@ -103,7 +103,7 @@ def table(liga, saison):
     data = response.json()
 
     tabelle = "```"
-    tabelle += "# | Team".ljust(30) + "Sp Si Un Ni Tore  Diff".center(20) + "Punkte".rjust(10) + "\n"
+    tabelle += "# | Team".ljust(30) + "Sp Si Un Ni Tore  TD".center(20) + "Pkt".rjust(10) + "\n"
     i = 1
     for team in data:
         name = germanise(team['teamName'])

@@ -23,10 +23,11 @@ def get_giveaways():
     response = requests.request("GET", url, data=payload)
     print("Api-Call Freegames: " + url)
     response = response.json()
+    try: response[0]['id']
+    except KeyError: return util.get_error_embed("api_down")
+    embed = interactions.Embed(title="Free Games", color=util.Colour.FREE_GAMES.value)
 
-    embed = interactions.Embed(title="Free Games", color=util.FREE_GAMES_COLOUR)
-
-    for i in range(10):
+    for i in range(min(len(response), 10)):
         game = response[i]
         embed.add_field(
             name=f"{game['platforms']} | {game['title']} | {game['worth']}",

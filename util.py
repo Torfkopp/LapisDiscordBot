@@ -120,6 +120,7 @@ def uwuify_by_chance(obj):
 def uwuify_embed(embed):
     """ Uwuifies an embed """
     embed.title = uwuifier.UwUify(embed.title)
+    if embed.description is not None: embed.description = uwuifier.UwUify(embed.description)
     for field in embed.fields:
         field.name = uwuifier.UwUify(field.name, False, False)
         field.value = uwuifier.UwUify(field.value, False, False)

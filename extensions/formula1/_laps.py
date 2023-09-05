@@ -18,6 +18,7 @@ matplotlib.rcParams['font.family'] = 'Formula1'
 def overview_fastest_laps(year, gp, session):
     """ Returns an overview of the fastest laps """
     # We only want support for timedelta plotting in this
+    # noinspection PyTypeChecker
     fastf1.plotting.setup_mpl(mpl_timedelta_support=True, color_scheme=None, misc_mpl_mods=False)
 
     # Load session

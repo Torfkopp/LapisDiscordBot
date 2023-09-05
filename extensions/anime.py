@@ -73,7 +73,8 @@ def get_quote():
     response = requests.request("GET", url, data=payload)
     print("Api-Call Anime: " + url)
     response = response.json()
-    response = response['apiResult'][0]
+    try: response = response['apiResult'][0]
+    except KeyError: return util.get_error_embed("api_down")
 
     character = response['character']
     result = "Anime: " + response['anime'] + "\n"
@@ -108,12 +109,13 @@ def get_image(theme):
     print(response)
     print("Api-Call Anime: " + url)
     response = response.json()
-    response = response['apiResult']
+    try: response = response['apiResult']
+    except KeyError: return util.get_error_embed("api_down")
 
     image = response['url'][0]
 
-    embed = interactions.Embed(title=theme.title())
+    embed = interactions.Embed(title="Anime Image", description=theme.title(), color=COLOUR)
     embed.set_image(url=image)
     embed.set_footer(image)
-    time.sleep(5)  # Very slow loading gifs, so this hopefully helps with it
+    time.sleep(10)  # Very slow loading gifs, so this hopefully helps with it
     return embed

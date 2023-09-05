@@ -1,3 +1,4 @@
+import html
 import random
 
 import interactions
@@ -52,6 +53,7 @@ async def on_trivia_component(event: Component):
     for component in Trivia.components.components:
         component.disabled = True
         if component == ctx.component: component.style = ButtonStyle.RED
+        # noinspection PyUnresolvedReferences
         if component.label == Trivia.right: component.style = ButtonStyle.GREEN  # warning ignorable
 
     await ctx.edit_origin(components=Trivia.components)
@@ -130,7 +132,7 @@ def get_trivia(category, difficulty):
     question += f"Difficulty: {trivia['difficulty']}\n"
     question += "\n"
     question += f"Question: {trivia['question']}"
-    question = question.replace("&quot;", '"')
+    question = html.unescape(question)
 
     answers = trivia['incorrect_answers']
     correct = trivia['correct_answer']
