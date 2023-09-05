@@ -112,7 +112,7 @@ class LoLPatchnotes(Extension):
 def _make_embed():
     embed = interactions.Embed(
         title=LoLPatchnotes.title,
-        color=util.LOLESPORTS_COLOUR,
+        color=util.Colour.LOLESPORTS.value,
         url=LoLPatchnotes.url
     )
     embed.set_thumbnail("https://i.imgur.com/45aABYm.png")

@@ -13,6 +13,7 @@ from extensions import secret
 
 def setup(bot): Jokes(bot)
 
+COLOUR = util.Colour.JOKES.value
 
 class Jokes(Extension):
     @slash_command(name="joke", description="Joke")

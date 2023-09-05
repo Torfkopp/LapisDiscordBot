@@ -14,6 +14,8 @@ import util
 def setup(bot): Anime(bot)
 
 
+COLOUR = util.Colour.ANIME.value
+
 THEME_OPTIONS = [
     "bite", "blush", "bonk", "bully",
     "cuddle", "cry", "dance", "glomp",

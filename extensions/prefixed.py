@@ -6,6 +6,9 @@ from interactions.ext.prefixed_commands import prefixed_command, PrefixedContext
 def setup(bot): Prefixed(bot)
 
 
+COLOUR = util.Colour.PREFIXED.value
+
+
 class Prefixed(Extension):
     @prefixed_command(name="hello")
     async def hello_function(self, ctx: PrefixedContext):

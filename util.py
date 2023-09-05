@@ -1,19 +1,14 @@
 import datetime
 import json
 import random
+from enum import Enum
 
 import interactions
 from interactions.models import discord
 
 import uwuifier
 
-UWUCHANCE = 5  # D-De chance dat a commyand wesponse gets u-u-uwuified
-
-FORMULA1_COLOUR = discord.Color.from_rgb(255, 24, 1)  # Formula1 Red
-FOOTBALL_COLOUR = discord.Color.from_rgb(29, 144, 83)  # Werder Bremen Green
-LOLESPORTS_COLOUR = discord.Color.from_rgb(200, 155, 60)  # League Gold
-FREE_GAMES_COLOUR = discord.BrandColors.WHITE
-
+# CHANNELS
 with open("config.json") as f: lines = json.load(f)
 TOKEN = lines['token']
 SPORTS_CHANNEL_ID = lines['sport_channel_id']
@@ -25,8 +20,30 @@ WRONG_CHANNEL_MESSAGE = "Falscher Channel, Bro"
 LIMIT_REACHED_MESSAGE = "Zu viele Commands, Bro"
 FAULTY_VALUE_MESSAGE = "Deine Werte passen iwie nicht, Bro"
 
+# COLOURS
+class Colour(Enum):
+    FOOTBALL = discord.Color.from_rgb(29, 144, 83)  # Werder Bremen Green
+    FORMULA1 = discord.Color.from_rgb(255, 24, 1)  # Formula1 Red
+    LOLESPORTS = discord.Color.from_rgb(200, 155, 60)  # League Gold
+
+    ANIME = discord.BrandColors.FUCHSIA
+    FREE_GAMES = discord.BrandColors.WHITE
+    HANGMAN = discord.BrandColors.BLACK
+    INSULTS = discord.MaterialColors.BROWN
+    JOKES = discord.MaterialColors.YELLOW
+    PREFIXED = discord.BrandColors.BLURPLE
+    QUOTES = discord.FlatUIColors.ASBESTOS
+    SECRET = discord.MaterialColors.DEEP_PURPLE
+    TRIVIA = discord.MaterialColors.LIGHT_BLUE
+
+    ERROR = discord.BrandColors.RED
+
+
+# Other settings
 CURRENT_F1_SEASON = datetime.datetime.now().year  # An F1 Season starts and ends within one year
 CURRENT_FOOTBALL_SEASON = 2023  # 2023/2024 -> 2023
+
+UWUCHANCE = 5  # D-De chance dat a commyand wesponse gets u-u-uwuified
 
 
 def random_colour_generator():

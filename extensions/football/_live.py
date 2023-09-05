@@ -10,7 +10,7 @@ from util import germanise
 """ All methods for the football live scoring """
 
 COMPETITION_LIST = ["Bundesliga", "2. Bundesliga", "DFB-Pokal"]  # List of League interested in
-COLOUR = util.FOOTBALL_COLOUR
+COLOUR = util.Colour.FOOTBALL.value
 
 
 def create_schedule():

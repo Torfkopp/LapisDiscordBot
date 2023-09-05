@@ -10,7 +10,7 @@ from interactions.client.utils import underline, bold
 
 import util
 
-COLOUR = util.LOLESPORTS_COLOUR
+COLOUR = util.Colour.LOLESPORTS.value
 COMMAND_LIMIT = 3  # Limit of consecutive calls in a short time (~60 calls per hour possible with a limit of 3)
 
 LEAGUE_DICT = {

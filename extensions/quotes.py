@@ -13,6 +13,9 @@ import util
 def setup(bot): Quotes(bot)
 
 
+COLOUR = util.Colour.QUOTES.value
+
+
 class Quotes(Extension):
     @slash_command(name="advice", description="Erhalte einen zufälligen Ratschlag")
     @slash_option(

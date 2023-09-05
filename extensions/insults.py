@@ -14,6 +14,9 @@ import util
 def setup(bot): Insults(bot)
 
 
+COLOUR = util.Colour.INSULTS.value
+
+
 class Insults(Extension):
     @slash_command(name="insult", description="Erhalte eine zufällige Beleidigung")
     @slash_option(

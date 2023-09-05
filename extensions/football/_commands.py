@@ -8,7 +8,7 @@ from util import germanise
 
 """ All methods for the football commands"""
 
-COLOUR = util.FOOTBALL_COLOUR
+COLOUR = util.Colour.FOOTBALL.value
 
 
 def goalgetter(liga, saison):

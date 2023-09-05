@@ -12,7 +12,7 @@ import util
 
 """ All methods for commands without group"""
 
-COLOUR = util.FORMULA1_COLOUR
+COLOUR = util.Colour.FORMULA1.value
 CURRENT_SEASON = util.CURRENT_F1_SEASON
 
 
