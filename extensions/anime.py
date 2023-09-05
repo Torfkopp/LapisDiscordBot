@@ -16,15 +16,13 @@ def setup(bot): Anime(bot)
 
 COLOUR = util.Colour.ANIME.value
 
-THEME_OPTIONS = [
-    "bite", "blush", "bonk", "bully",
-    "cuddle", "cry", "dance", "glomp",
-    "handhold", "happy", "highfive", "hug",
-    "kick", "kill", "kiss",
-    "lick", "nom", "pat", "poke",
-    "slap", "smile", "smug",
-    "wave", "wink", "yeet",
-]
+THEME_OPTIONS = ["airkiss", "angrystare", "bite", "bleh", "blush", "brofist", "celebrate", "cheers", "clap", "confused",
+                 "cool", "cry", "cuddle", "dance", "drool", "evillaugh", "facepalm", "handhold", "happy", "headbang",
+                 "hug", "kiss", "laugh", "lick", "love", "mad", "nervous", "no", "nom", "nosebleed", "nuzzle", "nyah",
+                 "pat", "peek", "pinch", "poke", "pout", "punch", "roll", "run", "sad", "scared", "shrug", "shy",
+                 "sigh", "sip", "slap", "sleep", "slowclap", "smack", "smile", "smug", "sneeze", "sorry", "stare",
+                 "stop", "surprised", "sweat", "thumbsup", "tickle", "tired", "wave", "wink", "woah", "yawn", "yay",
+                 "yes"]
 
 
 class Anime(Extension):
@@ -38,31 +36,31 @@ class Anime(Extension):
 
     @anime_function.subcommand(sub_cmd_name="reaction", sub_cmd_description="Zufälliges Anime (Bewegt-)Reaktion")
     @slash_option(
-        name="theme_option",
-        description="Thema der Reaktion",
+        name="theme_option1",
+        description="Thema (A-L)",
         required=False,
         opt_type=OptionType.STRING,
-        choices=[SlashCommandChoice(name=k.title(), value=k) for k in THEME_OPTIONS]
+        choices=[SlashCommandChoice(name=k.title(), value=k) for k in THEME_OPTIONS[:25]]
     )
-    async def reaction_function(self, ctx: SlashContext, theme_option: str = ""):
-        if theme_option == "": theme_option = random.choice(THEME_OPTIONS)
-        await ctx.defer()
-        await ctx.send(embed=get_image(theme_option))
-
-    @anime_function.subcommand(sub_cmd_name="image", sub_cmd_description="Zufälliges Anime Bild")
     @slash_option(
-        name="theme_option",
-        description="Thema des Bilds",
+        name="theme_option2",
+        description="Thema (M-Si)",
         required=False,
         opt_type=OptionType.STRING,
-        choices=[SlashCommandChoice(name="Waifu", value="sfw"),
-                 SlashCommandChoice(name="Awoo", value="awoo"),
-                 SlashCommandChoice(name="Neko", value="sfwNeko"),
-                 ]
+        choices=[SlashCommandChoice(name=k.title(), value=k) for k in THEME_OPTIONS[25:46]]
     )
-    async def image_function(self, ctx: SlashContext, theme_option: str = "sfw"):
+    @slash_option(
+        name="theme_option3",
+        description="Thema (Sl-Z)",
+        required=False,
+        opt_type=OptionType.STRING,
+        choices=[SlashCommandChoice(name=k.title(), value=k) for k in THEME_OPTIONS[46:]]
+    )
+    async def reaction_function(self, ctx: SlashContext,
+                                theme_option1: str= None, theme_option2:str= None, theme_option3:str= None):
+        theme_option = theme_option1 or theme_option2 or theme_option3 or random.choice(THEME_OPTIONS)
         await ctx.defer()
-        await ctx.send(embed=get_image(theme_option))
+        await ctx.send(embed=get_reaction(theme_option))
 
 
 def get_quote():
@@ -72,9 +70,10 @@ def get_quote():
 
     response = requests.request("GET", url, data=payload)
     print("Api-Call Anime: " + url)
-    response = response.json()
-    try: response = response['apiResult'][0]
-    except KeyError: return util.get_error_embed("api_down")
+    try:
+        response = response.json()
+        response = response['apiResult'][0]
+    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
 
     character = response['character']
     result = "Anime: " + response['anime'] + "\n"
@@ -100,22 +99,15 @@ def get_quote():
     return util.uwuify_by_chance(embed)
 
 
-def get_image(theme):
-    """ Gets a random image """
-    url = f"https://kyoko.rei.my.id/api/{theme}.php"
-    payload = ""
-
-    response = requests.request("GET", url, data=payload)
-    print(response)
+def get_reaction(theme):
+    """ Gets a random anime reaction depending on the theme """
+    url = f"https://api.otakugifs.xyz/gif?reaction={theme}"
+    response = requests.request("GET", url, data="")
     print("Api-Call Anime: " + url)
-    response = response.json()
-    try: response = response['apiResult']
-    except KeyError: return util.get_error_embed("api_down")
+    try: url = response.json()['url']
+    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
 
-    image = response['url'][0]
+    embed = interactions.Embed(title=f"{theme.title()} Reaction", color=COLOUR)
+    embed.set_image(url=url)
 
-    embed = interactions.Embed(title="Anime Image", description=theme.title(), color=COLOUR)
-    embed.set_image(url=image)
-    embed.set_footer(image)
-    time.sleep(10)  # Very slow loading gifs, so this hopefully helps with it
     return embed
