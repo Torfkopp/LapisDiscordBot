@@ -74,7 +74,7 @@ def lap_time_distribution(year, gp):
     finishing_order = [race.get_driver(i)["Abbreviation"] for i in point_finishers]
 
     # Modify Driver_colors palette. For that, change key from full name to Abbreviation.
-    # TODO evtl. Fehler bei Fahrern, die nicht zu den 20 Aktuellen gehören und in die Top 10 fahren
+    # May fail when there's a new driver getting into the top 10, will cross that bridge when we get there
     driver_colors = {abv: fastf1.plotting.DRIVER_COLORS[driver] for abv, driver in
                      fastf1.plotting.DRIVER_TRANSLATE.items()}
 

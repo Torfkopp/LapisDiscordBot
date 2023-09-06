@@ -1,4 +1,5 @@
 import datetime
+import random
 import traceback
 
 import interactions
@@ -12,9 +13,9 @@ from matplotlib import font_manager
 import util
 from core.extensions_loader import load_extensions
 from extensions import freegames, lolesport, lol_patchnotes
-from strunt import secret
 from extensions.football import football
 from extensions.formula1 import formula1
+from strunt import secret
 
 bot = Client(intents=Intents.DEFAULT, send_command_tracebacks=False)
 prefixed_commands.setup(bot)
@@ -28,10 +29,27 @@ TEST_MODE_ON = False
 class ActivityClass:
     football_schedule = []
     formula1_schedule = []
-    # TODO Hier einiges hinpacken
     # "GAME" (Spielt), "STREAMING" (Streamt), "LISTENING" (Hört X zu), "WATCHING" (Schaut), "COMPETING" (Tritt an)
-    activities = [("sich Bücher an", discord.activity.ActivityType.WATCHING),
-                  ("sich Anime an", discord.activity.ActivityType.WATCHING)]
+    activities = [
+        # Bot-"Personality" stuff
+        ("sich Bücher an", discord.activity.ActivityType.WATCHING),
+        ("Marios Gelaber", discord.activity.ActivityType.LISTENING),
+        ("ein paar Anime", discord.activity.ActivityType.STREAMING),
+        ("HdR zum X-ten Mal", discord.activity.ActivityType.WATCHING),
+        ("und tritt aus", discord.activity.ActivityType.COMPETING),
+        ("Anime OST", discord.activity.ActivityType.LISTENING),
+        ("nach nützlichen APIs", discord.activity.ActivityType.WATCHING),
+        # Extension related stuff
+        ("sich Anime an", discord.activity.ActivityType.WATCHING),
+        ("nach kostenlosen Spielen", discord.activity.ActivityType.WATCHING),
+        ("Galgenmännchen", discord.activity.ActivityType.GAME),
+        ("nach neuen Insults", discord.activity.ActivityType.WATCHING),
+        ("die Witze durch", discord.activity.ActivityType.WATCHING),
+        ("sich die Patchnotes an", discord.activity.ActivityType.WATCHING),
+        ("LoL-Esport", discord.activity.ActivityType.STREAMING),
+        ("weisen Menschen", discord.activity.ActivityType.LISTENING),
+        ("in einer Quizshow", discord.activity.ActivityType.COMPETING)
+    ]
     status = discord.Status.IDLE  # possible: "ONLINE", "OFFLINE", "DND", "IDLE", "INVISIBLE"
 
     def __init__(self, football_schedule, formula1_schedule):
@@ -65,8 +83,9 @@ class ActivityClass:
             type_ = discord.activity.ActivityType.WATCHING
         else:
             self.status = discord.Status.IDLE
-            activity = self.activities.pop()  # Take first element and put it at the end
-            self.activities.insert(0, activity)
+            # activity = self.activities.pop()  # Take first element and put it at the end
+            # self.activities.insert(0, activity)
+            activity = random.choice(self.activities)  # Takes a random element
             name = activity[0]
             type_ = activity[1]
 
@@ -74,7 +93,7 @@ class ActivityClass:
         return
 
     async def _change_activity(self, activity_name, activity_type):
-        """ Internal method to chance the activity""" 
+        """ Internal method to chance the activity"""
         activity = discord.activity.Activity.create(name=activity_name, type=activity_type)
         await bot.change_presence(status=self.status, activity=activity)
         return
