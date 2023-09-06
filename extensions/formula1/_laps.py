@@ -82,7 +82,7 @@ def overview_fastest_laps(year, gp, session):
                  f"Fastest Lap: {lap_time_string} ({pole_lap['Driver']})")
 
     # Save the figure and let Discord load it
-    plt.savefig('formula1/overview.png', bbox_inces='tight')
+    plt.savefig('formula1/overview.png', bbox_inches='tight')
     file = discord.File("formula1/overview.png", file_name="image.png")
 
     return file
@@ -476,7 +476,7 @@ def track_dominance(year, gp, session, driver1, driver2):
     # save plot
     plt.rcParams['savefig.dpi'] = 300
 
-    plt.savefig("formula1/trackdom.png")
+    plt.savefig("formula1/trackdom.png", bbox_inches='tight')
     file = discord.File("formula1/trackdom.png", file_name="image.png")
 
     return file

@@ -9,13 +9,13 @@ import util
 """ Methods for the race info command"""
 # all three methods part of the fastf1 docs examples
 
-# enabling misc_mpl_mods will turn on minor grid lines that clutters the plot
-fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False)
 matplotlib.rcParams['font.family'] = 'Formula1'
 
 
 def position_change(year, gp):
     """ Returns the place changes during the race"""
+    # enabling misc_mpl_mods will turn on minor grid lines that clutters the plot
+    fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False)
     # Load the session
     session = fastf1.get_session(year, gp, 'R')
     session.load(telemetry=False, weather=False, messages=False)
@@ -61,6 +61,8 @@ def position_change(year, gp):
 
 def lap_time_distribution(year, gp):
     """ Returns the drivers' lap time distribution during the race """
+    # enabling misc_mpl_mods will turn on minor grid lines that clutters the plot
+    fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False)
     # Load the race session
     race = fastf1.get_session(year, gp, 'R')
     race.load(weather=False, messages=False)
@@ -124,6 +126,8 @@ def lap_time_distribution(year, gp):
 
 def strategy(year, gp):
     """ Returns the tyre strategies during the race """
+    # enabling misc_mpl_mods will turn on minor grid lines that clutters the plot
+    fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False)
     # Load the race session
     session = fastf1.get_session(year, gp, 'R')
     session.load(messages=False)

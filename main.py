@@ -29,12 +29,12 @@ TEST_MODE_ON = False
 class ActivityClass:
     football_schedule = []
     formula1_schedule = []
-    # "GAME" (Spielt), "STREAMING" (Streamt), "LISTENING" (Hört X zu), "WATCHING" (Schaut), "COMPETING" (Tritt an)
+    # "GAME" (Spielt), "STREAMING" (Streamt), "LISTENING" (Hört X zu), "WATCHING" (Schaut), "COMPETING" (Tritt an in)
     activities = [
         # Bot-"Personality" stuff
         ("sich Bücher an", discord.activity.ActivityType.WATCHING),
         ("Marios Gelaber", discord.activity.ActivityType.LISTENING),
-        ("ein paar Anime", discord.activity.ActivityType.STREAMING),
+        ("ein paar Anime", discord.activity.ActivityType.WATCHING),
         ("HdR zum X-ten Mal", discord.activity.ActivityType.WATCHING),
         ("und tritt aus", discord.activity.ActivityType.COMPETING),
         ("Anime OST", discord.activity.ActivityType.LISTENING),
@@ -46,9 +46,9 @@ class ActivityClass:
         ("nach neuen Insults", discord.activity.ActivityType.WATCHING),
         ("die Witze durch", discord.activity.ActivityType.WATCHING),
         ("sich die Patchnotes an", discord.activity.ActivityType.WATCHING),
-        ("LoL-Esport", discord.activity.ActivityType.STREAMING),
+        ("LoL-Esport", discord.activity.ActivityType.WATCHING),
         ("weisen Menschen", discord.activity.ActivityType.LISTENING),
-        ("in einer Quizshow", discord.activity.ActivityType.COMPETING)
+        ("einer Quizshow", discord.activity.ActivityType.COMPETING)
     ]
     status = discord.Status.IDLE  # possible: "ONLINE", "OFFLINE", "DND", "IDLE", "INVISIBLE"
 
