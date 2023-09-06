@@ -63,7 +63,7 @@ class Trivia(Extension):
     components = ActionRow()
     right = ""
 
-    @slash_command(name="trivia", description="Erhalte eine Trivia Frage")
+    @slash_command(name="trivia", description="Erhalte eine Trivia-Frage")
     @slash_option(
         name="category_option",
         description="Kategorie der Frage",

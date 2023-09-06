@@ -61,7 +61,7 @@ class Jokes(Extension):
         await ctx.send(embed=get_joke(theme_option, lang_option))
 
     @joke_function.subcommand(sub_cmd_name="stammrunde",
-                              sub_cmd_description="Erhalte einen zufälligen Stammrunden-Witz")
+                              sub_cmd_description="Erhalte einen zufälligen Fakt über ein Stammrundenmitglied")
     async def norris_function(self, ctx: SlashContext):
         await ctx.send(embed=get_norris())
 

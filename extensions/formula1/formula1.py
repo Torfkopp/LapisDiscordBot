@@ -349,7 +349,7 @@ class Formula1(Extension):
 
     @f1_function.subcommand(
         sub_cmd_name="next",
-        sub_cmd_description="Das nächstes Event oder alle verbleibenden Rennen (Standard: nur nächstes)"
+        sub_cmd_description="Das nächstes Rennwochenende oder alle verbleibenden Rennen (Standard: nur nächstes)"
     )
     @slash_option(
         name="allnext_option",
@@ -467,7 +467,7 @@ class Formula1(Extension):
 
     @raceinfo_function.subcommand(
         sub_cmd_name="ltd",
-        sub_cmd_description="Lap Time Distribution der Fahrer für das Rennen (Standard: Letztes Rennen)"
+        sub_cmd_description="Lap Time Distribution der ersten 10 Fahrer für das Rennen (Standard: Letztes Rennen)"
     )
     @year_slash_option(2018)
     @grandprix_slash_option()
@@ -558,7 +558,7 @@ class Formula1(Extension):
 
     @standings_function.subcommand(
         sub_cmd_name="winnable",
-        sub_cmd_description="Für welchen Fahrer ist die Meisterschaft noch gewinnbar?"
+        sub_cmd_description="Für welchen Fahrer ist die Meisterschaft noch winnable?"
     )
     async def winnable_function(self, ctx: SlashContext):
         await command_function(ctx, standings.whocanwin())

@@ -25,6 +25,7 @@ class Colour(Enum):
     ANIME = discord.BrandColors.FUCHSIA
     FREE_GAMES = discord.BrandColors.WHITE
     HANGMAN = discord.BrandColors.BLACK
+    HELP = discord.BrandColors.BLURPLE
     INSULTS = discord.MaterialColors.BROWN
     JOKES = discord.MaterialColors.YELLOW
     PREFIXED = discord.BrandColors.BLURPLE

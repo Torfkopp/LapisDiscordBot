@@ -34,7 +34,7 @@ class Anime(Extension):
         await ctx.defer()
         await ctx.send(embed=get_quote())
 
-    @anime_function.subcommand(sub_cmd_name="reaction", sub_cmd_description="Zufälliges Anime (Bewegt-)Reaktion")
+    @anime_function.subcommand(sub_cmd_name="reaction", sub_cmd_description="Zufällige Anime Bewegtbildreaktion")
     @slash_option(
         name="theme_option1",
         description="Thema (A-L)",

@@ -81,11 +81,12 @@ class LoLPatchnotes(Extension):
         await ctx.send(embed=get_patch_image())
 
     @patch_function.subcommand(sub_cmd_name="summary",
-                               sub_cmd_description="Erhalte die Zusammenfassungen der Änderungen")
+                               sub_cmd_description="Erhalte die Zusammenfassungstexte der Änderungen")
     async def summary_function(self, ctx: SlashContext):
         await ctx.send(embed=get_patch_summaries())
 
-    @patch_function.subcommand(sub_cmd_name="details", sub_cmd_description="Erhalte die Details des Patches")
+    @patch_function.subcommand(sub_cmd_name="details",
+                               sub_cmd_description="Erhalte die Änderungen des Patches im Details")
     @slash_option(
         name="type_filter_option",
         description="Filterung nach Kategorie",

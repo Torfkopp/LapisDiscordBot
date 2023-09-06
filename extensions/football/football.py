@@ -131,7 +131,7 @@ class Football(Extension):
         await command_function(ctx, commands.goalgetter, liga_option, saison_option)
 
     @goalgetter_function.subcommand(sub_cmd_name="matchday",
-                                    sub_cmd_description="Gibtn Spieltag der Liga zur Saison "
+                                    sub_cmd_description="Gibtn Spieltag der Liga in der Saison "
                                                         "(Standard: Momentaner Bundesliga Spieltag")
     @league_slash_option()
     @season_slash_option()
@@ -176,7 +176,7 @@ class Football(Extension):
         await command_function(ctx, commands.matches, team_option, past_option, future_option)
 
     @goalgetter_function.subcommand(sub_cmd_name="table",
-                                    sub_cmd_description="Tabelle der Liga zur Saison (Standard: Jetzige Bundesliga)")
+                                    sub_cmd_description="Tabelle der Liga in der Saison (Standard: Jetzige Bundesliga)")
     @league_slash_option()
     @season_slash_option()
     async def table_function(self, ctx: SlashContext, liga_option: str = LEAGUE_CHOICES[0].value,

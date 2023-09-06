@@ -35,7 +35,7 @@ class Insults(Extension):
     async def insult_function(self, ctx: SlashContext, language_option: str = "en"):
         await ctx.send(embed=get_insult(language_option))
 
-    @slash_command(name="yomomma", description="Erhalte einen zufälligen deine Mutter Witz")
+    @slash_command(name="yomomma", description="Erhalte eine zufällige Beschreibung deiner Mutter")
     async def yomomma_function(self, ctx: SlashContext):
         await ctx.send(embed=get_yomomma())
 
