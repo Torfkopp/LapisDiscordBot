@@ -7,7 +7,7 @@ from interactions import (
 )
 
 import util
-from strunt import secret
+import secret
 
 """ File for the joke commands """
 

@@ -1,5 +1,5 @@
 config.json
 test.py
-strunt/secret.py
+secret.py
 /strunt/
 /formula1/*.png

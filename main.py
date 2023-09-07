@@ -10,12 +10,12 @@ from interactions.ext import prefixed_commands
 from interactions.models import discord
 from matplotlib import font_manager
 
+import secret
 import util
 from core.extensions_loader import load_extensions
 from extensions import freegames, lolesport, lol_patchnotes
 from extensions.football import football
 from extensions.formula1 import formula1
-from strunt import secret
 
 bot = Client(intents=Intents.DEFAULT, send_command_tracebacks=False)
 prefixed_commands.setup(bot)
