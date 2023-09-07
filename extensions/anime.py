@@ -1,5 +1,4 @@
 import random
-import time
 
 import interactions
 import requests
@@ -16,18 +15,46 @@ def setup(bot): Anime(bot)
 
 COLOUR = util.Colour.ANIME.value
 
-THEME_OPTIONS = ["airkiss", "angrystare", "bite", "bleh", "blush", "brofist", "celebrate", "cheers", "clap", "confused",
-                 "cool", "cry", "cuddle", "dance", "drool", "evillaugh", "facepalm", "handhold", "happy", "headbang",
-                 "hug", "kiss", "laugh", "lick", "love", "mad", "nervous", "no", "nom", "nosebleed", "nuzzle", "nyah",
-                 "pat", "peek", "pinch", "poke", "pout", "punch", "roll", "run", "sad", "scared", "shrug", "shy",
-                 "sigh", "sip", "slap", "sleep", "slowclap", "smack", "smile", "smug", "sneeze", "sorry", "stare",
-                 "stop", "surprised", "sweat", "thumbsup", "tickle", "tired", "wave", "wink", "woah", "yawn", "yay",
+THEME_OPTIONS = ["angrystare", "bleh", "blush", "celebrate", "clap", "confused",
+                 "cool", "cry", "dance", "drool", "evillaugh", "facepalm", "happy", "headbang",
+                 "laugh", "love", "mad", "nervous", "no", "nom", "nosebleed", "nyah",
+                 "peek", "pout", "punch", "roll", "run", "sad", "scared", "shrug", "shy",
+                 "sigh", "sip", "sleep", "slowclap", "smile", "smug", "sneeze", "sorry", "stare",
+                 "surprised", "sweat", "thumbsup", "tired", "wave", "wink", "woah", "yawn", "yay",
                  "yes"]
+
+ACTION_OPTIONS = {
+    "airkiss": "luftküsst", "bite": "beißt", "brofist": "brofisted", "cheers": "prostet",
+    "cuddle": "kuschelt mit", "handhold": "hält Händchen mit", "hug": "umarmt", "kiss": "küsst",
+    "lick": "leckt", "nuzzle": "nuzzlet", "pat": "streichelt", "pinch": "kneift", "poke": "stubst",
+    "punch": "schlägt", "slap": "ohrfeigt", "smack": "klatscht", "stop": "stoppt", "tickle": "kitzelt"
+}
 
 
 class Anime(Extension):
     @slash_command(name="anime", description="Anime Stuff")
     async def anime_function(self, ctx: SlashContext): await ctx.send("Anime")
+
+    @anime_function.subcommand(sub_cmd_name="action", sub_cmd_description="Mach was Animeliches zu jemanden")
+    @slash_option(
+        name="action_option",
+        description="Aktion",
+        required=True,
+        opt_type=OptionType.STRING,
+        choices=[SlashCommandChoice(name=k.title(), value=k) for k in ACTION_OPTIONS]
+    )
+    @slash_option(
+        name="user_option",
+        description="Ziel",
+        required=True,
+        opt_type=OptionType.USER
+    )
+    async def action_function(self, ctx: SlashContext, action_option, user_option):
+        await ctx.defer()
+        ping = f"{ctx.author.mention} {ACTION_OPTIONS.get(action_option)} {user_option.mention}"
+        embed = get_reaction(action_option)
+        embed.title = None
+        await ctx.send(ping, embed=embed)
 
     @anime_function.subcommand(sub_cmd_name="quote", sub_cmd_description="Zufälliges Anime Zitat")
     async def quote_function(self, ctx: SlashContext):
@@ -37,28 +64,20 @@ class Anime(Extension):
     @anime_function.subcommand(sub_cmd_name="reaction", sub_cmd_description="Zufällige Anime Bewegtbildreaktion")
     @slash_option(
         name="theme_option1",
-        description="Thema (A-L)",
+        description="Thema (A-Q)",
         required=False,
         opt_type=OptionType.STRING,
         choices=[SlashCommandChoice(name=k.title(), value=k) for k in THEME_OPTIONS[:25]]
     )
     @slash_option(
         name="theme_option2",
-        description="Thema (M-Si)",
+        description="Thema (R-Z)",
         required=False,
         opt_type=OptionType.STRING,
-        choices=[SlashCommandChoice(name=k.title(), value=k) for k in THEME_OPTIONS[25:46]]
+        choices=[SlashCommandChoice(name=k.title(), value=k) for k in THEME_OPTIONS[25:]]
     )
-    @slash_option(
-        name="theme_option3",
-        description="Thema (Sl-Z)",
-        required=False,
-        opt_type=OptionType.STRING,
-        choices=[SlashCommandChoice(name=k.title(), value=k) for k in THEME_OPTIONS[46:]]
-    )
-    async def reaction_function(self, ctx: SlashContext,
-                                theme_option1: str= None, theme_option2:str= None, theme_option3:str= None):
-        theme_option = theme_option1 or theme_option2 or theme_option3 or random.choice(THEME_OPTIONS)
+    async def reaction_function(self, ctx: SlashContext, theme_option1: str = None, theme_option2: str = None):
+        theme_option = theme_option1 or theme_option2 or random.choice(THEME_OPTIONS)
         await ctx.defer()
         await ctx.send(embed=get_reaction(theme_option))
 

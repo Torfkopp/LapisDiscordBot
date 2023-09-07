@@ -34,7 +34,8 @@ def get_help():
                           "/football matches: Alle Spiele des Teams von vor y und bis in x Wochen\n"
                           "/football table: Tabelle der Liga in der Saison")
     embed.add_field(name="Anime",
-                    value="/anime quote: Zufälliges Anime Zitat\n"
+                    value="/anime action: Tue einer Person eine Animeaktion an"
+                          "/anime quote: Zufälliges Anime Zitat\n"
                           "/anime reaction: Zufällige Anime Bewegtbildreaktion")
     embed.add_field(name="Free Games", value="/freegames: Erhalte momentan kostenlos erhaltbare PC-Spiele")
     embed.add_field(name="Hangman", value="/hangman: Spiele Galgenmännchen")
