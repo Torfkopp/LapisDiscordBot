@@ -11,6 +11,7 @@ from interactions import (
 from interactions.ext.paginators import Paginator
 
 import util
+from core import log
 
 
 def setup(bot): LoLPatchnotes(bot)
@@ -29,14 +30,14 @@ def update():
     """ Updates the url and soup to the newest patch notes """
     url = f"https://www.leagueoflegends.com/{PATCH_LANGUAGE}/news/tags/patch-notes/"
     response = requests.get(url)
-    print("Request page LoLPatch: " + url)
+    log.write("Request page LoLPatch: " + url)
     soup = BeautifulSoup(response.content, 'html.parser')
     latest_patch_link = soup.find('a', href=True)
     latest_patch_link = latest_patch_link['href']
 
     url = f"https://www.leagueoflegends.com{latest_patch_link}"
     response = requests.get(url)
-    print("Request page LoLPatch: " + url)
+    log.write("Request page LoLPatch: " + url)
     soup = BeautifulSoup(response.content, 'html.parser')
 
     title = soup.find('h1', class_="style__Title-sc-vd48si-5 kDFvhf").text
@@ -255,7 +256,7 @@ def get_patch_details(type_filter, name_filter):
 
     embeds = []
     midpatch_update = get_midpatch_update()
-    print(midpatch_update)
+    log.write(midpatch_update)
     if midpatch_update: embeds.append(midpatch_update)
     if type_filter < 2:  # true for 0 and 1 (all and champions only)
         embeds += make_embeds(_get_champion_embeds(champion_changes, name_filter), "Championänderungen")

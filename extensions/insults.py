@@ -8,6 +8,7 @@ from interactions import (
 )
 
 import util
+from core import log
 
 """ File for the insult commands """
 
@@ -48,7 +49,7 @@ def get_insult(lang):
 
     payload = ""
     response = requests.request("GET", url, data=payload, params=querystring)
-    print("Api-Call Insults: " + url)
+    log.write("Api-Call Insults: " + url)
 
     try:
         response = response.json()

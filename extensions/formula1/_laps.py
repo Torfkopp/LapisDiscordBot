@@ -212,9 +212,7 @@ def telemetry(year, gp, session, driver1, driver2):
     d1_name = driver1
 
     d2_laps = race.laps.pick_driver(driver2)
-    # print(d2_laps)
     d2_fastest = d2_laps.pick_fastest()
-    # print(d2_fastest)
     d2_number = d2_laps.iloc[0].loc['DriverNumber']
     d2_name = driver2
     d1_fl = (race.laps.pick_driver(d1_number).pick_fastest()["LapTime"])
@@ -447,7 +445,6 @@ def track_dominance(year, gp, session, driver1, driver2):
         except Exception as e:
             # traceback.print_exc()
             color_array.append(None)
-            print(i)
 
     # some numpy fuckery to turn x and y lists to coords, IDK how this works
     points = np.array([x, y]).T.reshape(-1, 1, 2)

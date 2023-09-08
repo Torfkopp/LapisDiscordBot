@@ -5,6 +5,7 @@ import pytz
 import requests
 
 import util
+from core import log
 from util import germanise
 
 """ All methods for the football live scoring """
@@ -39,7 +40,7 @@ def create_schedule():
     }
 
     response = requests.request("GET", url, data=payload, headers=headers)
-    print("Api-Call Football: " + url)
+    log.write("Api-Call Football: " + url)
     try: data = response.json()
     except: return list(start_times)
     data = data['content']
@@ -86,7 +87,7 @@ def get_live(content=""):
     }
 
     response = requests.request("GET", url, data=payload, headers=headers)
-    print("Api-Call Football: " + url)
+    log.write("Api-Call Football: " + url)
     data = response.json()
     data = data['content']
 
@@ -170,7 +171,7 @@ def get_match_goals(match_id):
     }
 
     response = requests.request("GET", url, data=payload, headers=headers)
-    print("Api-Call Football: " + url)
+    log.write("Api-Call Football: " + url)
     match_info = response.json()
 
     return_string = " "

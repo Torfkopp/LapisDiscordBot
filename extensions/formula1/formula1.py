@@ -14,6 +14,7 @@ import extensions.formula1._no_group as no_group
 import extensions.formula1._race_info as race_info
 import extensions.formula1._standings as standings
 import util
+from core import log
 
 """ Main file for the formula1 commands """
 
@@ -132,10 +133,10 @@ def auto_result():
         "TE": "trailers"
     }
     response = requests.request("GET", url, data=payload, headers=headers)
-    print("API Call Formula1: " + url)
+    log.write("API Call Formula1: " + url)
     try: response = response.json()
     except requests.exceptions.JSONDecodeError:
-        print("JSONDecodeError; API may be down")
+        log.write("JSONDecodeError; API may be down")
         return
 
     current_comp_id = response['currentCompetitionId']
@@ -145,10 +146,10 @@ def auto_result():
 
     url = f"https://api.sport1.info/v2/de/motorsport/sport/sr:stage:7668/match/{current_match_id}"
     response = requests.request("GET", url, data=payload, headers=headers)
-    print("API Call Formula1: " + url)
+    log.write("API Call Formula1: " + url)
     try: response = response.json()
     except requests.exceptions.JSONDecodeError:
-        print("JSONDecodeError; API may be down")
+        log.write("JSONDecodeError; API may be down")
         return
     result = "```"
     result += f"Ergebnis {util.germanise(response['competition']['name'])} {response['roundTitle']}" + "\n"

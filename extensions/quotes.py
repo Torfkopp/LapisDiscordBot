@@ -7,6 +7,7 @@ from interactions import (
 )
 
 import util
+from core import log
 
 """ File for all quoty commands """
 
@@ -38,7 +39,7 @@ def get_advice(term):
     if term != "":
         url_theme = url + f"/search/{term}"
         response = requests.request("GET", url_theme, data=payload)
-        print("Api-Call quotes: " + url_theme)
+        log.write("Api-Call quotes: " + url_theme)
         try:
             response = response.json()
             advices = response['slips']
@@ -48,7 +49,7 @@ def get_advice(term):
             else: rat = advices[random.randint(0, len(advices) - 1)]['advice']
     if rat == "":
         response = requests.request("GET", url, data=payload)
-        print("Api-Call quotes: " + url)
+        log.write("Api-Call quotes: " + url)
         try:
             response = response.json()
             rat = response['slip']['advice']

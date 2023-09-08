@@ -5,6 +5,7 @@ from interactions import (
 )
 
 import util
+from core import log
 
 
 def setup(bot): FreeGames(bot)
@@ -21,7 +22,7 @@ def get_giveaways():
     payload = ""
 
     response = requests.request("GET", url, data=payload)
-    print("Api-Call Freegames: " + url)
+    log.write("Api-Call Freegames: " + url)
     try:
         response = response.json()
         test = response[0]['id']  # tests if keys exist

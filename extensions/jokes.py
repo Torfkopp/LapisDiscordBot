@@ -8,6 +8,7 @@ from interactions import (
 
 import util
 import secret
+from core import log
 
 """ File for the joke commands """
 
@@ -76,7 +77,7 @@ def get_dad_joke(term):
     if term != "":
         url_term = url + f"search?term={term}"
         response = requests.request("GET", url_term, data=payload, headers=headers)
-        print("Api-Call Jokes: " + url)
+        log.write("Api-Call Jokes: " + url)
         try:
             response = response.json()
             jokes = response['results']
@@ -87,7 +88,7 @@ def get_dad_joke(term):
 
     if joke == "":
         response = requests.request("GET", url, data=payload, headers=headers)
-        print("Api-Call Jokes: " + url)
+        log.write("Api-Call Jokes: " + url)
 
         try:
             joke = response.json()
@@ -104,7 +105,7 @@ def get_joke(theme, lang):
     url = f"https://v2.jokeapi.dev/joke/{theme}{lang}"
     payload = ""
     response = requests.request("GET", url, data=payload)
-    print("Api-Call Jokes: " + url)
+    log.write("Api-Call Jokes: " + url)
     try:
         response = response.json()
         joke = f"Category: {response['category']}\n"
@@ -127,7 +128,7 @@ def get_norris():
     url = "https://api.chucknorris.io/jokes/random"
     payload = ""
     response = requests.request("GET", url, data=payload)
-    print("Api-Call Jokes: " + url)
+    log.write("Api-Call Jokes: " + url)
     try:
         response = response.json()
         joke = response['value']

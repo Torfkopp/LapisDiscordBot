@@ -9,11 +9,11 @@ from interactions.models import discord
 import uwuifier
 
 # CHANNELS
-with open("config.json") as f: lines = json.load(f)
-TOKEN = lines['token']
-SPORTS_CHANNEL_ID = lines['sport_channel_id']
-LABAR_CHANNEL_ID = lines['labar_channel_id']
-STAMMRUNDEN_CHANNEL_ID = lines['stammrunden_channel_id']
+with open("config.json") as f: config = json.load(f)
+TOKEN = config['token']
+SPORTS_CHANNEL_ID = config['sport_channel_id']
+LABAR_CHANNEL_ID = config['labar_channel_id']
+STAMMRUNDEN_CHANNEL_ID = config['stammrunden_channel_id']
 
 
 # COLOURS

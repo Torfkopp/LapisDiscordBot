@@ -4,6 +4,7 @@ import interactions
 import requests
 
 import util
+from core import log
 from util import germanise
 
 """ All methods for the football commands"""
@@ -15,7 +16,7 @@ def goalgetter(liga, saison):
     """ Method for the goalgetter command """
     url = f"https://api.openligadb.de/getgoalgetters/{liga}/{saison}"
     response = requests.get(url)
-    print("Api-Call Football: " + url)
+    log.write("Api-Call Football: " + url)
     try: data = response.json()
     except requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
     embed = interactions.Embed(title=f"Torjäger der Liga {liga}", color=COLOUR)
@@ -31,7 +32,7 @@ def get_current_spieltag(liga):
     """ Gets the current Spieltag """
     url = f'https://api.openligadb.de/getcurrentgroup/{liga}'
     response = requests.get(url)
-    print("Api-Call Football: " + url)
+    log.write("Api-Call Football: " + url)
     data = response.json()
     return data['groupOrderID']
 
@@ -44,7 +45,7 @@ def matchday(liga, saison, spieltag):
 
     url = f"https://api.openligadb.de/getmatchdata/{liga}/{saison}/{spieltag}"
     response = requests.get(url)
-    print("Api-Call Football: " + url)
+    log.write("Api-Call Football: " + url)
     try: jsondata = response.json()
     except requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
 
@@ -70,7 +71,7 @@ def matches(team, past, future):
     """ Method for the matches command """
     url = f"https://api.openligadb.de/getmatchesbyteam/{team}/{past}/{future}"
     response = requests.get(url)
-    print("Api-Call Football: " + url)
+    log.write("Api-Call Football: " + url)
     try: data = response.json()
     except requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
     embed = interactions.Embed(title=f"Spiele von {team} in den letzten {past} und den nächsten {future} Wochen",
@@ -102,7 +103,7 @@ def table(liga, saison):
     """ Method for the table command """
     url = f"https://api.openligadb.de/getbltable/{liga}/{saison}"
     response = requests.get(url)
-    print("Api-Call Football: " + url)
+    log.write("Api-Call Football: " + url)
     try: data = response.json()
     except requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
 

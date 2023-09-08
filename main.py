@@ -12,6 +12,7 @@ from matplotlib import font_manager
 
 import secret
 import util
+from core import log
 from core.extensions_loader import load_extensions
 from extensions import freegames, lolesport, lol_patchnotes
 from extensions.football import football
@@ -121,7 +122,7 @@ async def live_scoring():
         if not still_going:
             # noinspection PyUnresolvedReferences
             current_task.stop()  # current_task is a task when this is called, thus PyUnresolvedReferences ignorable
-            print("Live scoring stops")
+            log.write("Live scoring stops")
 
 
 async def start_gip():
@@ -131,11 +132,11 @@ async def start_gip():
     if current_task is None:
         current_task = Task(live_scoring, IntervalTrigger(minutes=2))
         current_task.start()
-        print("Live scoring begins")
+        log.write("Live scoring begins")
         return
     if not current_task.running:
         current_task.start()
-        print("Live scoring begins")
+        log.write("Live scoring begins")
 
 
 async def formula1_result():
@@ -161,9 +162,10 @@ async def on_error(event: Error):
 @listen()
 async def on_ready():
     """ Is called when the bot is ready """
-    print("Ready")
-    print(f"This bot is owned by {bot.owner}")
+    log.write("Ready")
+    log.write(f"This bot is owned by {bot.owner}")
     await secret.main(bot)
+    await log.start_procedure(bot)
     # Loads the Formula1 font
     for font in font_manager.findSystemFonts(["formula1/font"]): font_manager.fontManager.addfont(font)
 
@@ -179,7 +181,7 @@ async def on_startup():
 
     # FOOTBALL LIVE SCORING PART
     football_schedule = football.create_schedule()
-    print("Starting times of today's games: " + str(football_schedule))
+    log.write("Starting times of today's games: " + str(football_schedule))
     for start_time in football_schedule:
         # When the start time was less than 90 minutes ago, start the live scoring automatically
         if datetime.timedelta(minutes=0) < (datetime.datetime.now() - start_time) < datetime.timedelta(minutes=90):
@@ -190,7 +192,7 @@ async def on_startup():
     # FORMULA 1 AUTOMATIC RESULTS PART
     formula1_schedule, embed = formula1.create_schedule()
     if isinstance(embed, interactions.Embed): await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
-    print("Today's formula1 sessions: " + str(formula1_schedule))
+    log.write("Today's formula1 sessions: " + str(formula1_schedule))
     for start_time in formula1_schedule: Task(formula1_result, DateTrigger(start_time)).start()
 
     # AUTOMATIC ACTIVITY CHANGE PART

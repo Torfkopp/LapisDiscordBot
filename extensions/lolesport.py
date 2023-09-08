@@ -9,6 +9,7 @@ from interactions import (
 from interactions.client.utils import underline, bold
 
 import util
+from core import log
 
 COLOUR = util.Colour.LOLESPORTS.value
 COMMAND_LIMIT = 3  # Limit of consecutive calls in a short time (~60 calls per hour possible with a limit of 3)
@@ -120,7 +121,7 @@ def get_schedule(league):
     }
 
     response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
-    print("Api-Call lolesports: " + url)
+    log.write("Api-Call lolesports: " + url)
     try:
         response = response.json()
         events = response['data']['schedule']['events']
@@ -221,7 +222,7 @@ def get_standings(league):
     }
 
     response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
-    print("Api-Call lolesports: " + url)
+    log.write("Api-Call lolesports: " + url)
     try:
         response = response.json()
         response = response['data']['leagues'][0]['tournaments'][0]

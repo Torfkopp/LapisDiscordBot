@@ -8,6 +8,7 @@ from interactions import (
 )
 
 import util
+from core import log
 
 
 def setup(bot): Anime(bot)
@@ -88,7 +89,7 @@ def get_quote():
     payload = ""
 
     response = requests.request("GET", url, data=payload)
-    print("Api-Call Anime: " + url)
+    log.write("Api-Call Anime: " + url)
     try:
         response = response.json()
         response = response['apiResult'][0]
@@ -102,12 +103,12 @@ def get_quote():
 
     url = f"https://myanimelist.net/search/all?cat=all&q={character}"
     response = requests.get(url)
-    print("Site-Call: " + url)
+    log.write("Site-Call: " + url)
     soup = BeautifulSoup(response.content, 'html.parser')
     character_url = soup.find('div', class_="picSurround di-tc thumb").find('a')['href']
 
     response = requests.get(character_url)
-    print("Site-Call: " + character_url)
+    log.write("Site-Call: " + character_url)
     soup = BeautifulSoup(response.content, 'html.parser')
     picture_url = soup.find('td', class_="borderClass").find('img')['data-src']
 
@@ -122,7 +123,7 @@ def get_reaction(theme):
     """ Gets a random anime reaction depending on the theme """
     url = f"https://api.otakugifs.xyz/gif?reaction={theme}"
     response = requests.request("GET", url, data="")
-    print("Api-Call Anime: " + url)
+    log.write("Api-Call Anime: " + url)
     try: url = response.json()['url']
     except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
 

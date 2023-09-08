@@ -11,6 +11,7 @@ from interactions.api.events import Component
 
 import util
 import uwuifier
+from core import log
 
 
 def setup(bot):
@@ -124,7 +125,7 @@ def get_trivia(category, difficulty):
     payload = ""
 
     response = requests.request("GET", url, data=payload)
-    print("Api-Call Trivia: " + url)
+    log.write("Api-Call Trivia: " + url)
     try:
         response = response.json()
         trivia = response['results'][0]
