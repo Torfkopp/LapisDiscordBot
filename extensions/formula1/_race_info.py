@@ -5,6 +5,7 @@ import seaborn as sns
 from interactions.models import discord
 
 import util
+from core import log
 
 """ Methods for the race info command"""
 # all three methods part of the fastf1 docs examples
@@ -18,6 +19,7 @@ def position_change(year, gp):
     fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False)
     # Load the session
     session = fastf1.get_session(year, gp, 'R')
+    log.write("FastF1: " + session)
     session.load(telemetry=False, weather=False, messages=False)
 
     # Create plot
@@ -65,6 +67,7 @@ def lap_time_distribution(year, gp):
     fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False)
     # Load the race session
     race = fastf1.get_session(year, gp, 'R')
+    log.write("FastF1: " + session)
     race.load(weather=False, messages=False)
 
     # Get all laps for point finishers only. Filter out slow laps
@@ -130,6 +133,7 @@ def strategy(year, gp):
     fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False)
     # Load the race session
     session = fastf1.get_session(year, gp, 'R')
+    log.write("FastF1: " + session)
     session.load(messages=False)
     laps = session.laps
 

@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from fastf1.core import Laps
 
 import util
+from core import log
 
 """ All methods for commands without group"""
 
@@ -19,6 +20,7 @@ CURRENT_SEASON = util.CURRENT_F1_SEASON
 def result(year, gp, session):
     """ Returns the result of the specified session """
     sess = fastf1.get_session(year, gp, session)
+    log.write("FastF1: " + session)
     sess.load(weather=False)
     results = sess.results
     ranking = "```"
@@ -80,6 +82,7 @@ def result(year, gp, session):
 
 def next_race():
     event_schedule = fastf1.get_events_remaining()
+    log.write("FastF1: Remaining events")
     next_event = event_schedule.iloc[0]
 
     round_number = next_event['RoundNumber']
@@ -123,6 +126,7 @@ def next_race():
 def remaining_races():
     """ Returns the seasons remaining races """
     event_schedule = fastf1.get_events_remaining()
+    log.write("FastF1: Remaining Events")
     events = "```"
     events += "R#".ljust(3) + "Land".center(15) + "Ort".center(15) + "Uhrzeit".rjust(20) + "\n"
     for i, _ in enumerate(event_schedule.iterrows()):

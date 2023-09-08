@@ -1,6 +1,5 @@
 import datetime
 import random
-import traceback
 
 import interactions
 from interactions import Client, Intents, listen, Task, IntervalTrigger, DateTrigger
@@ -155,7 +154,7 @@ async def update_patchnotes():
 
 @listen(Error, disable_default_listeners=True)
 async def on_error(event: Error):
-    traceback.print_exception(event.error)
+    log.write(event.error)
     await event.ctx.send(embed=util.get_error_embed("error"))
 
 

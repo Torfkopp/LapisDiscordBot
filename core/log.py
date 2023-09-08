@@ -1,8 +1,8 @@
 import datetime
 import json
+import traceback
 
 from interactions.models import discord
-
 
 """ Own logging class since bot runs remotely """
 
@@ -18,4 +18,11 @@ async def start_procedure(bot):
 def write(log):
     """ Writes the parameter to the logfile with the time in front """
     print(log)
-    with open("strunt/log.txt", "a") as logfile: logfile.write(f"{datetime.datetime.now()}: {log} \n")
+    with open("strunt/log.txt", "a") as logfile: logfile.write(f"{datetime.datetime.now()}: {log}\n")
+
+
+def error(err):
+    """ Writes the error to the file """
+    traceback.print_exception(err)
+    with open("strunt/log.txt", "a") as logfile:
+        logfile.write(f"\n {datetime.datetime.now()} ERROR\n{err}\n")
