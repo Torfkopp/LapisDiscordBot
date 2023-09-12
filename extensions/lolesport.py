@@ -16,6 +16,7 @@ COMMAND_LIMIT = 3  # Limit of consecutive calls in a short time (~60 calls per h
 
 LEAGUE_DICT = {
     # "WORLDS": "98767975604431411",
+    # "WORLDS QUALI SERIES": "110988878756156222",
     # "MSI": "98767991325878492",
     # "ALL-STAR": "98767991295297326",
     "LEC": "98767991302996019",
@@ -25,12 +26,78 @@ LEAGUE_DICT = {
     "LPL": "98767991314006698",
     "LCS": "98767991299243165",
 }
+LIVE_LEAGUES = "98767975604431411,110988878756156222,98767991302996019,105266091639104326"
 STANDARD = LEAGUE_DICT.get("LEC")
 
 
 def setup(bot): LoLesports(bot)
 
 
+'''
+##################################################
+LIVE PART
+##################################################
+'''
+
+
+def create_schedule():
+    start_times = set()
+    events = get_schedule(LIVE_LEAGUES)
+    if isinstance(events, interactions.Embed): return list(start_times)
+
+    today = datetime.datetime.now().date()
+    for event in events:
+        time = datetime.datetime.fromisoformat(event['startTime'])
+        time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
+        if not time.date() == today: continue
+        start_times.add(time)
+
+    return list(start_times)
+
+
+def get_live():
+    embeds = {}
+    one_game_still_live = False
+
+    events = get_schedule(LIVE_LEAGUES)
+    today = datetime.datetime.now().date()
+
+    for event in events:
+        time = datetime.datetime.fromisoformat(event['startTime'])
+        time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
+        if not time.date() == today: continue
+
+        league = event['league']['name']
+        if embeds.get(league) is None: embeds[league] = interactions.Embed(title=league, color=COLOUR)
+        embed = embeds['league']
+
+        team1 = event['match']['teams'][0]
+        team2 = event['match']['teams'][1]
+        record1 = f"{team1['record']['wins']}-{team1['record']['losses']}"
+        record2 = f"{team2['record']['wins']}-{team2['record']['losses']}"
+        wins1 = team1['result']['gameWins']
+        wins2 = team2['result']['gameWins']
+
+        if event['state'] == 'completed': time = "END"
+        elif event['state'] == 'live':
+            time = "LIVE"
+            one_game_still_live = True
+        else: time = f"Startet um: {datetime.datetime.strftime(time, '%d.%m %H:%M')}"
+
+        bo_format = f"{(event['match']['strategy']['type']).capitalize()} {event['match']['strategy']['count']}"
+        # name: (W-L) Team1 X:Y Team2 (W-L), value: Startzeit (oder END), Format
+        embed.add_field(name=f"({record1}) {team1['name']} {wins1}:{wins2} {team2['name']} ({record2})",
+                        value=f"{time}, {bo_format}",
+                        inline=True)  # See how inlining looks
+
+    return embeds, one_game_still_live
+
+
+'''
+##################################################
+COMMAND PART
+##################################################
+'''
 command_calls = 0
 limit_reached = False
 
@@ -176,7 +243,6 @@ def get_results(league):
         i += 1
 
     for event in completed:
-        if event['state'] == "unstarted": continue
         team1 = event['match']['teams'][0]
         team2 = event['match']['teams'][1]
         record1 = f"{team1['record']['wins']}-{team1['record']['losses']}"

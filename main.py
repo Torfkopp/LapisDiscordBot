@@ -21,13 +21,15 @@ bot = Client(intents=Intents.DEFAULT, send_command_tracebacks=False)
 prefixed_commands.setup(bot)
 
 LIVE_SCORE_MESSAGE = ""
-current_task = None
+live_scoring_task = None
+
+LIVE_LEAGUE_MESSAGE = ""
+live_league_task = None
 
 TEST_MODE_ON = False
 
 
 class ActivityClass:
-    football_schedule = []
     formula1_schedule = []
     # "GAME" (Spielt), "STREAMING" (Streamt), "LISTENING" (Hört X zu), "WATCHING" (Schaut), "COMPETING" (Tritt an in)
     activities = [
@@ -36,7 +38,7 @@ class ActivityClass:
         ("Marios Gelaber", discord.activity.ActivityType.LISTENING),
         ("ein paar Anime", discord.activity.ActivityType.WATCHING),
         ("HdR zum X-ten Mal", discord.activity.ActivityType.WATCHING),
-        ("und tritt aus", discord.activity.ActivityType.COMPETING),
+        ("und tritt aus in", discord.activity.ActivityType.COMPETING),
         ("Anime OST", discord.activity.ActivityType.LISTENING),
         ("nach nützlichen APIs", discord.activity.ActivityType.WATCHING),
         # Extension related stuff
@@ -52,9 +54,7 @@ class ActivityClass:
     ]
     status = discord.Status.IDLE  # possible: "ONLINE", "OFFLINE", "DND", "IDLE", "INVISIBLE"
 
-    def __init__(self, football_schedule, formula1_schedule):
-        self.football_schedule = football_schedule
-        self.formula1_schedule = formula1_schedule
+    def __init__(self, formula1_schedule): self.formula1_schedule = formula1_schedule
 
     async def test_mode(self):
         self.status = discord.Status.DND
@@ -63,24 +63,28 @@ class ActivityClass:
     async def rotate_activity(self):
         """ Changes the activity depending on the situation """
         now = datetime.datetime.now()
-        watches_football, watches_formula1 = False, False
-        for time in self.football_schedule:
-            if datetime.timedelta(minutes=0) < now - time < datetime.timedelta(minutes=100): watches_football = True
+        watches_football, watches_formula1, watches_esport = False, False, False
+
+        # noinspection PyUnresolvedReferences
+        if live_scoring_task is not None and live_scoring_task.running: watches_football = True
+        # noinspection PyUnresolvedReferences
+        if live_league_task is not None and live_league_task.running: watches_esport = True
         for time in self.formula1_schedule:
             if datetime.timedelta(minutes=0) < now - time < datetime.timedelta(minutes=100): watches_formula1 = True
 
-        if watches_football and watches_formula1:
+        if watches_football or watches_formula1 or watches_esport:
             self.status = discord.Status.DND
-            name = "Fußball und Formel 1"
             type_ = discord.activity.ActivityType.WATCHING
-        elif watches_football:
-            self.status = discord.Status.DND
-            name = "sich Fußball an"
-            type_ = discord.activity.ActivityType.WATCHING
-        elif watches_formula1:
-            self.status = discord.Status.DND
-            name = "sich Formel 1 an"
-            type_ = discord.activity.ActivityType.WATCHING
+            name = ""
+            if watches_football and watches_formula1 and watches_esport: name = "Fußball, Formel1 und LoL"
+
+            elif watches_football and watches_formula1 and not watches_esport: name = "Fußball und Formel1"
+            elif watches_football and not watches_formula1 and watches_esport: name = "Fußball und LoL"
+            elif not watches_football and watches_formula1 and watches_esport: name = "Formel1 und LoL"
+
+            elif watches_football and not watches_formula1 and not watches_esport: name = "Fußball"
+            elif not watches_football and watches_formula1 and not watches_esport: name = "Formel1"
+            elif not watches_football and not watches_formula1 and watches_esport: name = "LoL"
         else:
             self.status = discord.Status.IDLE
             # activity = self.activities.pop()  # Take first element and put it at the end
@@ -113,29 +117,57 @@ async def live_scoring():
     if LIVE_SCORE_MESSAGE == "":
         LIVE_SCORE_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=football.get_live()[0])
     else:
-        embeds, still_going = football.get_live(LIVE_SCORE_MESSAGE.embeds)
-        try:
-            await LIVE_SCORE_MESSAGE.edit(embeds=embeds)
-        except HTTPException:
-            LIVE_SCORE_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=embeds)
+        embeds, still_going = football.get_live()
+        try: await LIVE_SCORE_MESSAGE.edit(embeds=embeds)
+        except HTTPException: LIVE_SCORE_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=embeds)
         if not still_going:
             # noinspection PyUnresolvedReferences
-            current_task.stop()  # current_task is a task when this is called, thus PyUnresolvedReferences ignorable
+            live_scoring_task.stop()  # live_scoring_task is a task, thus PyUnresolvedReferences ignorable
             log.write("Live scoring stops")
 
 
-async def start_gip():
+async def start_live_scoring():
     """ When called, creates a task calling live_scoring and starts it
     or, if it already exits and is stopped, starts it again """
-    global current_task
-    if current_task is None:
-        current_task = Task(live_scoring, IntervalTrigger(minutes=2))
-        current_task.start()
+    global live_scoring_task
+    if live_scoring_task is None:
+        live_scoring_task = Task(live_scoring, IntervalTrigger(minutes=2))
+        live_scoring_task.start()
         log.write("Live scoring begins")
         return
-    if not current_task.running:
-        current_task.start()
+    if not live_scoring_task.running:
+        live_scoring_task.start()
         log.write("Live scoring begins")
+
+
+async def live_league():
+    """ Sends the live league results to the channel and keeps it updated until all live games have ended """
+    global LIVE_LEAGUE_MESSAGE
+    if LIVE_LEAGUE_MESSAGE == "":
+        LIVE_LEAGUE_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=lolesport.get_live()[0])
+    else:
+        embeds, still_going = lolesport.get_live()
+        try: await LIVE_LEAGUE_MESSAGE.edit(embeds=embeds)
+        except HTTPException: LIVE_LEAGUE_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=embeds)
+        if not still_going:
+            # noinspection PyUnresolvedReferences
+            live_league_task.stop()
+            log.write("Live league stops")
+    return
+
+
+async def start_live_league():
+    """ When called, creates a task calling live_league and starts it
+        or, if it already exits and is stopped, starts it again """
+    global live_league_task
+    if live_league_task is None:
+        live_league_task = Task(live_league, IntervalTrigger(minutes=30))
+        live_league_task.start()
+        log.write("Live league begins")
+        return
+    if not live_league_task.running:
+        live_league_task.start()
+        log.write("Live league begins")
 
 
 async def formula1_result():
@@ -150,6 +182,17 @@ async def update_patchnotes():
     """ When called, updates the lol_patchnotes and, if need be, sends in the patchnotes """
     embed = lol_patchnotes.update()
     if embed: await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=embed)
+
+
+async def pseudo_restart():
+    """ Resets the variables for automatic results and calls on_startup again """
+    global LIVE_SCORE_MESSAGE, LIVE_LEAGUE_MESSAGE, live_scoring_task, live_league_task
+    LIVE_SCORE_MESSAGE = ""
+    live_scoring_task = None
+
+    LIVE_LEAGUE_MESSAGE = ""
+    live_league_task = None
+    await on_startup()
 
 
 @listen(Error, disable_default_listeners=True)
@@ -173,7 +216,7 @@ async def on_ready():
 async def on_startup():
     """ Is called when the bot starts up (used for schedule things) """
     if TEST_MODE_ON:
-        activity = ActivityClass([], [])
+        activity = ActivityClass([])
         await activity.test_mode()
         return
     reduce_command_calls.start()
@@ -184,8 +227,8 @@ async def on_startup():
     for start_time in football_schedule:
         # When the start time was less than 90 minutes ago, start the live scoring automatically
         if datetime.timedelta(minutes=0) < (datetime.datetime.now() - start_time) < datetime.timedelta(minutes=90):
-            await start_gip()
-        task = Task(start_gip, DateTrigger(start_time))
+            await start_live_scoring()
+        task = Task(start_live_scoring, DateTrigger(start_time))
         task.start()
 
     # FORMULA 1 AUTOMATIC RESULTS PART
@@ -194,8 +237,15 @@ async def on_startup():
     log.write("Today's formula1 sessions: " + str(formula1_schedule))
     for start_time in formula1_schedule: Task(formula1_result, DateTrigger(start_time)).start()
 
+    # AUTOMATIC LOLESPORTS RESULTS PART
+    league_schedule = lolesport.create_schedule()
+    # When every start time has already past, start live league manually
+    if league_schedule[len(league_schedule) - 1] < datetime.datetime.now(): await start_live_league()
+    log.write("Starting times of today's lol esport matches: " + str(league_schedule))
+    for start_time in league_schedule: Task(start_live_league, DateTrigger(start_time)).start()
+
     # AUTOMATIC ACTIVITY CHANGE PART
-    activity = ActivityClass(football_schedule, formula1_schedule)
+    activity = ActivityClass(formula1_schedule)
     await activity.rotate_activity()
     Task(activity.rotate_activity, IntervalTrigger(minutes=2)).start()
 
@@ -206,6 +256,10 @@ async def on_startup():
     # AUTOMATIC LOL_PATCHNOTES PART
     await update_patchnotes()
     Task(update_patchnotes, IntervalTrigger(hours=2)).start()
+
+    # AUTOMATIC PSEUDO RESTART PART
+    # Only important when the bot runs 24/7
+    # Task(pseudo_restart, IntervalTrigger(hours=24)).start()
 
 
 # load all extensions in the ./extensions folder
