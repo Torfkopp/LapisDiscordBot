@@ -1,5 +1,6 @@
 import datetime
 import random
+import traceback
 
 import interactions
 from interactions import Client, Intents, listen, Task, IntervalTrigger, DateTrigger
@@ -197,7 +198,7 @@ async def pseudo_restart():
 
 @listen(Error, disable_default_listeners=True)
 async def on_error(event: Error):
-    log.write(event.error)
+    log.error(event.error)
     await event.ctx.send(embed=util.get_error_embed("error"))
 
 
@@ -240,7 +241,8 @@ async def on_startup():
     # AUTOMATIC LOLESPORTS RESULTS PART
     league_schedule = lolesport.create_schedule()
     # When every start time has already past, start live league manually
-    if league_schedule[len(league_schedule) - 1] < datetime.datetime.now(): await start_live_league()
+    if len(league_schedule) > 0 and league_schedule[len(league_schedule) - 1] < datetime.datetime.now():
+        await start_live_league()
     log.write("Starting times of today's lol esport matches: " + str(league_schedule))
     for start_time in league_schedule: Task(start_live_league, DateTrigger(start_time)).start()
 
