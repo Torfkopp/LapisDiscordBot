@@ -14,7 +14,7 @@ import secret
 import util
 from core import log
 from core.extensions_loader import load_extensions
-from extensions import lolesport, lol_patchnotes
+from extensions import lolesport, lol_patchnotes, freegames
 from extensions.football import football
 from extensions.formula1 import formula1
 
@@ -181,7 +181,7 @@ async def formula1_result():
     """ When called, sends in the result of the latest Formula1 session"""
     result = formula1.auto_result()
     # If getting result fails, try again in an hour
-    if result == "": Task(formula1_result, DateTrigger(datetime.datetime.now() + datetime.timedelta(hours=0.5))).start()
+    if result is None: Task(formula1_result, DateTrigger(datetime.datetime.now() + datetime.timedelta(hours=0.5))).start()
     else: await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result)
 
 
@@ -241,7 +241,7 @@ async def on_startup():
     # FORMULA 1 AUTOMATIC RESULTS PART
     formula1_schedule, embed = formula1.create_schedule()
     if isinstance(embed, interactions.Embed): await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
-    log.write("Today's formula1 sessions: " + str(formula1_schedule))
+    log.write("Today's formula1 sessions (+1.5 hours): " + str(formula1_schedule))
     for start_time in formula1_schedule: Task(formula1_result, DateTrigger(start_time)).start()
 
     # AUTOMATIC LOLESPORTS RESULTS PART
@@ -258,8 +258,8 @@ async def on_startup():
     Task(activity.rotate_activity, IntervalTrigger(minutes=2)).start()
 
     # AUTOMATIC FREE GAMES PART
-    # if datetime.datetime.now().weekday() == 4:
-    #   await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=freegames.get_giveaways())
+    if datetime.datetime.now().weekday() == 4:
+        await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=freegames.get_giveaways())
 
     # AUTOMATIC LOL_PATCHNOTES PART
     await update_patchnotes()

@@ -126,6 +126,9 @@ def auto_result():
     except requests.exceptions.JSONDecodeError:
         log.write("JSONDecodeError; API may be down")
         return
+
+    if response['isLive'] is not "false": return  # If session is still going, return null to try again later
+
     result = "```"
     result += f"Ergebnis {util.germanise(response['competition']['name'])} {response['roundTitle']}" + "\n"
     result += "\n"
