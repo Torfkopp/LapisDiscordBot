@@ -99,7 +99,7 @@ def get_quote():
     result = "Anime: " + response['anime'] + "\n"
     result += "Character: " + character  # + "\n\n"
     # result += "Quote: " + response['english']
-    quote = "„" + response['english'] + "“"
+    quote = "**„" + response['english'] + "“**"
 
     url = f"https://myanimelist.net/search/all?cat=all&q={character}"
     response = requests.get(url)
@@ -114,7 +114,7 @@ def get_quote():
 
     # noinspection PyTypeChecker
     embed = interactions.Embed(title="Anime Quote", description=result, color=COLOUR, thumbnail=picture_url)
-    embed.add_field(name=quote, value="\u200b")
+    embed.add_field(value=quote, name="\u200b")
 
     return util.uwuify_by_chance(embed)
 

@@ -1,5 +1,3 @@
-import locale
-
 import interactions
 from interactions import (
     Extension, OptionType, slash_option, slash_command, SlashContext, SlashCommandChoice
@@ -10,8 +8,6 @@ import extensions.football._live as live
 import util
 
 """ Main file for the football commands """
-
-locale.setlocale(locale.LC_ALL, 'de_DE')  # Changes local to Deutsch for time display
 
 SPORTS_CHANNEL_ID = util.SPORTS_CHANNEL_ID
 
@@ -45,7 +41,6 @@ def get_live(content=""):
 '''def get_match_goals(match_id):
     """ Get the match's goalscorers """
     return live.get_match_goals(match_id)'''
-
 
 '''
 ##################################################

@@ -15,7 +15,7 @@ COLOUR = util.Colour.LOLESPORTS.value
 COMMAND_LIMIT = 3  # Limit of consecutive calls in a short time (~60 calls per hour possible with a limit of 3)
 
 LEAGUE_DICT = {
-    # "WORLDS": "98767975604431411",
+    "WORLDS": "98767975604431411",
     # "WORLDS QUALI SERIES": "110988878756156222",
     # "MSI": "98767991325878492",
     # "ALL-STAR": "98767991295297326",
@@ -120,10 +120,10 @@ def increment_command_calls():
 async def command_function(ctx, func, *args):
     """ Function for the commands """
     if str(ctx.channel_id) != util.SPORTS_CHANNEL_ID:
-        await ctx.send(util.get_error_embed("wrong_channel"))
+        await ctx.send(embed=util.get_error_embed("wrong_channel"))
         return
     elif limit_reached:
-        await ctx.send(util.get_error_embed("limit_reached"))
+        await ctx.send(embed=util.get_error_embed("limit_reached"))
         return
     increment_command_calls()
     result = func(*args)

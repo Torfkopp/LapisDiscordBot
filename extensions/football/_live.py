@@ -10,7 +10,7 @@ from util import germanise
 
 """ All methods for the football live scoring """
 
-COMPETITION_LIST = ["Bundesliga", "2. Bundesliga", "DFB-Pokal"]  # List of League interested in
+COMPETITION_LIST = util.COMPETITION_LIST  # List of League interested in
 COLOUR = util.Colour.FOOTBALL.value
 
 

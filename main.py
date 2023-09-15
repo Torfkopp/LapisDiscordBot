@@ -1,6 +1,6 @@
 import datetime
+import locale
 import random
-import traceback
 
 import interactions
 from interactions import Client, Intents, listen, Task, IntervalTrigger, DateTrigger
@@ -14,7 +14,7 @@ import secret
 import util
 from core import log
 from core.extensions_loader import load_extensions
-from extensions import freegames, lolesport, lol_patchnotes
+from extensions import lolesport, lol_patchnotes
 from extensions.football import football
 from extensions.formula1 import formula1
 
@@ -28,6 +28,11 @@ LIVE_LEAGUE_MESSAGE = ""
 live_league_task = None
 
 TEST_MODE_ON = False
+
+try: locale.setlocale(locale.LC_ALL, 'de_DE')  # Changes local to Deutsch for time display
+except locale.Error:
+    try: locale.setlocale(locale.LC_ALL, 'de_DE.utf8')  # Tries this
+    except locale.Error: pass  # Accepts defeat
 
 
 class ActivityClass:
@@ -71,7 +76,8 @@ class ActivityClass:
         # noinspection PyUnresolvedReferences
         if live_league_task is not None and live_league_task.running: watches_esport = True
         for time in self.formula1_schedule:
-            if datetime.timedelta(minutes=0) < now - time < datetime.timedelta(minutes=100): watches_formula1 = True
+            if datetime.timedelta(minutes=0) < now - (time - datetime.timedelta(hours=1.5)) < datetime.timedelta(
+                    minutes=100): watches_formula1 = True
 
         if watches_football or watches_formula1 or watches_esport:
             self.status = discord.Status.DND
@@ -252,8 +258,8 @@ async def on_startup():
     Task(activity.rotate_activity, IntervalTrigger(minutes=2)).start()
 
     # AUTOMATIC FREE GAMES PART
-    if datetime.datetime.now().weekday() == 4:
-        await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=freegames.get_giveaways())
+    # if datetime.datetime.now().weekday() == 4:
+    #   await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=freegames.get_giveaways())
 
     # AUTOMATIC LOL_PATCHNOTES PART
     await update_patchnotes()

@@ -40,6 +40,7 @@ class Colour(Enum):
 CURRENT_F1_SEASON = datetime.datetime.now().year  # An F1 Season starts and ends within one year
 CURRENT_FOOTBALL_SEASON = 2023  # 2023/2024 -> 2023
 
+COMPETITION_LIST = ["Bundesliga", "2. Bundesliga", "DFB-Pokal"]  # List of League interested in
 UWUCHANCE = 5  # D-De chance dat a commyand wesponse gets u-u-uwuified
 
 
@@ -58,7 +59,7 @@ def random_colour_generator():
 def get_gif(term: str):
     """ Returns a gif with the term
     Returns a standard gif, when the term is not found """
-    with open("Resources/gifs.json") as g: gif_db = json.load(g)
+    with open("resources/gifs.json") as g: gif_db = json.load(g)
 
     try: gifs = gif_db[term]
     except KeyError: return gif_db['standard']
