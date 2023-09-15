@@ -52,7 +52,7 @@ def matchday(liga, saison, spieltag):
     embed = interactions.Embed(title=f"{germanise(jsondata[0]['leagueName'])} Spieltag {spieltag}", color=COLOUR)
     i = 1
     for match in jsondata:
-        time = datetime.datetime.fromisoformat(match['matchDateTime']).strftime("%A, %d. %B %Y %H:%M")
+        time = datetime.datetime.fromisoformat(match['matchDateTime'].replace("Z", "+00:00")).strftime("%A, %d. %B %Y %H:%M")
         team1 = germanise(match['team1']['teamName'])
         team2 = germanise(match['team2']['teamName'])
         goals1 = "-"
@@ -81,7 +81,7 @@ def matches(team, past, future):
 
     i = 1
     for match in data:
-        time = datetime.datetime.fromisoformat(match['matchDateTime']).strftime("%a, %d. %b %Y %H:%M")
+        time = datetime.datetime.fromisoformat(match['matchDateTime'].replace("Z", "+00:00")).strftime("%a, %d. %b %Y %H:%M")
         if latest_match_date == time: continue  # Go to next match if match already exists
         latest_match_date = time
 

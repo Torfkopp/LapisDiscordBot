@@ -50,7 +50,7 @@ def create_schedule():
         if league['matches'][0]['competition']['name'] not in COMPETITION_LIST: continue
         # Add match times to set
         for match in league['matches']:
-            time = datetime.datetime.fromisoformat(match['scheduledStartTime'])
+            time = datetime.datetime.fromisoformat(match['scheduledStartTime'].replace("Z", "+00:00"))
             time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
             start_times.add(time)
 
@@ -107,7 +107,7 @@ def get_live(content=""):
             if 'homeScore' in match: score1 = match['homeScore']
             if 'awayScore' in match: score2 = match['awayScore']
             # Game starting time
-            time = datetime.datetime.fromisoformat(match['scheduledStartTime'])
+            time = datetime.datetime.fromisoformat(match['scheduledStartTime'].replace("Z", "+00:00"))
             time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None).strftime(
                 "%H:%M")
             minute = "Startet um " + time + " Uhr"

@@ -134,7 +134,7 @@ def remaining_races():
         events += str(event['RoundNumber']).ljust(3)
         events += event['Country'].center(15)
         events += event['Location'].center(15)
-        time = datetime.datetime.fromisoformat(str(event['Session5Date']))
+        time = event['Session5Date']
         time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
         events += str(time).rjust(20)
         events += "\n"

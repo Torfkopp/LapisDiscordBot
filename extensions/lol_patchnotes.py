@@ -42,7 +42,7 @@ def update():
 
     title = soup.find('h1', class_="style__Title-sc-vd48si-5 kDFvhf").text
     time = soup.find('time')['datetime']
-    time = datetime.datetime.fromisoformat(time)
+    time = datetime.datetime.fromisoformat(time.replace("Z", "+00:00"))
     time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
     patch_update = soup.find('h2', id="patch-midpatch-updates")
     patch_update = patch_update is not None

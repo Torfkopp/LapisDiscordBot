@@ -47,7 +47,7 @@ def create_schedule():
 
     today = datetime.datetime.now().date()
     for event in events:
-        time = datetime.datetime.fromisoformat(event['startTime'])
+        time = datetime.datetime.fromisoformat(event['startTime'].replace("Z", "+00:00"))
         time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
         if not time.date() == today: continue
         start_times.add(time)
@@ -63,7 +63,7 @@ def get_live():
     today = datetime.datetime.now().date()
 
     for event in events:
-        time = datetime.datetime.fromisoformat(event['startTime'])
+        time = datetime.datetime.fromisoformat(event['startTime'].replace("Z", "+00:00"))
         time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
         if not time.date() == today: continue
 
@@ -214,7 +214,7 @@ def get_upcoming(league):
         team2 = event['match']['teams'][1]
         record1 = f"{team1['record']['wins']}-{team1['record']['losses']}"
         record2 = f"{team2['record']['wins']}-{team2['record']['losses']}"
-        start_time = datetime.datetime.fromisoformat(event['startTime'])
+        start_time = datetime.datetime.fromisoformat(event['startTime'].replace("Z", "+00:00"))
         start_time = start_time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
         start_time = datetime.datetime.strftime(start_time, "%d.%m %H:%M")
         league = event['league']['name']
@@ -249,7 +249,7 @@ def get_results(league):
         record2 = f"{team2['record']['wins']}-{team2['record']['losses']}"
         wins1 = team1['result']['gameWins']
         wins2 = team2['result']['gameWins']
-        start_time = datetime.datetime.fromisoformat(event['startTime'])
+        start_time = datetime.datetime.fromisoformat(event['startTime'].replace("Z", "+00:00"))
         start_time = start_time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
         start_time = datetime.datetime.strftime(start_time, "%d.%m %H:%M")
         league = event['league']['name']
