@@ -112,8 +112,8 @@ def get_live(content=""):
                 "%H:%M")
             minute = "Startet um " + time + " Uhr"
             # If match has begun, get the minutes
-            if 'matchTime' in match['matchInfo'] and match['isLive']: minute = str(
-                match['matchInfo']['matchTime']) + "' "
+            if 'matchTime' in match['matchInfo'] and match['isLive']:
+                minute = str(match['matchInfo']['matchTime']) + "' "
             # If match has ended, put in the END
             if match['period'] == "FULL_TIME": minute = "END "
             # If match has gone to the penalties, add the score after the penalties after the normal score

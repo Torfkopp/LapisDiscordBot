@@ -124,7 +124,7 @@ async def live_scoring():
     if LIVE_SCORE_MESSAGE == "":
         LIVE_SCORE_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=football.get_live()[0])
     else:
-        embeds, still_going = football.get_live()
+        embeds, still_going = football.get_live(LIVE_SCORE_MESSAGE.embeds)
         try: await LIVE_SCORE_MESSAGE.edit(embeds=embeds)
         except HTTPException: LIVE_SCORE_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=embeds)
         if not still_going:
@@ -214,7 +214,6 @@ async def on_ready():
     log.write("Ready")
     log.write(f"This bot is owned by {bot.owner}")
     await secret.main(bot)
-    await log.start_procedure(bot)
     # Loads the Formula1 font
     for font in font_manager.findSystemFonts(["formula1/font"]): font_manager.fontManager.addfont(font)
 
@@ -227,6 +226,7 @@ async def on_startup():
         await activity.test_mode()
         return
     reduce_command_calls.start()
+    await log.start_procedure(bot)
 
     # FOOTBALL LIVE SCORING PART
     football_schedule = football.create_schedule()
@@ -241,7 +241,7 @@ async def on_startup():
     # FORMULA 1 AUTOMATIC RESULTS PART
     formula1_schedule, embed = formula1.create_schedule()
     if isinstance(embed, interactions.Embed): await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
-    log.write("Today's formula1 sessions (+1.5 hours): " + str(formula1_schedule))
+    log.write("Today's formula1 sessions (start + 1.5 h): " + str(formula1_schedule))
     for start_time in formula1_schedule: Task(formula1_result, DateTrigger(start_time)).start()
 
     # AUTOMATIC LOLESPORTS RESULTS PART
