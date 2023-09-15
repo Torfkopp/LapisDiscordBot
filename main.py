@@ -54,7 +54,6 @@ class ActivityClass:
         ("nach neuen Insults", discord.activity.ActivityType.WATCHING),
         ("die Witze durch", discord.activity.ActivityType.WATCHING),
         ("sich die Patchnotes an", discord.activity.ActivityType.WATCHING),
-        ("LoL-Esport", discord.activity.ActivityType.WATCHING),
         ("weisen Menschen", discord.activity.ActivityType.LISTENING),
         ("einer Quizshow", discord.activity.ActivityType.COMPETING)
     ]
