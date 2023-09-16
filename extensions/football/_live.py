@@ -107,8 +107,8 @@ def get_live(content=""):
             if 'homeScore' in match: score1 = match['homeScore']
             if 'awayScore' in match: score2 = match['awayScore']
             # Game starting time
-            time = datetime.datetime.fromisoformat(match['scheduledStartTime'].replace("Z", "+00:00"))
-            time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None).strftime("%H:%M")
+            start_time = datetime.datetime.fromisoformat(match['scheduledStartTime'].replace("Z", "+00:00"))
+            time = start_time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None).strftime("%H:%M")
             minute = "Startet um " + time + " Uhr"
             # If match has begun, get the minutes
             if 'matchTime' in match['matchInfo'] and match['isLive']:
@@ -139,11 +139,9 @@ def get_live(content=""):
                 else:
                     new_value = new_value.split(' ')[0] + " " + ' '.join(old.value.split(' ')[1:])
             embed.add_field(name=new_name, value=new_value)
-            if (match['isLive'] or  # To ensure a delayed start (max 45 min) won't turn off the live games
-                    (datetime.timedelta(minutes=0)
-                     < (datetime.datetime.now(pytz.utc) - datetime.datetime.fromisoformat(match['scheduledStartTime']))
-                     < datetime.timedelta(minutes=45))):
-                one_game_still_live = True
+            # To ensure a delayed start (max 45 min) won't turn off the live games
+            if (match['isLive'] or (datetime.timedelta(minutes=0) < (datetime.datetime.now(pytz.utc) - start_time)
+                                    < datetime.timedelta(minutes=45))): one_game_still_live = True
 
         embeds.append(embed)
 

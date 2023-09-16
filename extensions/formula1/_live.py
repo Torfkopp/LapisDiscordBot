@@ -81,8 +81,10 @@ def create_schedule():
     if (date_today.weekday() == 4) and (
             (session_list[1] - date_today).days == 0): embed = no_group.next_race()
 
-    for i in range(0, len(session_list)):  # A session should be finished 1.5 hours after the start
-        if session_list[i].date() == date_today.date(): start_times.add(session_list[i] + datetime.timedelta(hours=1.5))
+    for i in range(0, len(session_list)):  # A session should be finished 1 hour after its start (1.5 for a race)
+        if session_list[i].date() == date_today.date():
+            if i == 4: start_times.add(session_list[i] + datetime.timedelta(hours=1.5))
+            else: start_times.add(session_list[i] + datetime.timedelta(hours=1))
 
     return list(start_times), embed
 
