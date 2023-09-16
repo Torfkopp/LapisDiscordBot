@@ -242,7 +242,7 @@ async def on_startup():
     # FORMULA 1 AUTOMATIC RESULTS PART
     formula1_schedule, embed = formula1.create_schedule()
     if isinstance(embed, interactions.Embed): await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
-    log.write("Today's formula1 sessions (start + 1.5 h): " + str(formula1_schedule))
+    log.write("Today's formula1 sessions (ending times): " + str(formula1_schedule))
     for start_time in formula1_schedule: Task(formula1_result, DateTrigger(start_time)).start()
 
     # AUTOMATIC LOLESPORTS RESULTS PART
