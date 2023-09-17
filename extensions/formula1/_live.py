@@ -51,6 +51,13 @@ def create_schedule():
     event_schedule = fastf1.get_events_remaining()
     next_event = event_schedule.iloc[0]
 
+    # On Sundays before the race, the current event is already removed from fastf1's remaining events
+    if date_today.weekday() == 6:
+        race_time = fastf1.get_event(2023, next_event['RoundNumber']-1)
+        race_time = race_time['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
+        start_times.add(race_time + datetime.timedelta(hours=1.5))
+        return list(start_times), embed
+
     session_list = [next_event['Session1Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
                     next_event['Session2Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
                     next_event['Session3Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
@@ -82,9 +89,7 @@ def create_schedule():
             (session_list[1] - date_today).days == 0): embed = no_group.next_race()
 
     for i in range(0, len(session_list)):  # A session should be finished 1 hour after its start (1.5 for a race)
-        if session_list[i].date() == date_today.date():
-            if i == 4: start_times.add(session_list[i] + datetime.timedelta(hours=1.5))
-            else: start_times.add(session_list[i] + datetime.timedelta(hours=1))
+        if session_list[i].date() == date_today.date(): start_times.add(session_list[i] + datetime.timedelta(hours=1))
 
     return list(start_times), embed
 
