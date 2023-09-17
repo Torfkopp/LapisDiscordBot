@@ -56,6 +56,7 @@ def get_help():
                           "/lol standings: Die Standings der Liga\n"
                           "/lol upcoming: Die nächsten Matches")
     embed.add_field(name="Quotes", value="/advice: Erhalte einen zufälligen Ratschlag")
+    embed.add_field(name="Tierlist", value="/tierlist: Erstelle eine Tierlist")
     embed.add_field(name="Trivia", value="/trivia: Erhalte eine Trivia-Frage")
 
     return util.uwuify_by_chance(embed)

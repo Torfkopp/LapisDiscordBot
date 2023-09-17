@@ -27,7 +27,7 @@ live_scoring_task = None
 LIVE_LEAGUE_MESSAGE = ""
 live_league_task = None
 
-TEST_MODE_ON = False
+TEST_MODE_ON = True
 
 try: locale.setlocale(locale.LC_ALL, 'de_DE')  # Changes local to Deutsch for time display
 except locale.Error:
@@ -55,6 +55,7 @@ class ActivityClass:
         ("die Witze durch", discord.activity.ActivityType.WATCHING),
         ("sich die Patchnotes an", discord.activity.ActivityType.WATCHING),
         ("weisen Menschen", discord.activity.ActivityType.LISTENING),
+        ("sich Tierlisten an", discord.activity.ActivityType.WATCHING),
         ("einer Quizshow", discord.activity.ActivityType.COMPETING)
     ]
     status = discord.Status.IDLE  # possible: "ONLINE", "OFFLINE", "DND", "IDLE", "INVISIBLE"

@@ -31,6 +31,7 @@ class Colour(Enum):
     PREFIXED = discord.BrandColors.BLURPLE
     QUOTES = discord.FlatUIColors.ASBESTOS
     SECRET = discord.MaterialColors.DEEP_PURPLE
+    TIERLIST = discord.FlatUIColors.SILVER
     TRIVIA = discord.MaterialColors.LIGHT_BLUE
 
     ERROR = discord.BrandColors.RED
