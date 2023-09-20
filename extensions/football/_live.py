@@ -10,8 +10,31 @@ from util import germanise
 
 """ All methods for the football live scoring """
 
-COMPETITION_LIST = util.COMPETITION_LIST  # List of League interested in
+# List of Leagues fully interested in
+UNFILTERED_COMPETITIONS = ["Bundesliga", "2. Bundesliga", "DFB-Pokal", "Supercup"]
+# List of Leagues partially interested in
+FILTERED_COMPETITIONS = ["Champions League", "Europa League", "Europa Conference League"]
+COMPETITION_LIST = UNFILTERED_COMPETITIONS + FILTERED_COMPETITIONS  # List of all Leagues with at least some interest in
+
 COLOUR = util.Colour.FOOTBALL.value
+
+
+def match_interested_in(match):
+    """ Returns whether there's interest in the match
+    :return True if interest exists, else False """
+    # Conditions for interest:
+    #   1. Competition is in UNFILTERED_COMPETITIONS
+    #   2. Competition is in FILTERED_COMPETITIONS and
+    #       2.1 has either one German team participating or 2.2 is late enough in the tournament to be interesting
+    if match['competition']['name'] in UNFILTERED_COMPETITIONS: return True
+    elif match['competition']['name'] in FILTERED_COMPETITIONS:
+        if match['homeTeam']['country'] == "Germany" or match['awayTeam']['country'] == "Germany": return True
+        match match['competition']['name']:
+            case "Champions League": return match["roundType"] in ["ROUND_OF_16", "QUARTER_FINALS", "SEMI_FINALS",
+                                                                   "FINAL"]
+            case "Europa League": return match["roundType"] in ["QUARTER_FINALS", "SEMI_FINALS", "FINAL"]
+            case "Conference League": return match["roundType"] in ["SEMI_FINALS", "FINAL"]
+    else: return False
 
 
 def create_schedule():
@@ -50,6 +73,7 @@ def create_schedule():
         if league['matches'][0]['competition']['name'] not in COMPETITION_LIST: continue
         # Add match times to set
         for match in league['matches']:
+            if not match_interested_in(match): continue
             time = datetime.datetime.fromisoformat(match['scheduledStartTime'].replace("Z", "+00:00"))
             time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
             start_times.add(time)
@@ -96,9 +120,10 @@ def get_live(content=""):
         # Skip league if not one of the wanted ones
         league_name = league['matches'][0]['competition']['name']
         if league_name not in COMPETITION_LIST: continue
-        embed = interactions.Embed(title=league_name, color=COLOUR)
+        embed = interactions.Embed(title=f"{league_name} - {league['matches'][0]['roundTitle']}", color=COLOUR)
         # Iterate over every match in the league
         for match in league['matches']:
+            if not match_interested_in(match): continue
             team1 = germanise(match['homeTeam']['name'])
             team2 = germanise(match['awayTeam']['name'])
             # Goals
@@ -142,8 +167,7 @@ def get_live(content=""):
             # To ensure a delayed start (max 45 min) won't turn off the live games
             if (match['isLive'] or (datetime.timedelta(minutes=0) < (datetime.datetime.now(pytz.utc) - start_time)
                                     < datetime.timedelta(minutes=45))): one_game_still_live = True
-
-        embeds.append(embed)
+        if len(embed.fields) > 0: embeds.append(embed)  # Add to list if not empty
 
     return embeds, one_game_still_live
 
