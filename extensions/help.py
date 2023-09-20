@@ -14,25 +14,22 @@ COLOUR = util.Colour.HELP.value
 
 
 class Help(Extension):
-
     @slash_command(name="help", description="Auflistung der Befehle")
     async def help_function(self, ctx: SlashContext):
-        embeds = [get_help(), _formula1_help()]
-        paginator = Paginator.create_from_embeds(self.bot, *embeds)
-        await paginator.send(ctx)
+        embed, file = get_help()
+        await ctx.send(embeds=embed, file=file)
+
+    @slash_command(name="help_sport", description="Auflistung aller Sport-Befehle")
+    async def help_sport_function(self, ctx: SlashContext):
+        embed, file = get_help_sport()
+        await ctx.send(embeds=embed, file=file)
 
 
-# noinspection PyTypeChecker
 def get_help():
-    embed = interactions.Embed(title="Hilfe", color=COLOUR,
-                               thumbnail="https://raw.githubusercontent.com/Torfkopp/LapisDiscordBot/master/resources"
-                                         "/Lapis2.jpg")
-    embed.description = "Lapis hilft dir gerne! :)\nHier die Auflistung aller Befehle"
-    embed.add_field(name="Fußball",
-                    value="/football goalgetter: Gibt die Topscorer der Liga zurück\n"
-                          "/football matchday: Gibtn Spieltag der Liga in der Saison\n"
-                          "/football matches: Alle Spiele des Teams von vor y und bis in x Wochen\n"
-                          "/football table: Tabelle der Liga in der Saison")
+    file = interactions.models.discord.File("lapis_pics/Lapis2.jpg", "Lapis2.jpg")
+    # noinspection PyTypeChecker
+    embed = interactions.Embed(title="Hilfe", color=COLOUR, thumbnail="attachment://Lapis2.jpg")
+    embed.description = "Lapis hilft dir gerne! :)\nHier die Auflistung aller Befehle:"
     embed.add_field(name="Anime",
                     value="/anime action: Tue einer Person eine Animeaktion an"
                           "/anime quote: Zufälliges Anime Zitat\n"
@@ -51,23 +48,27 @@ def get_help():
                     value="/patch image: Erhalte das Patchzusammenfassungsbild\n"
                           "/patch summary: Erhalte die Zusammenfassungstexte der Änderungen\n"
                           "/patch details: Erhalte die Änderungen des Patches im Details")
-    embed.add_field(name="LoLEsports",
-                    value="/lol results: Die Ergebnisse der letzten Matches\n"
-                          "/lol standings: Die Standings der Liga\n"
-                          "/lol upcoming: Die nächsten Matches")
     embed.add_field(name="Quotes", value="/advice: Erhalte einen zufälligen Ratschlag")
     embed.add_field(name="Tierlist", value="/tierlist: Erstelle eine Tierlist")
     embed.add_field(name="Trivia", value="/trivia: Erhalte eine Trivia-Frage")
 
-    return util.uwuify_by_chance(embed)
+    return util.uwuify_by_chance(embed), file
 
 
-def _formula1_help():
+def get_help_sport():
+    file = interactions.models.discord.File("lapis_pics/LapisSport.jpg", "LapisSport.jpg")
     # noinspection PyTypeChecker
-    embed = interactions.Embed(title="Formel 1 Hilfe", color=COLOUR,
-                               description="Hier die Auflistung aller Formel1 Befehle",
-                               thumbnail="https://raw.githubusercontent.com/Torfkopp/LapisDiscordBot/master/resources"
-                                         "/Lapis2.jpg")
+    embed = interactions.Embed(title="Sporthilfe", color=COLOUR, thumbnail="attachment://LapisSport.jpg")
+    embed.description = "Lapis hilft dir gerne! :)\nHier die Auflistung aller Sportbefehle:"
+    embed.add_field(name="Fußball",
+                    value="/football goalgetter: Gibt die Topscorer der Liga zurück\n"
+                          "/football matchday: Gibtn Spieltag der Liga in der Saison\n"
+                          "/football matches: Alle Spiele des Teams von vor y und bis in x Wochen\n"
+                          "/football table: Tabelle der Liga in der Saison")
+    embed.add_field(name="LoLEsports",
+                    value="/lol results: Die Ergebnisse der letzten Matches\n"
+                          "/lol standings: Die Standings der Liga\n"
+                          "/lol upcoming: Die nächsten Matches")
     embed.add_field(name="Formel 1",
                     value="/result: Ergebnis der Session\n"
                           "/next: Das nächstes Rennwochenende oder alle verbleibenden Rennen"
@@ -91,4 +92,4 @@ def _formula1_help():
                           "/standings heatmap: Heatmap für die Rennen aller Fahrer in der Saison\n"
                           "/standings winnable: Für welchen Fahrer ist die Meisterschaft noch winnable?"
                     )
-    return util.uwuify_by_chance(embed)
+    return util.uwuify_by_chance(embed), file
