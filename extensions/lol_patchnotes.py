@@ -89,7 +89,7 @@ class LoLPatchnotes(Extension):
     @patch_function.subcommand(sub_cmd_name="details",
                                sub_cmd_description="Erhalte die Änderungen des Patches im Details")
     @slash_option(
-        name="type_filter_option",
+        name="type_filter",
         description="Filterung nach Kategorie",
         required=False,
         opt_type=OptionType.INTEGER,
@@ -100,13 +100,13 @@ class LoLPatchnotes(Extension):
         ]
     )
     @slash_option(
-        name="name_filter_option",
+        name="name_filter",
         description="Namensfilterung: Namen (Teil reicht) durch Komma abtrennen",
         required=False,
         opt_type=OptionType.STRING
     )
-    async def details_function(self, ctx: SlashContext, type_filter_option: int = 0, name_filter_option: str = ""):
-        embeds = get_patch_details(type_filter_option, name_filter_option)
+    async def details_function(self, ctx: SlashContext, type_filter: int = 0, name_filter: str = ""):
+        embeds = get_patch_details(type_filter, name_filter)
         paginator = Paginator.create_from_embeds(self.bot, *embeds)
         await paginator.send(ctx)
 

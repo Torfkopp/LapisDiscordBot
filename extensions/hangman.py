@@ -54,7 +54,7 @@ class Hangman(Extension):
 
     @slash_command(name="hangman", description="Spiele Galgenmännchen")
     @slash_option(
-        name="lang_option",
+        name="language",
         description="Sprache des Wortes",
         required=False,
         opt_type=OptionType.BOOLEAN,
@@ -64,7 +64,7 @@ class Hangman(Extension):
         ]
     )
     @slash_option(
-        name="difficulty_option",
+        name="difficulty",
         description="Schwierigkeit des Wortes",
         required=False,
         opt_type=OptionType.STRING,
@@ -74,7 +74,7 @@ class Hangman(Extension):
             SlashCommandChoice(name="Hart", value="hard")
         ]
     )
-    async def hangman_function(self, ctx: SlashContext, lang_option: bool = True, difficulty_option: str = ""):
+    async def hangman_function(self, ctx: SlashContext, language: bool = True, difficulty: str = ""):
         ar1, ar2, ar3, ar4, ar5 = ActionRow(), ActionRow(), ActionRow(), ActionRow(), ActionRow()
         for c in ['A', 'B', 'C', 'D', 'E']: ar1.add_component(
             Button(custom_id=f"hangman_{c}", style=ButtonStyle.GREY, label=c))
@@ -89,7 +89,7 @@ class Hangman(Extension):
 
         Hangman.COMPONENTS = [ar1, ar2, ar3, ar4, ar5]
 
-        Hangman.WORD_TO_GUESS = get_word(lang_option, difficulty_option)
+        Hangman.WORD_TO_GUESS = get_word(language, difficulty)
         build_censored_word()
         await ctx.send(embed=build_embed(False, False), components=Hangman.COMPONENTS)
 

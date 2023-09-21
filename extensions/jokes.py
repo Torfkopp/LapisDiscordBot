@@ -25,17 +25,17 @@ class Jokes(Extension):
 
     @joke_function.subcommand(sub_cmd_name="dad_joke", sub_cmd_description="Erhalte einen zufälligen Dad Joke")
     @slash_option(
-        name="theme_option",
+        name="theme",
         description="Thema des Witzes auf Angelsächsisch (Random, wenn nix gefunden)",
         required=False,
         opt_type=OptionType.STRING
     )
-    async def dad_joke_function(self, ctx: SlashContext, theme_option: str = ""):
-        await ctx.send(embed=get_dad_joke(theme_option))
+    async def dad_joke_function(self, ctx: SlashContext, theme: str = ""):
+        await ctx.send(embed=get_dad_joke(theme))
 
     @joke_function.subcommand(sub_cmd_name="joke", sub_cmd_description="Erhalte einen zufälligen Witz")
     @slash_option(
-        name="theme_option",
+        name="theme",
         description="Thema des Witzes",
         required=False,
         opt_type=OptionType.STRING,
@@ -49,7 +49,7 @@ class Jokes(Extension):
         ]
     )
     @slash_option(
-        name="lang_option",
+        name="language",
         description="Die Sprache des Witzes",
         required=False,
         opt_type=OptionType.STRING,
@@ -58,8 +58,8 @@ class Jokes(Extension):
             SlashCommandChoice(name="Englisch", value="")
         ]
     )
-    async def jokejoke_function(self, ctx: SlashContext, theme_option: str = "any", lang_option: str = "?lang=de"):
-        await ctx.send(embed=get_joke(theme_option, lang_option))
+    async def jokejoke_function(self, ctx: SlashContext, theme: str = "any", language: str = "?lang=de"):
+        await ctx.send(embed=get_joke(theme, language))
 
     @joke_function.subcommand(sub_cmd_name="stammrunde",
                               sub_cmd_description="Erhalte einen zufälligen Fakt über ein Stammrundenmitglied")

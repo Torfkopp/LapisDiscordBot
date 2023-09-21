@@ -21,13 +21,13 @@ COLOUR = util.Colour.QUOTES.value
 class Quotes(Extension):
     @slash_command(name="advice", description="Erhalte einen zufälligen Ratschlag")
     @slash_option(
-        name="theme_option",
+        name="theme",
         description="Angelsächsischer Term, der im Ratschlag enthalten sein soll (Random, wenn nix gefunden)",
         required=False,
         opt_type=OptionType.STRING
     )
-    async def advice_function(self, ctx: SlashContext, theme_option: str = ""):
-        await ctx.send(embed=get_advice(theme_option))
+    async def advice_function(self, ctx: SlashContext, theme: str = ""):
+        await ctx.send(embed=get_advice(theme))
 
 
 def get_advice(term):

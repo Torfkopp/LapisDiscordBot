@@ -136,7 +136,7 @@ def league_slash_option():
         choices = []
         for key in LEAGUE_DICT: choices.append(SlashCommandChoice(name=key, value=LEAGUE_DICT.get(key)))
         return slash_option(
-            name="league_option",
+            name="league",
             description="Name der Liga",
             required=False,
             opt_type=OptionType.STRING,
@@ -152,18 +152,18 @@ class LoLesports(Extension):
 
     @lol_function.subcommand(sub_cmd_name="results", sub_cmd_description="Die Ergebnisse der letzten Matches")
     @league_slash_option()
-    async def results_function(self, ctx: SlashContext, league_option: str = STANDARD):
-        await command_function(ctx, get_results, league_option)
+    async def results_function(self, ctx: SlashContext, league: str = STANDARD):
+        await command_function(ctx, get_results, league)
 
     @lol_function.subcommand(sub_cmd_name="standings", sub_cmd_description="Die Standings der Liga")
     @league_slash_option()
-    async def standings_function(self, ctx: SlashContext, league_option: str = STANDARD):
-        await command_function(ctx, get_standings, league_option)
+    async def standings_function(self, ctx: SlashContext, league: str = STANDARD):
+        await command_function(ctx, get_standings, league)
 
     @lol_function.subcommand(sub_cmd_name="upcoming", sub_cmd_description="Die nächsten Matches")
     @league_slash_option()
-    async def upcoming_function(self, ctx: SlashContext, league_option: str = STANDARD):
-        await command_function(ctx, get_upcoming, league_option)
+    async def upcoming_function(self, ctx: SlashContext, league: str = STANDARD):
+        await command_function(ctx, get_upcoming, league)
 
 
 def get_schedule(league):

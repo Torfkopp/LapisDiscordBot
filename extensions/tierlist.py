@@ -19,31 +19,33 @@ async def function(ctx, entry_function, *args):
 
 class Tierlist(Extension):
     message: interactions.models.discord.message
+    file: interactions.models.discord.File
     embed: interactions.Embed
 
     @slash_command(name="tierlist", description="Erstelle eine Tierlist")
     @slash_option(
-        name="name_option",
+        name="name",
         description="Name/Thema der Tierlist",
         required=True,
         opt_type=OptionType.STRING
     )
     @slash_option(
-        name="tiers_option",
+        name="tiers",
         description="Tiers mit Komma abgetrennt ('S' für S-D Liste, '0-10' für 0 bis 10 Liste)",
         required=False,
         opt_type=OptionType.STRING
     )
     @slash_option(
-        name="description_option",
+        name="description",
         description="Erklärung der Einordnung (z. B. 0 (Gut) -> 10 (Schlecht))",
         required=False,
         opt_type=OptionType.STRING
     )
-    async def tierlist_function(self, ctx: SlashContext, name_option,
-                                tiers_option: str = "S", description_option: str = ""):
-        Tierlist.embed = create_tierlist(name_option, tiers_option, description_option)
-        Tierlist.message = await ctx.send(embed=Tierlist.embed)
+    async def tierlist_function(self, ctx: SlashContext, name, tiers: str = "S", description: str = ""):
+        Tierlist.embed, Tierlist.file = create_tierlist(name, tiers, description)
+        Tierlist.message = await ctx.send(file=Tierlist.file, embed=Tierlist.embed)
+
+    # TODO Slash Commands umwandeln
 
     @prefixed_command()
     async def c(self, ctx: PrefixedContext, arg1, arg2): await function(ctx, create_entry, arg1, arg2)
@@ -78,14 +80,15 @@ def create_tierlist(theme, tiers, description):
                                description=f"Ordnung: {description}",
                                color=util.Colour.TIERLIST.value)
     embed.set_footer("@Lapis + (c/create {Tier} {Name} | d/delete {Tier} {Name} | m/move {Tier1} {Tier2} {Name})")
-    embed.set_thumbnail(url="https://images5.alphacoders.com/118/1188164.png")
+    file = interactions.models.discord.File("lapis_pics/LapisTier.jpg", "LapisTier.jpg")
+    embed.set_thumbnail(url="attachment://LapisTier.jpg")
 
     for tier in tiers:
         tier = tier.strip()
         if tier == "": continue
         embed.add_field(name=tier, value="\u200b")
 
-    return embed
+    return embed, file
 
 
 def create_entry(tier, name):

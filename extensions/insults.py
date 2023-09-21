@@ -22,7 +22,7 @@ COLOUR = util.Colour.INSULTS.value
 class Insults(Extension):
     @slash_command(name="insult", description="Erhalte eine zufällige Beleidigung")
     @slash_option(
-        name="language_option",
+        name="language",
         description="Sprache des Witzes",
         required=False,
         opt_type=OptionType.STRING,
@@ -33,8 +33,8 @@ class Insults(Extension):
             SlashCommandChoice(name="Spanisch", value="es"),
             SlashCommandChoice(name="Franzakisch", value="fr")]
     )
-    async def insult_function(self, ctx: SlashContext, language_option: str = "en"):
-        await ctx.send(embed=get_insult(language_option))
+    async def insult_function(self, ctx: SlashContext, language: str = "en"):
+        await ctx.send(embed=get_insult(language))
 
     @slash_command(name="yomomma", description="Erhalte eine zufällige Beschreibung deiner Mutter")
     async def yomomma_function(self, ctx: SlashContext):

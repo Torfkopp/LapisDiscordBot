@@ -38,22 +38,22 @@ class Anime(Extension):
 
     @anime_function.subcommand(sub_cmd_name="action", sub_cmd_description="Mach was Animeliches zu jemanden")
     @slash_option(
-        name="action_option",
+        name="action",
         description="Aktion",
         required=True,
         opt_type=OptionType.STRING,
         choices=[SlashCommandChoice(name=k.title(), value=k) for k in ACTION_OPTIONS]
     )
     @slash_option(
-        name="user_option",
+        name="user",
         description="Ziel",
         required=True,
         opt_type=OptionType.USER
     )
-    async def action_function(self, ctx: SlashContext, action_option, user_option):
+    async def action_function(self, ctx: SlashContext, action, user):
         await ctx.defer()
-        ping = f"{ctx.author.mention} {ACTION_OPTIONS.get(action_option)} {user_option.mention}"
-        embed = get_reaction(action_option)
+        ping = f"{ctx.author.mention} {ACTION_OPTIONS.get(action)} {user.mention}"
+        embed = get_reaction(action)
         embed.title = None
         await ctx.send(ping, embed=embed)
 
@@ -64,21 +64,21 @@ class Anime(Extension):
 
     @anime_function.subcommand(sub_cmd_name="reaction", sub_cmd_description="Zufällige Anime Bewegtbildreaktion")
     @slash_option(
-        name="theme_option1",
+        name="theme_1",
         description="Thema (A-Q)",
         required=False,
         opt_type=OptionType.STRING,
         choices=[SlashCommandChoice(name=k.title(), value=k) for k in THEME_OPTIONS[:25]]
     )
     @slash_option(
-        name="theme_option2",
+        name="theme_2",
         description="Thema (R-Z)",
         required=False,
         opt_type=OptionType.STRING,
         choices=[SlashCommandChoice(name=k.title(), value=k) for k in THEME_OPTIONS[25:]]
     )
-    async def reaction_function(self, ctx: SlashContext, theme_option1: str = None, theme_option2: str = None):
-        theme_option = theme_option1 or theme_option2 or random.choice(THEME_OPTIONS)
+    async def reaction_function(self, ctx: SlashContext, theme_1: str = None, theme_2: str = None):
+        theme_option = theme_1 or theme_2 or random.choice(THEME_OPTIONS)
         await ctx.defer()
         await ctx.send(embed=get_reaction(theme_option))
 

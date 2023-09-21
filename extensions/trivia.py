@@ -66,7 +66,7 @@ class Trivia(Extension):
 
     @slash_command(name="trivia", description="Erhalte eine Trivia-Frage")
     @slash_option(
-        name="category_option",
+        name="category",
         description="Kategorie der Frage",
         required=False,
         opt_type=OptionType.STRING,
@@ -74,7 +74,7 @@ class Trivia(Extension):
                  dict(sorted(CATEGORY_OPTIONS.items()))]  # sorted by alphabet
     )
     @slash_option(
-        name="difficulty_option",
+        name="difficulty",
         description="Schwierigkeitsgrad",
         required=False,
         opt_type=OptionType.STRING,
@@ -84,8 +84,8 @@ class Trivia(Extension):
             SlashCommandChoice(name="Hard", value="hard")
         ]
     )
-    async def trivia_function(self, ctx: SlashContext, category_option: str = "", difficulty_option: str = ""):
-        question, choices, Trivia.right = get_trivia(category_option, difficulty_option)
+    async def trivia_function(self, ctx: SlashContext, category: str = "", difficulty: str = ""):
+        question, choices, Trivia.right = get_trivia(category, difficulty)
         Trivia.components = ActionRow(
             Button(
                 custom_id="trivia_A",

@@ -77,7 +77,7 @@ def increment_command_calls():
 def league_slash_option():  # call with @league_option
     def wrapper(func):
         return slash_option(
-            name="liga_option",
+            name="liga",
             description="Liga",
             required=False,
             opt_type=OptionType.STRING,
@@ -90,7 +90,7 @@ def league_slash_option():  # call with @league_option
 def season_slash_option():  # call with @season_option
     def wrapper(func):
         return slash_option(
-            name="saison_option",
+            name="saison",
             description="Saison",
             required=False,
             opt_type=OptionType.INTEGER,
@@ -121,9 +121,9 @@ class Football(Extension):
                    sub_cmd_description="Gibt die Topscorer der Liga zurück (Standard: Bundesliga")
     @league_slash_option()
     @season_slash_option()
-    async def goalgetter_function(self, ctx: SlashContext, liga_option: str = LEAGUE_CHOICES[0].value,
-                                  saison_option: int = CURRENT_SEASON):
-        await command_function(ctx, commands.goalgetter, liga_option, saison_option)
+    async def goalgetter_function(self, ctx: SlashContext, liga: str = LEAGUE_CHOICES[0].value,
+                                  saison: int = CURRENT_SEASON):
+        await command_function(ctx, commands.goalgetter, liga, saison)
 
     @goalgetter_function.subcommand(sub_cmd_name="matchday",
                                     sub_cmd_description="Gibtn Spieltag der Liga in der Saison "
@@ -131,27 +131,27 @@ class Football(Extension):
     @league_slash_option()
     @season_slash_option()
     @slash_option(
-        name="day_option",
+        name="day",
         description="Spieltag",
         required=False,
         opt_type=OptionType.INTEGER,
         min_value=1
     )
-    async def matchday_function(self, ctx: SlashContext, liga_option: str = LEAGUE_CHOICES[0].value,
-                                saison_option: int = CURRENT_SEASON, day_option: int = 0):
-        await command_function(ctx, commands.matchday, liga_option, saison_option, day_option)
+    async def matchday_function(self, ctx: SlashContext, liga: str = LEAGUE_CHOICES[0].value,
+                                saison: int = CURRENT_SEASON, day: int = 0):
+        await command_function(ctx, commands.matchday, liga, saison, day)
 
     @goalgetter_function.subcommand(sub_cmd_name="matches",
                                     sub_cmd_description="Alle Spiele des Teams von vor y und bis in x Wochen"
                                                         "(Standard: SVW, vor 2 und in 2 Wochen)")
     @slash_option(
-        name="team_option",
+        name="team",
         description="Teamname",
         required=False,
         opt_type=OptionType.STRING,
     )
     @slash_option(
-        name="past_option",
+        name="past",
         description="Von",
         required=False,
         opt_type=OptionType.INTEGER,
@@ -159,21 +159,21 @@ class Football(Extension):
         max_value=50
     )
     @slash_option(
-        name="future_option",
+        name="future",
         description="bis",
         required=False,
         opt_type=OptionType.INTEGER,
         min_value=1,
         max_value=50
     )
-    async def matches_function(self, ctx: SlashContext, team_option: str = "Werder Bremen", past_option: int = 2,
-                               future_option: int = 2):
-        await command_function(ctx, commands.matches, team_option, past_option, future_option)
+    async def matches_function(self, ctx: SlashContext, team: str = "Werder Bremen", past: int = 2,
+                               future: int = 2):
+        await command_function(ctx, commands.matches, team, past, future)
 
     @goalgetter_function.subcommand(sub_cmd_name="table",
                                     sub_cmd_description="Tabelle der Liga in der Saison (Standard: Jetzige Bundesliga)")
     @league_slash_option()
     @season_slash_option()
-    async def table_function(self, ctx: SlashContext, liga_option: str = LEAGUE_CHOICES[0].value,
-                             saison_option: int = CURRENT_SEASON):
-        await command_function(ctx, commands.table, liga_option, saison_option)
+    async def table_function(self, ctx: SlashContext, liga: str = LEAGUE_CHOICES[0].value,
+                             saison: int = CURRENT_SEASON):
+        await command_function(ctx, commands.table, liga, saison)

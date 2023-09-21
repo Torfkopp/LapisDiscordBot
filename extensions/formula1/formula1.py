@@ -100,7 +100,7 @@ def get_last_finished_gp():
 def year_slash_option(min_year):
     def wrapper(func):
         return slash_option(
-            name="year_option",
+            name="year",
             description="Jahr",
             required=False,
             opt_type=OptionType.INTEGER,
@@ -114,7 +114,7 @@ def year_slash_option(min_year):
 def grandprix_slash_option():
     def wrapper(func):
         return slash_option(
-            name="gp_option",
+            name="gp",
             description="Grand Prix",
             required=False,
             opt_type=OptionType.STRING
@@ -126,7 +126,7 @@ def grandprix_slash_option():
 def session_slash_option():
     def wrapper(func):
         return slash_option(
-            name="session_option",
+            name="session",
             description="Session",
             required=False,
             opt_type=OptionType.STRING,
@@ -149,7 +149,7 @@ def driver_slash_option(number=1):
 
     def wrapper(func):
         return slash_option(
-            name=f"driver{number}_option",
+            name=f"driver_{number}",
             description=f"Fahrerkürzel des {number}. Fahrers",
             required=True,
             opt_type=OptionType.STRING,
@@ -199,26 +199,25 @@ class Formula1(Extension):
     @year_slash_option(1950)
     @grandprix_slash_option()
     @session_slash_option()
-    async def result_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON,
-                              gp_option: str = "", session_option: str = ""):
-        try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
+    async def result_function(self, ctx: SlashContext, year: int = CURRENT_SEASON, gp: str = "", session: str = ""):
+        try: gp, session = get_current_and_check_input(year, gp, session)
         except DataNotLoadedError:
             await ctx.send(embed=util.get_error_embed("faulty_value"))
             return
-        await command_function(ctx, no_group.result, year_option, gp_option, session_option)
+        await command_function(ctx, no_group.result, year, gp, session)
 
     @f1_function.subcommand(
         sub_cmd_name="next",
         sub_cmd_description="Das nächstes Rennwochenende oder alle verbleibenden Rennen (Standard: nur nächstes)"
     )
     @slash_option(
-        name="allnext_option",
+        name="allnext",
         description="Alle?",
         opt_type=OptionType.BOOLEAN,
         required=False
     )
-    async def next_function(self, ctx: SlashContext, allnext_option: bool = False):
-        if allnext_option: await command_function(ctx, no_group.remaining_races)
+    async def next_function(self, ctx: SlashContext, allnext: bool = False):
+        if allnext: await command_function(ctx, no_group.remaining_races)
         else: await command_function(ctx, no_group.next_race)
 
     ''' ######################
@@ -234,12 +233,10 @@ class Formula1(Extension):
     @year_slash_option(2018)
     @grandprix_slash_option()
     @session_slash_option()
-    async def laps_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON,
-                            gp_option: str = "", session_option: str = ""):
-        try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
+    async def laps_function(self, ctx: SlashContext, year: int = CURRENT_SEASON, gp: str = "", session: str = ""):
+        try: gp, session = get_current_and_check_input(year, gp, session)
         except DataNotLoadedError: return await ctx.send(embed=util.get_error_embed("faulty_value"))
-        await command_function(ctx, laps.overview_fastest_laps, year_option, gp_option,
-                               session_option)
+        await command_function(ctx, laps.overview_fastest_laps, year, gp, session)
 
     @laps_function.subcommand(
         sub_cmd_name="compare",
@@ -251,13 +248,11 @@ class Formula1(Extension):
     @year_slash_option(2018)
     @grandprix_slash_option()
     @session_slash_option()
-    async def compare_function(self, ctx: SlashContext, driver1_option, driver2_option,
-                               year_option: int = CURRENT_SEASON,
-                               gp_option: str = "", session_option: str = ""):
-        try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
+    async def compare_function(self, ctx: SlashContext, driver_1, driver_2,
+                               year: int = CURRENT_SEASON, gp: str = "", session: str = ""):
+        try: gp, session = get_current_and_check_input(year, gp, session)
         except DataNotLoadedError: return await ctx.send(embed=util.get_error_embed("faulty_value"))
-        await command_function(ctx, laps.compare_laps, year_option, gp_option, session_option,
-                               driver1_option.upper(), driver2_option.upper())
+        await command_function(ctx, laps.compare_laps, year, gp, session, driver_1.upper(), driver_2.upper())
 
     @laps_function.subcommand(
         sub_cmd_name="scatterplot",
@@ -267,12 +262,11 @@ class Formula1(Extension):
     @year_slash_option(2018)
     @grandprix_slash_option()
     @session_slash_option()
-    async def scatterplot_function(self, ctx: SlashContext, driver1_option, year_option: int = CURRENT_SEASON,
-                                   gp_option: str = "", session_option: str = ""):
-        try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
+    async def scatterplot_function(self, ctx: SlashContext, driver_1,
+                                   year: int = CURRENT_SEASON, gp: str = "", session: str = ""):
+        try: gp, session = get_current_and_check_input(year, gp, session)
         except DataNotLoadedError: return await ctx.send(embed=util.get_error_embed("faulty_value"))
-        await command_function(ctx, laps.scatterplot, year_option, gp_option, session_option,
-                               str.upper(driver1_option))
+        await command_function(ctx, laps.scatterplot, year, gp, session, str.upper(driver_1))
 
     @laps_function.subcommand(
         sub_cmd_name="telemetry",
@@ -284,13 +278,11 @@ class Formula1(Extension):
     @year_slash_option(2018)
     @grandprix_slash_option()
     @session_slash_option()
-    async def telemetry_function(self, ctx: SlashContext, driver1_option, driver2_option,
-                                 year_option: int = CURRENT_SEASON,
-                                 gp_option: str = "", session_option: str = ""):
-        try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
+    async def telemetry_function(self, ctx: SlashContext, driver_1, driver_2,
+                                 year: int = CURRENT_SEASON, gp: str = "", session: str = ""):
+        try: gp, session = get_current_and_check_input(year, gp, session)
         except DataNotLoadedError: return await ctx.send(embed=util.get_error_embed("faulty_value"))
-        await command_function(ctx, laps.telemetry, year_option, gp_option, session_option,
-                               driver1_option.upper(), driver2_option.upper())
+        await command_function(ctx, laps.telemetry, year, gp, session, driver_1.upper(), driver_2.upper())
 
     @laps_function.subcommand(
         sub_cmd_name="track_dominance",
@@ -301,13 +293,11 @@ class Formula1(Extension):
     @year_slash_option(2018)
     @grandprix_slash_option()
     @session_slash_option()
-    async def track_dominance_function(self, ctx: SlashContext, driver1_option, driver2_option,
-                                       year_option: int = CURRENT_SEASON,
-                                       gp_option: str = "", session_option: str = ""):
-        try: gp_option, session_option = get_current_and_check_input(year_option, gp_option, session_option)
+    async def track_dominance_function(self, ctx: SlashContext, driver_1, driver_2,
+                                       year: int = CURRENT_SEASON, gp: str = "", session: str = ""):
+        try: gp, session = get_current_and_check_input(year, gp, session)
         except DataNotLoadedError: return await ctx.send(embed=util.get_error_embed("faulty_value"))
-        await command_function(ctx, laps.track_dominance, year_option, gp_option, session_option,
-                               driver1_option.upper(), driver2_option.upper())
+        await command_function(ctx, laps.track_dominance, year, gp, session, driver_1.upper(), driver_2.upper())
 
     ''' ######################
     Commands in RACEINFO group
@@ -321,9 +311,9 @@ class Formula1(Extension):
     )
     @year_slash_option(2018)
     @grandprix_slash_option()
-    async def raceinfo_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, gp_option: int = 0):
-        if gp_option == 0: gp_option = get_last_finished_gp()
-        await command_function(ctx, race_info.position_change, year_option, gp_option)
+    async def raceinfo_function(self, ctx: SlashContext, year: int = CURRENT_SEASON, gp: int = 0):
+        if gp == 0: gp = get_last_finished_gp()
+        await command_function(ctx, race_info.position_change, year, gp)
 
     @raceinfo_function.subcommand(
         sub_cmd_name="ltd",
@@ -331,9 +321,9 @@ class Formula1(Extension):
     )
     @year_slash_option(2018)
     @grandprix_slash_option()
-    async def ltd_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, gp_option: int = 0):
-        if gp_option == 0: gp_option = get_last_finished_gp()
-        await command_function(ctx, race_info.lap_time_distribution, year_option, gp_option)
+    async def ltd_function(self, ctx: SlashContext, year: int = CURRENT_SEASON, gp: int = 0):
+        if gp == 0: gp = get_last_finished_gp()
+        await command_function(ctx, race_info.lap_time_distribution, year, gp)
 
     @raceinfo_function.subcommand(
         sub_cmd_name="tyre",
@@ -341,9 +331,9 @@ class Formula1(Extension):
     )
     @year_slash_option(2018)
     @grandprix_slash_option()
-    async def tyre_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, gp_option: int = 0):
-        if gp_option == 0: gp_option = get_last_finished_gp()
-        await command_function(ctx, race_info.strategy, year_option, gp_option)
+    async def tyre_function(self, ctx: SlashContext, year: int = CURRENT_SEASON, gp: int = 0):
+        if gp == 0: gp = get_last_finished_gp()
+        await command_function(ctx, race_info.strategy, year, gp)
 
     ''' #######################
     Commands in STANDINGS group
@@ -357,7 +347,7 @@ class Formula1(Extension):
     )
     @year_slash_option(1950)
     @slash_option(
-        name="championship_option",
+        name="championship",
         description="Meisterschaftsart",
         required=False,
         opt_type=OptionType.BOOLEAN,
@@ -366,9 +356,8 @@ class Formula1(Extension):
             SlashCommandChoice(name="Konstrukteurs-WM", value=False)
         ]
     )
-    async def standings_function(self, ctx: SlashContext,
-                                 year_option: int = CURRENT_SEASON, championship_option: bool = True):
-        await command_function(ctx, standings.table, year_option, championship_option)
+    async def standings_function(self, ctx: SlashContext, year: int = CURRENT_SEASON, championship: bool = True):
+        await command_function(ctx, standings.table, year, championship)
 
     @standings_function.subcommand(
         sub_cmd_name="average",
@@ -376,7 +365,7 @@ class Formula1(Extension):
     )
     @year_slash_option(1950)
     @slash_option(
-        name="session_option",
+        name="session",
         description="Session",
         required=False,
         opt_type=OptionType.STRING,
@@ -386,8 +375,8 @@ class Formula1(Extension):
             SlashCommandChoice(name="Sprint", value="S")
         ]
     )
-    async def average_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, session_option: str = "R"):
-        await command_function(ctx, standings.average_position, year_option, session_option)
+    async def average_function(self, ctx: SlashContext, year: int = CURRENT_SEASON, session: str = "R"):
+        await command_function(ctx, standings.average_position, year, session)
 
     @standings_function.subcommand(
         sub_cmd_name="h2h",
@@ -395,7 +384,7 @@ class Formula1(Extension):
     )
     @year_slash_option(1950)
     @slash_option(
-        name="session_option",
+        name="session",
         description="Session",
         required=False,
         opt_type=OptionType.STRING,
@@ -405,16 +394,16 @@ class Formula1(Extension):
             SlashCommandChoice(name="Sprint", value="S")
         ]
     )
-    async def h2h_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON, session_option: str = "R"):
-        await command_function(ctx, standings.h2h, year_option, session_option)
+    async def h2h_function(self, ctx: SlashContext, year: int = CURRENT_SEASON, session: str = "R"):
+        await command_function(ctx, standings.h2h, year, session)
 
     @standings_function.subcommand(
         sub_cmd_name="heatmap",
         sub_cmd_description="Heatmap für die Positionen aller Fahrer in der Saison (Standard: Momentane Saison)"
     )
     @year_slash_option(1950)
-    async def heatmap_function(self, ctx: SlashContext, year_option: int = CURRENT_SEASON):
-        await command_function(ctx, standings.heatmap, year_option)
+    async def heatmap_function(self, ctx: SlashContext, year: int = CURRENT_SEASON):
+        await command_function(ctx, standings.heatmap, year)
 
     @standings_function.subcommand(
         sub_cmd_name="winnable",
