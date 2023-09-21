@@ -14,6 +14,7 @@ TOKEN = config['token']
 SPORTS_CHANNEL_ID = config['sport_channel_id']
 LABAR_CHANNEL_ID = config['labar_channel_id']
 STAMMRUNDEN_CHANNEL_ID = config['stammrunden_channel_id']
+MODERATOREN_CHANNEL_ID = config['moderatoren_channel_id']
 
 
 # COLOURS
@@ -28,6 +29,7 @@ class Colour(Enum):
     HELP = discord.BrandColors.BLURPLE
     INSULTS = discord.MaterialColors.BROWN
     JOKES = discord.MaterialColors.YELLOW
+    MODMAIL = discord.MaterialColors.GREY
     PREFIXED = discord.BrandColors.BLURPLE
     QUOTES = discord.FlatUIColors.ASBESTOS
     SECRET = discord.MaterialColors.DEEP_PURPLE
