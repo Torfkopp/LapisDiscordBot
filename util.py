@@ -111,7 +111,7 @@ def get_error_embed(term: str):
 
 def get_if_uwuify():
     """ Returns if you should uwuify"""
-    return not random.randint(0, 100) < UWUCHANCE
+    return random.randint(0, 100) < UWUCHANCE
 
 
 def uwuify_by_chance(obj):

@@ -52,9 +52,8 @@ def update():
     LoLPatchnotes.title = title
 
     if patch_update:
-        try:  # If a midpatch update exists in the iteration but didn't exist in the last one, call the method
-            if not LoLPatchnotes.patch_update: return get_midpatch_update()
-        except NameError: pass
+        # If a midpatch update exists in the iteration but didn't exist in the last one, call the method
+        if LoLPatchnotes.patch_update is not None and not LoLPatchnotes.patch_update: return get_midpatch_update()
     LoLPatchnotes.patch_update = patch_update
 
     if datetime.datetime.now() - time < datetime.timedelta(hours=2): return get_patch_image()
@@ -72,19 +71,17 @@ class LoLPatchnotes(Extension):
     url: str
     soup: BeautifulSoup
     title: str
-    patch_update: bool
+    patch_update = None
 
     @slash_command(name="patch", description="Erhalte die Patchzusammenfassung")
     async def patch_function(self, ctx: SlashContext): await ctx.send("Patch")
 
     @patch_function.subcommand(sub_cmd_name="image", sub_cmd_description="Erhalte das Patchzusammenfassungsbild", )
-    async def image_function(self, ctx: SlashContext):
-        await ctx.send(embed=get_patch_image())
+    async def image_function(self, ctx: SlashContext): await ctx.send(embed=get_patch_image())
 
     @patch_function.subcommand(sub_cmd_name="summary",
                                sub_cmd_description="Erhalte die Zusammenfassungstexte der Änderungen")
-    async def summary_function(self, ctx: SlashContext):
-        await ctx.send(embed=get_patch_summaries())
+    async def summary_function(self, ctx: SlashContext): await ctx.send(embed=get_patch_summaries())
 
     @patch_function.subcommand(sub_cmd_name="details",
                                sub_cmd_description="Erhalte die Änderungen des Patches im Details")
@@ -108,7 +105,8 @@ class LoLPatchnotes(Extension):
     async def details_function(self, ctx: SlashContext, type_filter: int = 0, name_filter: str = ""):
         embeds = get_patch_details(type_filter, name_filter)
         paginator = Paginator.create_from_embeds(self.bot, *embeds)
-        await paginator.send(ctx)
+        try: await paginator.send(ctx)
+        except IndexError: await ctx.send(embed=util.get_error_embed("faulty_value"))
 
 
 def _make_embed():
@@ -143,6 +141,7 @@ def get_patch_summaries():
     champ_summaries = soup.find_all('p', class_="summary")
 
     embed = _make_embed()
+    if len(champ_names) != len(champ_summaries): embed.add_field(name=champ_names.pop(0).text, value="Neuer Champ")
     for i in range(min(25, len(champ_summaries))):
         embed.add_field(name=champ_names[i].text, value=champ_summaries[i].text, inline=True)
     return util.uwuify_by_chance(embed)
@@ -151,27 +150,27 @@ def get_patch_summaries():
 def get_midpatch_update():
     """ Returns the midpatch updates """
     soup = LoLPatchnotes.soup
-    if not soup.find('h2', id="patch-midpatch-updates"): return None
+    midpatch = soup.find('h2', id="patch-mid-patch-updates") or soup.find('h2', id="patch-midpatch-updates")
+    if midpatch is None: return None
     embed = _make_embed()
-    patch_updates = soup.find_all('div', class_="white-stone accent-before")
+    midpatch_update = soup.find('div', class_="white-stone accent-before")
     embed.title = "Patch-Aktualisierungen"
-    for patch_update in patch_updates:
-        if patch_update.find('h4') is None or patch_update.find('ul') is None: continue
-        titles = patch_update.find_all('h4')
-        uls = patch_update.find_all('ul')
-        quote = patch_update.find('blockquote')
-        description = f"“{patch_update.find('blockquote').text}”" if quote else None
 
-        embed.add_field(
-            name=titles[0].text,
-            value=description if description else "\u200b"
-        )
+    titles = midpatch_update.find_all('h4')
+    uls = midpatch_update.find_all('ul')
+    quote = midpatch_update.find('blockquote')
+    description = f"“{midpatch_update.find('blockquote').text.strip()}”" if quote else None
 
-        for i in range(len(uls)):
-            name = titles[i + 1].text
-            value = ""
-            for li in uls[i].find_all['li']: value += li.text
-            embed.add_field(name=name, value=value)
+    embed.add_field(
+        name=titles[0].text,
+        value=description if description else "\u200b"
+    )
+
+    for i in range(len(uls)):
+        name = titles[i + 1].text
+        value = ""
+        for li in uls[i].find_all('li'): value += f"- {li.text}\n"
+        embed.add_field(name=name, value=value)
 
     return embed
 
@@ -201,6 +200,7 @@ def _get_champion_embeds(champion_changes, name_filter):
         change_text = (change_text
                        .replace("Fähigkeitsstärke", "AP")
                        .replace("Angriffsschaden", "AD"))
+        if change_text == "": change_text = f"“{champ_change.find('blockquote').text.strip()}”"
         embed_fields.append(interactions.EmbedField(name=name, value=change_text))
 
     return embed_fields
@@ -235,10 +235,13 @@ def get_patch_details(type_filter, name_filter):
     changes = soup.find_all('div', class_="patch-change-block white-stone accent-before")
     champ_amount = 0
     for change in changes:
+        if change == changes[0] and "champions" in change.find('a')['href']:  # New Champ Releases
+            champ_amount += 1
+            continue
         if change.find('p'): champ_amount += 1
         else: break
     champion_changes = changes[:champ_amount]
-    item_changes = changes[champ_amount:]
+    system_changes = changes[champ_amount:]
 
     def make_embeds(fields, text):
         """ Converts the fields to one or more embeds """
@@ -256,12 +259,11 @@ def get_patch_details(type_filter, name_filter):
 
     embeds = []
     midpatch_update = get_midpatch_update()
-    log.write(midpatch_update)
     if midpatch_update: embeds.append(midpatch_update)
     if type_filter < 2:  # true for 0 and 1 (all and champions only)
         embeds += make_embeds(_get_champion_embeds(champion_changes, name_filter), "Championänderungen")
     if type_filter % 2 == 0:  # true for 0 and 2 (all and system only)
-        embeds += make_embeds(_get_system_embeds(item_changes, name_filter), "Systemänderungen")
+        embeds += make_embeds(_get_system_embeds(system_changes, name_filter), "Systemänderungen")
 
     if util.get_if_uwuify():
         for i in range(len(embeds)): embeds[i] = util.uwuify_embed(embeds[i])
