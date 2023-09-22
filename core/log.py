@@ -24,5 +24,8 @@ def write(log):
 def error(err):
     """ Writes the error to the file """
     traceback.print_exception(err)
+    error_message = traceback.format_exception(err)
     with open("strunt/log.txt", "a") as logfile:
-        logfile.write(f"\n {datetime.datetime.now()} ERROR\n{err}\n")
+        logfile.write(f"\n {datetime.datetime.now()} ERROR\n")
+        for line in error_message: logfile.write(line)
+        logfile.write("\n")
