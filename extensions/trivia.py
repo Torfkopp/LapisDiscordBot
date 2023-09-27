@@ -51,18 +51,20 @@ CATEGORY_OPTIONS = {
 async def on_trivia_component(event: Component):
     ctx = event.ctx
     if not ctx.custom_id.startswith("trivia"): return
+    # Uncomment (and remove content parameter) if only author should be able to answer
+    # if ctx.author_id != Trivia.author_id: return
     for component in Trivia.components.components:
         component.disabled = True
         if component == ctx.component: component.style = ButtonStyle.RED
         # noinspection PyUnresolvedReferences
         if component.label == Trivia.right: component.style = ButtonStyle.GREEN  # warning ignorable
-
-    await ctx.edit_origin(components=Trivia.components)
+    await ctx.edit_origin(components=Trivia.components, content=f"Beantwortet von: {ctx.author}")
 
 
 class Trivia(Extension):
     components = ActionRow()
-    right = ""
+    right: str
+    author_id = None
 
     @slash_command(name="trivia", description="Erhalte eine Trivia-Frage")
     @slash_option(
@@ -85,6 +87,7 @@ class Trivia(Extension):
         ]
     )
     async def trivia_function(self, ctx: SlashContext, category: str = "", difficulty: str = ""):
+        Trivia.author_id = ctx.author_id
         question, choices, Trivia.right = get_trivia(category, difficulty)
         Trivia.components = ActionRow(
             Button(
@@ -140,6 +143,7 @@ def get_trivia(category, difficulty):
     answers = trivia['incorrect_answers']
     correct = trivia['correct_answer']
     answers.append(correct)
+    answers = [html.unescape(x) for x in answers]
     random.shuffle(answers)
 
     if util.get_if_uwuify():

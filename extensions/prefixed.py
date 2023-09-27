@@ -22,6 +22,15 @@ class Prefixed(Extension):
     async def moin(self, ctx: PrefixedContext): await ctx.reply(embed=hello())
 
     @prefixed_command()
+    async def Hello(self, ctx: PrefixedContext): await ctx.reply(embed=hello())
+
+    @prefixed_command()
+    async def Hallo(self, ctx: PrefixedContext): await ctx.reply(embed=hello())
+
+    @prefixed_command()
+    async def Moin(self, ctx: PrefixedContext): await ctx.reply(embed=hello())
+
+    @prefixed_command()
     async def goodbye(self, ctx: PrefixedContext):
         if ctx.author_id not in self.bot.owner_ids: return
         embed = interactions.Embed(title="Auf Wiedersehen!", color=COLOUR)
