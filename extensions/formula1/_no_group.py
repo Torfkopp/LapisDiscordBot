@@ -20,7 +20,7 @@ CURRENT_SEASON = util.CURRENT_F1_SEASON
 def result(year, gp, session):
     """ Returns the result of the specified session """
     sess = fastf1.get_session(year, gp, session)
-    log.write("FastF1: " + session)
+    log.write("FastF1: " + str(session))
     sess.load(weather=False)
     results = sess.results
     ranking = "```"

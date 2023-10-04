@@ -24,7 +24,7 @@ def overview_fastest_laps(year, gp, session):
 
     # Load session
     session = fastf1.get_session(year, gp, session)
-    log.write("FastF1: " + session)
+    log.write("FastF1: " + str(session))
     session.load(weather=False, messages=False)
 
     # Get array of all drivers
@@ -98,7 +98,7 @@ def compare_laps(year, gp, session, driver1, driver2):
 
     # Load a session and its telemetry data
     session = fastf1.get_session(year, gp, session)
-    log.write("FastF1: " + session)
+    log.write("FastF1: " + str(session))
     session.load(weather=False, messages=False)
 
     # Select the two laps to compare
@@ -148,7 +148,7 @@ def scatterplot(year, gp, session, driver):
 
     # Load session
     race = fastf1.get_session(year, gp, 'R')
-    log.write("FastF1: " + session)
+    log.write("FastF1: " + str(session))
     race.load(weather=False, messages=False)
 
     # Get all laps of a single driver. Filter out slow laps
@@ -208,7 +208,7 @@ def telemetry(year, gp, session, driver1, driver2):
     plt.subplots_adjust(left=0.07, right=0.98, top=0.89, hspace=0.8)
 
     race = fastf1.get_session(year, gp, session)
-    log.write("FastF1: " + session)
+    log.write("FastF1: " + str(session))
     race.load(laps=True, telemetry=True, weather=False, messages=False)
 
     d1_laps = race.laps.pick_driver(driver1)
@@ -345,7 +345,7 @@ def track_dominance(year, gp, session, driver1, driver2):
     ax.axis('off')
     # get session using given args
     race = fastf1.get_session(year, gp, session)
-    log.write("FastF1: " + session)
+    log.write("FastF1: " + str(session))
     race.load(laps=True, telemetry=True, weather=False, messages=False)
     # get driver data for their fastest lap during the session
     d1_laps = race.laps.pick_driver(driver1)
