@@ -162,12 +162,12 @@ def driver_slash_option(number=1):
 
 async def command_function(ctx, func, *args):
     """ Function for the commands """
-    '''if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
+    if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
         await ctx.send(embed=util.get_error_embed("wrong_channel"))
         return
     elif limit_reached:
         await ctx.send(embed=util.get_error_embed("limit_reached"))
-        return'''
+        return
     increment_command_calls()
     await ctx.defer()
     try:
