@@ -3,6 +3,7 @@ import subprocess
 import interactions
 from interactions import Extension
 from interactions.ext.prefixed_commands import prefixed_command, PrefixedContext
+from interactions.models import discord
 
 import util
 
@@ -37,6 +38,12 @@ class Prefixed(Extension):
         if ctx.author_id not in self.bot.owner_ids: return
         embed = interactions.Embed(title="Auf Wiedersehen!", color=COLOUR)
         embed.set_image(url=util.get_gif("goodbye"))
+
+        await self.bot.change_presence(status=discord.Status.DND,
+                                       activity=discord.activity.Activity.create(
+                                           name="zu, dass sie herunterfährt",
+                                           type=discord.activity.ActivityType.WATCHING))
+
         await ctx.send(embed=embed)
         await self.bot.stop()
 
@@ -45,8 +52,12 @@ class Prefixed(Extension):
         if ctx.author_id not in self.bot.owner_ids: return
         embed = interactions.Embed(title="UPGRADE!", color=COLOUR)
         embed.set_image(url=util.get_gif("update"))
+        await self.bot.change_presence(status=discord.Status.DND,
+                                       activity=discord.activity.Activity.create(
+                                           name="Updates auf",
+                                           type=discord.activity.ActivityType.GAME))
         await ctx.send(embed=embed)
-        subprocess.call(["bash", "./resources/update.sh"])
+        subprocess.call(["bash", "./strunt/update.sh"])
         await self.bot.stop()
 
 
