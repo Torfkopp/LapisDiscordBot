@@ -1,3 +1,5 @@
+import subprocess
+
 import interactions
 from interactions import Extension
 from interactions.ext.prefixed_commands import prefixed_command, PrefixedContext
@@ -36,6 +38,15 @@ class Prefixed(Extension):
         embed = interactions.Embed(title="Auf Wiedersehen!", color=COLOUR)
         embed.set_image(url=util.get_gif("goodbye"))
         await ctx.send(embed=embed)
+        await self.bot.stop()
+
+    @prefixed_command()
+    async def update(self, ctx: PrefixedContext):
+        if ctx.author_id not in self.bot.owner_ids: return
+        embed = interactions.Embed(title="UPGRADE!", color=COLOUR)
+        embed.set_image(url=util.get_gif("update"))
+        await ctx.send(embed=embed)
+        subprocess.call(["bash", "./resources/update.sh"])
         await self.bot.stop()
 
 
