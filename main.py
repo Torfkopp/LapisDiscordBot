@@ -229,6 +229,7 @@ async def on_startup():
         return
     reduce_command_calls.start()
     await log.start_procedure(bot)
+    if datetime.datetime.now().weekday() == 1: util.reset_message_tracker()  # Reset on Tuesday
 
     # FOOTBALL LIVE SCORING PART
     football_schedule = football.create_schedule()
@@ -242,13 +243,16 @@ async def on_startup():
 
     # FORMULA 1 AUTOMATIC RESULTS PART
     formula1_schedule, embed = formula1.create_schedule()
-    if isinstance(embed, interactions.Embed): await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
+    if isinstance(embed, interactions.Embed):
+        if ((datetime.datetime.now().weekday() == 0 and not util.message_sent("rawe_ceek")) or
+                (datetime.datetime.now().weekday() == 4 and not util.message_sent("race_schedule"))):
+            await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
     log.write("Today's formula1 sessions (ending times): " + str(formula1_schedule))
     for start_time in formula1_schedule: Task(formula1_result, DateTrigger(start_time)).start()
 
     # AUTOMATIC LOLESPORTS RESULTS PART
     league_schedule = lolesport.create_schedule()
-    # When every start time has already past, start live league manually
+    # When every start time has already passed, start live league manually
     if len(league_schedule) > 0 and league_schedule[len(league_schedule) - 1] < datetime.datetime.now():
         await start_live_league()
     log.write("Starting times of today's lol esport matches: " + str(league_schedule))
@@ -260,7 +264,7 @@ async def on_startup():
     Task(activity.rotate_activity, IntervalTrigger(minutes=2)).start()
 
     # AUTOMATIC FREE GAMES PART
-    if datetime.datetime.now().weekday() == 4:
+    if datetime.datetime.now().weekday() == 4 and not util.message_sent("games"):
         await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=freegames.get_giveaways())
 
     # AUTOMATIC LOL_PATCHNOTES PART

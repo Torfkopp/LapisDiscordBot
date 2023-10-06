@@ -10,7 +10,6 @@ import extensions.formula1._no_group as no_group
 import util
 from core import log
 
-
 COLOUR = util.Colour.FORMULA1.value
 
 
@@ -53,7 +52,7 @@ def create_schedule():
 
     # On Sundays before the race, the current event is already removed from fastf1's remaining events
     if date_today.weekday() == 6:
-        race_time = fastf1.get_event(2023, next_event['RoundNumber']-1)
+        race_time = fastf1.get_event(2023, next_event['RoundNumber'] - 1)
         race_time = race_time['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
         start_times.add(race_time + datetime.timedelta(hours=1.5))
         return list(start_times), embed
@@ -85,8 +84,7 @@ def create_schedule():
         embed.set_image(url=image_url)
 
     # On friday of every race weekend, send the schedule to the channel
-    if (date_today.weekday() == 4) and (
-            (session_list[1] - date_today).days == 0): embed = no_group.next_race()
+    if (date_today.weekday() == 4) and ((session_list[1] - date_today).days == 0): embed = no_group.next_race()
 
     for i in range(0, len(session_list)):  # A session should be finished 1 hour after its start (1.5 for a race)
         if session_list[i].date() == date_today.date(): start_times.add(session_list[i] + datetime.timedelta(hours=1))

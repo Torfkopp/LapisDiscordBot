@@ -109,6 +109,25 @@ def get_error_embed(term: str):
     return uwuify_by_chance(embed)
 
 
+def message_sent(message: str):
+    """ Returns whether the message was already sent, and if it wasn't, sets the tracker to true
+    :param 'rawe_ceek', 'games', or 'race_schedule' """
+    with open("resources/message_tracker.json", "r") as message_tracker: trackers = json.load(message_tracker)
+    if trackers[message]: return True
+    else:
+        trackers[message] = True
+        with open("resources/message_tracker.json", "w") as message_tracker: json.dump(trackers, message_tracker)
+        return False
+
+
+def reset_message_tracker():
+    """ Resets the message trackers"""
+    with open("resources/message_tracker.json", "r") as message_tracker: trackers = json.load(message_tracker)
+    for tracker in trackers: trackers[tracker] = False
+    with open("resources/message_tracker.json", "w") as message_tracker: json.dump(trackers, message_tracker)
+    return
+
+
 def get_if_uwuify():
     """ Returns if you should uwuify"""
     return random.randint(0, 100) < UWUCHANCE

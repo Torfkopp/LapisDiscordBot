@@ -35,6 +35,7 @@ class Prefixed(Extension):
 
     @prefixed_command()
     async def goodbye(self, ctx: PrefixedContext):
+        """ Shuts down the bot"""
         if ctx.author_id not in self.bot.owner_ids: return
         embed = interactions.Embed(title="Auf Wiedersehen!", color=COLOUR)
         embed.set_image(url=util.get_gif("goodbye"))
@@ -49,6 +50,8 @@ class Prefixed(Extension):
 
     @prefixed_command()
     async def update(self, ctx: PrefixedContext):
+        """ Function to update the bot remotely;
+        shuts down the bot and calls a script that pulls the git changes and restarts the bot """
         if ctx.author_id not in self.bot.owner_ids: return
         embed = interactions.Embed(title="UPGRADE!", color=COLOUR)
         embed.set_image(url=util.get_gif("update"))
@@ -58,7 +61,7 @@ class Prefixed(Extension):
                                            type=discord.activity.ActivityType.GAME))
         await ctx.send(embed=embed)
         await self.bot.stop()
-        subprocess.call(["bash", "./strunt/update.sh"])
+        subprocess.call(["bash", "./strunt/update.sh"])  # Adapt to os
 
 
 def hello():
