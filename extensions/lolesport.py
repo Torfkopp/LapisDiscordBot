@@ -187,12 +187,14 @@ def get_schedule(league):
         "TE": "trailers"
     }
 
-    response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
-    log.write("Api-Call lolesports: " + url)
     try:
+        log.write("Api-Call lolesports: " + url)
+        response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
         response = response.json()
         events = response['data']['schedule']['events']
-    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+        log.write("API DOWN")
+        return util.get_error_embed("api_down")
 
     return events
 
@@ -287,23 +289,29 @@ def get_standings(league):
         "TE": "trailers"
     }
 
-    response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
-    log.write("Api-Call lolesports: " + url)
     try:
+        log.write("Api-Call lolesports: " + url)
+        response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
         response = response.json()
         response = response['data']['leagues'][0]['tournaments'][0]
-    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+        log.write("API DOWN")
+        return util.get_error_embed("api_down")
 
     tournament_id = response['id']
 
     url = "https://esports-api.lolesports.com/persisted/gw/getStandingsV3"
     querystring = {"hl": "de-DE", "tournamentId": tournament_id}
 
-    response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
+
     try:
+        log.write("Api-Call lolesports: " + url)
+        response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
         response = response.json()
         standings = response['data']['standings'][0]
-    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+        log.write("API DOWN")
+        return util.get_error_embed("api_down")
 
     standings_name = standings['slug'].replace("_", " ").title()
     embed = interactions.Embed(title=f"Standings für {standings_name}", color=COLOUR)

@@ -15,10 +15,14 @@ COLOUR = util.Colour.FOOTBALL.value
 def goalgetter(liga, saison):
     """ Method for the goalgetter command """
     url = f"https://api.openligadb.de/getgoalgetters/{liga}/{saison}"
-    response = requests.get(url)
-    log.write("Api-Call Football: " + url)
-    try: data = response.json()
-    except requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+    try:
+        log.write("Api-Call Football: " + url)
+        response = requests.get(url)
+        data = response.json()
+    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+        log.write("API DOWN")
+        return util.get_error_embed("api_down")
+
     embed = interactions.Embed(title=f"Torjäger der Liga {liga}", color=COLOUR)
     for i in range(0, min(len(data), 15)):  # Limit shown scorers to 15
         name = germanise(data[i]['goalGetterName'])
@@ -31,8 +35,8 @@ def goalgetter(liga, saison):
 def get_current_spieltag(liga):
     """ Gets the current Spieltag """
     url = f'https://api.openligadb.de/getcurrentgroup/{liga}'
-    response = requests.get(url)
     log.write("Api-Call Football: " + url)
+    response = requests.get(url)
     data = response.json()
     return data['groupOrderID']
 
@@ -41,18 +45,24 @@ def matchday(liga, saison, spieltag):
     """ Method for the matchday command """
     if spieltag == 0:
         try: spieltag = get_current_spieltag(liga)
-        except requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+        except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+            log.write("API DOWN")
+            return util.get_error_embed("api_down")
 
     url = f"https://api.openligadb.de/getmatchdata/{liga}/{saison}/{spieltag}"
-    response = requests.get(url)
-    log.write("Api-Call Football: " + url)
-    try: jsondata = response.json()
-    except requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+    try:
+        log.write("Api-Call Football: " + url)
+        response = requests.get(url)
+        jsondata = response.json()
+    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+        log.write("API DOWN")
+        return util.get_error_embed("api_down")
 
     embed = interactions.Embed(title=f"{germanise(jsondata[0]['leagueName'])} Spieltag {spieltag}", color=COLOUR)
     i = 1
     for match in jsondata:
-        time = datetime.datetime.fromisoformat(match['matchDateTime'].replace("Z", "+00:00")).strftime("%A, %d. %B %Y %H:%M")
+        time = datetime.datetime.fromisoformat(match['matchDateTime'].replace("Z", "+00:00")).strftime(
+            "%A, %d. %B %Y %H:%M")
         team1 = germanise(match['team1']['teamName'])
         team2 = germanise(match['team2']['teamName'])
         goals1 = "-"
@@ -70,10 +80,14 @@ def matchday(liga, saison, spieltag):
 def matches(team, past, future):
     """ Method for the matches command """
     url = f"https://api.openligadb.de/getmatchesbyteam/{team}/{past}/{future}"
-    response = requests.get(url)
-    log.write("Api-Call Football: " + url)
-    try: data = response.json()
-    except requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+    try:
+        log.write("Api-Call Football: " + url)
+        response = requests.get(url)
+        data = response.json()
+    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+        log.write("API DOWN")
+        return util.get_error_embed("api_down")
+
     embed = interactions.Embed(title=f"Spiele von {team} in den letzten {past} und den nächsten {future} Wochen",
                                color=COLOUR)
 
@@ -81,7 +95,8 @@ def matches(team, past, future):
 
     i = 1
     for match in data:
-        time = datetime.datetime.fromisoformat(match['matchDateTime'].replace("Z", "+00:00")).strftime("%a, %d. %b %Y %H:%M")
+        time = datetime.datetime.fromisoformat(match['matchDateTime'].replace("Z", "+00:00")).strftime(
+            "%a, %d. %b %Y %H:%M")
         if latest_match_date == time: continue  # Go to next match if match already exists
         latest_match_date = time
 
@@ -102,10 +117,13 @@ def matches(team, past, future):
 def table(liga, saison):
     """ Method for the table command """
     url = f"https://api.openligadb.de/getbltable/{liga}/{saison}"
-    response = requests.get(url)
-    log.write("Api-Call Football: " + url)
-    try: data = response.json()
-    except requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+    try:
+        log.write("Api-Call Football: " + url)
+        response = requests.get(url)
+        data = response.json()
+    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+        log.write("API DOWN")
+        return util.get_error_embed("api_down")
 
     tabelle = "```"
     tabelle += "# | Team".ljust(30) + "Sp Si Un Ni Tore  TD".center(20) + "Pkt".rjust(10) + "\n"

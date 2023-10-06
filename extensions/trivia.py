@@ -128,12 +128,14 @@ def get_trivia(category, difficulty):
     if difficulty != "": url += f"&difficulty={difficulty}"
     payload = ""
 
-    response = requests.request("GET", url, data=payload)
-    log.write("Api-Call Trivia: " + url)
     try:
+        log.write("Api-Call Trivia: " + url)
+        response = requests.request("GET", url, data=payload)
         response = response.json()
         trivia = response['results'][0]
-    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+        log.write("API DOWN")
+        return util.get_error_embed("api_down")
 
     question = f"Category: {trivia['category']}\n"
     question += f"Difficulty: {trivia['difficulty']}\n"

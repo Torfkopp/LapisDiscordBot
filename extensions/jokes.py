@@ -76,24 +76,29 @@ def get_dad_joke(term):
 
     if term != "":
         url_term = url + f"search?term={term}"
-        response = requests.request("GET", url_term, data=payload, headers=headers)
-        log.write("Api-Call Jokes: " + url)
+
         try:
+            log.write("Api-Call Jokes: " + url)
+            response = requests.request("GET", url_term, data=payload, headers=headers)
             response = response.json()
             jokes = response['results']
-        except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+        except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+            log.write("API DOWN")
+            return util.get_error_embed("api_down")
+
         if len(jokes) == 0: joke = ""
         elif len(jokes) == 1: joke = jokes[0]['joke']
         else: joke = jokes[random.randint(0, len(jokes) - 1)]['joke']
 
     if joke == "":
-        response = requests.request("GET", url, data=payload, headers=headers)
-        log.write("Api-Call Jokes: " + url)
-
         try:
+            log.write("Api-Call Jokes: " + url)
+            response = requests.request("GET", url, data=payload, headers=headers)
             joke = response.json()
             joke = joke["joke"]
-        except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+        except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+            log.write("API DOWN")
+            return util.get_error_embed("api_down")
 
     embed = interactions.Embed(title=joke, color=COLOUR)
 
@@ -104,12 +109,15 @@ def get_joke(theme, lang):
     """ Returns a random joke considering the theme and language """
     url = f"https://v2.jokeapi.dev/joke/{theme}{lang}"
     payload = ""
-    response = requests.request("GET", url, data=payload)
-    log.write("Api-Call Jokes: " + url)
+
     try:
+        log.write("Api-Call Jokes: " + url)
+        response = requests.request("GET", url, data=payload)
         response = response.json()
         joke = f"Category: {response['category']}\n"
-    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+        log.write("API DOWN")
+        return util.get_error_embed("api_down")
     if response['type'] == "single":
         joke += f"Joke: {response['joke']}"
     elif response['type'] == "twopart":
@@ -127,12 +135,14 @@ def get_norris():
     name_list = secret.name_list
     url = "https://api.chucknorris.io/jokes/random"
     payload = ""
-    response = requests.request("GET", url, data=payload)
-    log.write("Api-Call Jokes: " + url)
     try:
+        log.write("Api-Call Jokes: " + url)
+        response = requests.request("GET", url, data=payload)
         response = response.json()
         joke = response['value']
-    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+        log.write("API DOWN")
+        return util.get_error_embed("api_down")
     joke = joke.replace("Chuck Norris", random.choice(name_list))
     joke = joke.replace("' ", "'s ")
 

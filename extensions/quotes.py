@@ -48,12 +48,14 @@ def get_advice(term):
             if len(advices) == 1: rat = advices[0]['advice']
             else: rat = advices[random.randint(0, len(advices) - 1)]['advice']
     if rat == "":
-        response = requests.request("GET", url, data=payload)
-        log.write("Api-Call quotes: " + url)
         try:
+            log.write("Api-Call quotes: " + url)
+            response = requests.request("GET", url, data=payload)
             response = response.json()
             rat = response['slip']['advice']
-        except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+        except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+            log.write("API DOWN")
+            return util.get_error_embed("api_down")
 
     embed = interactions.Embed(title=rat, color=COLOUR)
 

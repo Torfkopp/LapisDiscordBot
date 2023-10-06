@@ -44,17 +44,17 @@ class Insults(Extension):
 def get_insult(lang):
     """ Return an insult in the specified language """
     url = "https://evilinsult.com/generate_insult.php"
-
     querystring = {"lang": lang, "type": "json"}
-
     payload = ""
-    response = requests.request("GET", url, data=payload, params=querystring)
-    log.write("Api-Call Insults: " + url)
 
     try:
+        log.write("Api-Call Insults: " + url)
+        response = requests.request("GET", url, data=payload, params=querystring)
         response = response.json()
         insult = response['insult']
-    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+        log.write("API DOWN")
+        return util.get_error_embed("api_down")
 
     if lang != "en" and response['comment'] != "": insult += f" (Translation: {response['comment']}"
 

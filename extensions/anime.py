@@ -88,12 +88,14 @@ def get_quote():
     url = "https://kyoko.rei.my.id/api/quotes.php"
     payload = ""
 
-    response = requests.request("GET", url, data=payload)
-    log.write("Api-Call Anime: " + url)
     try:
+        log.write("Api-Call Anime: " + url)
+        response = requests.request("GET", url, data=payload)
         response = response.json()
         response = response['apiResult'][0]
-    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+        log.write("API DOWN")
+        return util.get_error_embed("api_down")
 
     character = response['character']
     result = "Anime: " + response['anime'] + "\n"
@@ -122,10 +124,14 @@ def get_quote():
 def get_reaction(theme):
     """ Gets a random anime reaction depending on the theme """
     url = f"https://api.otakugifs.xyz/gif?reaction={theme}"
-    response = requests.request("GET", url, data="")
-    log.write("Api-Call Anime: " + url)
-    try: url = response.json()['url']
-    except KeyError or requests.exceptions.JSONDecodeError: return util.get_error_embed("api_down")
+
+    try:
+        log.write("Api-Call Anime: " + url)
+        response = requests.request("GET", url, data="")
+        url = response.json()['url']
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+        log.write("API DOWN")
+        return util.get_error_embed("api_down")
 
     embed = interactions.Embed(title=f"{theme.title()} Reaction", color=COLOUR)
     embed.set_image(url=url)
