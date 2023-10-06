@@ -183,7 +183,7 @@ async def formula1_result():
     # If getting result fails, try again in an hour
     if result is None:
         log.write("Formula1 Session not finished yet; trying again in 10 minutes")
-        Task(formula1_result, DateTrigger(datetime.datetime.now() + datetime.timedelta(hours=0.1))).start()
+        Task(formula1_result, DateTrigger(datetime.datetime.now() + datetime.timedelta(minutes=5))).start()
     else: await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result)
 
 

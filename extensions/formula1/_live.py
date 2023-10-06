@@ -11,6 +11,23 @@ import util
 from core import log
 
 COLOUR = util.Colour.FORMULA1.value
+payload = ""  # Payload for the sport1 api
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0",
+    "Accept": "*/*",
+    "Accept-Language": "de,en-US;q=0.7,en;q=0.3",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Origin": "https://www.sport1.de",
+    "Connection": "keep-alive",
+    "Referer": "https://www.sport1.de/",
+    "Sec-Fetch-Dest": "empty",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "cross-site",
+    "DNT": "1",
+    "Sec-GPC": "1",
+    "TE": "trailers"
+}  # Headers for the sport1 api
+result_url = None  # Is set when auto_result is called but the session isn't finished yet
 
 
 def get_current():
@@ -92,30 +109,15 @@ def create_schedule():
     return list(start_times), embed
 
 
-def auto_result():
-    """ Returns the result of the latest session and sets the current paras to it """
+def get_result_url():
+    """ Gets the url for the session to get the result from """
     url = ("https://api.sport1.info/v2/de/motorsport/sport/sr:stage:7668/season/sr:stage:1031201"
            "/minSportEventsWithSessions")
-    payload = ""
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0",
-        "Accept": "*/*",
-        "Accept-Language": "de,en-US;q=0.7,en;q=0.3",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Origin": "https://www.sport1.de",
-        "Connection": "keep-alive",
-        "Referer": "https://www.sport1.de/",
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "cross-site",
-        "DNT": "1",
-        "Sec-GPC": "1",
-        "TE": "trailers"
-    }
-    response = requests.request("GET", url, data=payload, headers=headers)
-    log.write("API Call Formula1: " + url)
-    try: response = response.json()
-    except requests.exceptions.JSONDecodeError:
+    try:
+        log.write("API Call Formula1: " + url)
+        response = requests.request("GET", url, data=payload, headers=headers)
+        response = response.json()
+    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("JSONDecodeError; API may be down")
         return
 
@@ -125,14 +127,25 @@ def auto_result():
         if compo['id'] == current_comp_id: current_match_id = compo['currentMatchId']
 
     url = f"https://api.sport1.info/v2/de/motorsport/sport/sr:stage:7668/match/{current_match_id}"
-    response = requests.request("GET", url, data=payload, headers=headers)
-    log.write("API Call Formula1: " + url)
-    try: response = response.json()
-    except requests.exceptions.JSONDecodeError:
+    return url
+
+
+def auto_result():
+    """ Returns the result of the latest session and sets the current paras to it """
+    global result_url  # If result_url is set, use it, else get the url of the current session
+    url = result_url if result_url else get_result_url()
+    try:
+        log.write("API Call Formula1: " + url)
+        response = requests.request("GET", url, data=payload, headers=headers)
+        response = response.json()
+    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("JSONDecodeError; API may be down")
         return
 
-    if response['isLive']: return  # If session is still going, return null to try again later
+    if response['period'] != "FULL_TIME":  # If session is still going,
+        result_url = url  # set result_url since the current_match pointer gets set immediately after session finish
+        return  # and return null to try again later
+    result_url = None  # If session is finished, set result_url to None again
 
     result = "```"
     result += f"Ergebnis {util.germanise(response['competition']['name'])} {response['roundTitle']}" + "\n"
