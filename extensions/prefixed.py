@@ -57,8 +57,8 @@ class Prefixed(Extension):
                                            name="Updates auf",
                                            type=discord.activity.ActivityType.GAME))
         await ctx.send(embed=embed)
-        subprocess.call(["bash", "./strunt/update.sh"])
         await self.bot.stop()
+        subprocess.call(["bash", "./strunt/update.sh"])
 
 
 def hello():

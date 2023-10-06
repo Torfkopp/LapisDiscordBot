@@ -18,9 +18,8 @@ matplotlib.rcParams['font.family'] = 'Formula1'
 
 def overview_fastest_laps(year, gp, session):
     """ Returns an overview of the fastest laps """
-    # We only want support for timedelta plotting in this
     # noinspection PyTypeChecker
-    fastf1.plotting.setup_mpl(mpl_timedelta_support=True, color_scheme=None, misc_mpl_mods=False)
+    fastf1.plotting.setup_mpl(misc_mpl_mods=False)
 
     # Load session
     session = fastf1.get_session(year, gp, session)
@@ -148,7 +147,7 @@ def scatterplot(year, gp, session, driver):
 
     # Load session
     race = fastf1.get_session(year, gp, 'R')
-    log.write("FastF1: " + str(session))
+    log.write("FastF1: " + str(race))
     race.load(weather=False, messages=False)
 
     # Get all laps of a single driver. Filter out slow laps
