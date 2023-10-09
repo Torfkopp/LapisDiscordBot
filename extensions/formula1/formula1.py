@@ -45,9 +45,14 @@ def create_schedule():
     return live.create_schedule()
 
 
-def auto_result():
+def auto_result(result_only: bool):
     """ Returns the result of the latest session and sets the current paras to it """
-    return live.auto_result()
+    return live.auto_result(result_only)
+
+
+def auto_info():
+    """ Returns some day-relevant F1 information """
+    return live.f1_info()
 
 
 '''

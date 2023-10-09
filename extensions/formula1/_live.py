@@ -58,30 +58,17 @@ def get_current():
     return current_gp, current_session
 
 
-def create_schedule():
-    """ Creates a schedule for the Formula1 sessions """
-    start_times = set()
-    embed = ""
+def f1_info():
+    """ Returns an embed with additional info """
+    embed = None
+
     date_today = datetime.datetime.today()
-
     event_schedule = fastf1.get_events_remaining()
-    next_event = event_schedule.iloc[0]
-
-    # On Sundays before the race, the current event is already removed from fastf1's remaining events
-    if date_today.weekday() == 6:
-        race_time = fastf1.get_event(2023, next_event['RoundNumber'] - 1)
-        race_time = race_time['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
-        start_times.add(race_time + datetime.timedelta(hours=1.5))
-        return list(start_times), embed
-
-    session_list = [next_event['Session1Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
-                    next_event['Session2Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
-                    next_event['Session3Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
-                    next_event['Session4Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
-                    next_event['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)]
+    first_session_date = event_schedule.iloc[0]['Session1Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(
+        tzinfo=None)
 
     # When it's monday on a race week, send bad meme
-    if (date_today.weekday() == 0) and ((session_list[1] - date_today).days < 7):
+    if (date_today.weekday() == 0) and ((first_session_date - date_today).days < 7):
         embed = interactions.Embed(title="Es ist Rawe Ceek!", color=COLOUR)
         rand_numb = random.randint(0, 100)
         if 0 < rand_numb < 16:
@@ -101,15 +88,39 @@ def create_schedule():
         embed.set_image(url=image_url)
 
     # On friday of every race weekend, send the schedule to the channel
-    if (date_today.weekday() == 4) and ((session_list[1] - date_today).days == 0): embed = no_group.next_race()
+    if (date_today.weekday() == 4) and ((first_session_date - date_today).days == 0): embed = no_group.next_race()
 
-    for i in range(0, len(session_list)):  # A session should be finished 1 hour after its start (1.5 for a race)
-        if session_list[i].date() == date_today.date(): start_times.add(session_list[i] + datetime.timedelta(hours=1))
-
-    return list(start_times), embed
+    return embed
 
 
-def get_result_url():
+def create_schedule():
+    """ Returns today's formula1 sessions """
+    date_today = datetime.datetime.today()
+    event_schedule = fastf1.get_events_remaining()
+    next_event = event_schedule.iloc[0]
+
+    # On Sundays before the race, the current event is already removed from fastf1's remaining events
+    if date_today.weekday() == 6:
+        race = fastf1.get_event(2023, next_event['RoundNumber'] - 1)
+        race_time = race['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
+        return {race_time: race['Session5']}
+
+    session_map = {
+        next_event['Session1Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None):
+            next_event['Session1'],
+        next_event['Session2Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None):
+            next_event['Session2'],
+        next_event['Session3Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None):
+            next_event['Session3'],
+        next_event['Session4Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None):
+            next_event['Session4'],
+        next_event['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None):
+            next_event['Session5']}
+
+    return {date: session_map.get(date) for date in session_map.keys() if date.date() == date_today.date()}
+
+
+def _get_result_url():
     """ Gets the url for the session to get the result from """
     url = ("https://api.sport1.info/v2/de/motorsport/sport/sr:stage:7668/season/sr:stage:1031201"
            "/minSportEventsWithSessions")
@@ -130,25 +141,13 @@ def get_result_url():
     return url
 
 
-def auto_result():
-    """ Returns the result of the latest session and sets the current paras to it """
-    global result_url  # If result_url is set, use it, else get the url of the current session
-    url = result_url if result_url else get_result_url()
-    try:
-        log.write("API Call Formula1: " + url)
-        response = requests.request("GET", url, data=payload, headers=headers)
-        response = response.json()
-    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
-        log.write("JSONDecodeError; API may be down")
-        return
-
-    if response['period'] != "FULL_TIME":  # If session is still going,
-        result_url = url  # set result_url since the current_match pointer gets set immediately after session finish
-        return  # and return null to try again later
-    result_url = None  # If session is finished, set result_url to None again
-
+def _make_result(response):
+    """
+    :param response: The response of the api
+    :return: The result
+    """
     result = "```"
-    result += f"Ergebnis {util.germanise(response['competition']['name'])} {response['roundTitle']}" + "\n"
+    result += f"Ergebnis - {util.germanise(response['competition']['name'])} - {response['roundTitle']}" + "\n"
     result += "\n"
     result += "#".ljust(6) + "Name".center(20)
     if response['roundType'] == "RACE" or response['roundType'] == "SPRINT":
@@ -183,5 +182,25 @@ def auto_result():
 
     result += "```"
     result = "||" + result + "||"  # Make Spoiler
+    return result
 
-    return util.uwuify_by_chance(result)
+
+def auto_result(result_only: bool):
+    """ Returns the result of the latest session and sets the current paras to it """
+    global result_url  # If result_url is set, use it, else get the url of the current session
+    url = result_url if result_url else _get_result_url()
+    try:
+        log.write("API Call Formula1: " + url)
+        response = requests.request("GET", url, data=payload, headers=headers)
+        response = response.json()
+    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+        log.write("JSONDecodeError; API may be down")
+        return None, False  #
+
+    result_url = url  # set result_url since the current_match pointer gets set immediately after session finish
+
+    # If only the result is wanted and the session is still in progress, don't create the result text
+    if result_only and response['period'] != "FULL_TIME": return None, True
+    if response['period'] == "FULL_TIME": result_url = None  # Reset the result_url if a session ends
+
+    return util.uwuify_by_chance(_make_result(response)), response['period'] != "FULL_TIME"
