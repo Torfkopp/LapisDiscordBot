@@ -193,17 +193,6 @@ async def update_patchnotes():
     if embed: await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=embed)
 
 
-async def pseudo_restart():
-    """ Resets the variables for automatic results and calls on_startup again """
-    global LIVE_SCORE_MESSAGE, LIVE_LEAGUE_MESSAGE, live_scoring_task, live_league_task
-    LIVE_SCORE_MESSAGE = ""
-    live_scoring_task = None
-
-    LIVE_LEAGUE_MESSAGE = ""
-    live_league_task = None
-    await on_startup()
-
-
 @listen(Error, disable_default_listeners=True)
 async def on_error(event: Error):
     log.error(event.error)
@@ -269,10 +258,6 @@ async def on_startup():
     # AUTOMATIC LOL_PATCHNOTES PART
     await update_patchnotes()
     Task(update_patchnotes, IntervalTrigger(hours=2)).start()
-
-    # AUTOMATIC PSEUDO RESTART PART
-    # Only important when the bot runs 24/7
-    # Task(pseudo_restart, IntervalTrigger(hours=24)).start()
 
 
 # load all extensions in the ./extensions folder
