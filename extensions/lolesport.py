@@ -69,7 +69,7 @@ def get_live():
 
         league = event['league']['name']
         if embeds.get(league) is None: embeds[league] = interactions.Embed(title=league, color=COLOUR)
-        embed = embeds['league']
+        embed = embeds[league]
 
         team1 = event['match']['teams'][0]
         team2 = event['match']['teams'][1]
@@ -90,6 +90,7 @@ def get_live():
                         value=f"{time}, {bo_format}",
                         inline=True)  # See how inlining looks
 
+    embeds = list(embeds.values())
     return embeds, one_game_still_live
 
 

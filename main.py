@@ -252,9 +252,8 @@ async def on_startup():
 
     # AUTOMATIC LOLESPORTS RESULTS PART
     league_schedule = lolesport.create_schedule()
-    # When every start time has already passed, start live league manually
     if len(league_schedule) > 0 and league_schedule[len(league_schedule) - 1] < datetime.datetime.now():
-        await start_live_league()
+        await live_league()  # When every start time has already passed, start live league once to get results
     log.write("Starting times of today's lol esport matches: " + str(league_schedule))
     for start_time in league_schedule: Task(start_live_league, DateTrigger(start_time)).start()
 
