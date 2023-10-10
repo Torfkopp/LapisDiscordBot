@@ -42,14 +42,15 @@ LIVE PART
 
 def create_schedule():
     start_times = set()
-    events = get_schedule(LIVE_LEAGUES)
+    events = get_schedule(LIVE_LEAGUES)  # Embed gets returned if fault
     if isinstance(events, interactions.Embed): return list(start_times)
 
-    today = datetime.datetime.now().date()
+    now = datetime.datetime.now()
     for event in events:
         time = datetime.datetime.fromisoformat(event['startTime'].replace("Z", "+00:00"))
         time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
-        if not time.date() == today: continue
+        if event['state'] == "inProgress": time = now + datetime.timedelta(minutes=1)
+        elif not time.date() == now.date(): continue
         start_times.add(time)
 
     return list(start_times)
@@ -63,6 +64,7 @@ def get_live():
     today = datetime.datetime.now().date()
 
     for event in events:
+        if event['type'] != 'match': continue
         time = datetime.datetime.fromisoformat(event['startTime'].replace("Z", "+00:00"))
         time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
         if not time.date() == today: continue

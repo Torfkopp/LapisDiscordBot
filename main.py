@@ -175,7 +175,7 @@ async def start_live_league():
         or, if it already exits and is stopped, starts it again """
     global live_league_task
     if live_league_task is None:
-        live_league_task = Task(live_league, IntervalTrigger(minutes=15))
+        live_league_task = Task(live_league, IntervalTrigger(minutes=10))
         live_league_task.start()
         log.write("Live league begins")
         return
