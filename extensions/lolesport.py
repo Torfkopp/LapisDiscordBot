@@ -79,7 +79,7 @@ def get_live():
         wins2 = team2['result']['gameWins']
 
         if event['state'] == 'completed': time = "END"
-        elif event['state'] == 'live':
+        elif event['state'] == 'inProgress':
             time = "LIVE"
             one_game_still_live = True
         else: time = f"Startet um: {datetime.datetime.strftime(time, '%d.%m %H:%M')}"
@@ -189,7 +189,7 @@ def get_schedule(league):
     }
 
     try:
-        log.write("Api-Call lolesports: " + url)
+        log.write(f"Api-Call lolesports: {url} {querystring}")
         response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
         response = response.json()
         events = response['data']['schedule']['events']
