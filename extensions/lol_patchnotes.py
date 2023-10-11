@@ -41,11 +41,11 @@ def update():
     soup = BeautifulSoup(response.content, 'html.parser')
 
     title = soup.find('h1', class_="style__Title-sc-vd48si-5 kDFvhf").text
-    time = soup.find('time')['datetime']
-    time = datetime.datetime.fromisoformat(time.replace("Z", "+00:00"))
-    time = time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
+
     patch_update = soup.find('h2', id="patch-midpatch-updates")
     patch_update = patch_update is not None
+    new_patchnotes = False
+    if LoLPatchnotes.url and LoLPatchnotes.url != url: new_patchnotes = True
 
     LoLPatchnotes.url = url
     LoLPatchnotes.soup = soup
@@ -56,7 +56,7 @@ def update():
         if LoLPatchnotes.patch_update is not None and not LoLPatchnotes.patch_update: return get_midpatch_update()
     LoLPatchnotes.patch_update = patch_update
 
-    if datetime.datetime.now() - time < datetime.timedelta(hours=2): return get_patch_image()
+    if new_patchnotes: return get_patch_image()
     return None
 
 
@@ -68,7 +68,7 @@ COMMAND PART
 
 
 class LoLPatchnotes(Extension):
-    url: str
+    url = None
     soup: BeautifulSoup
     title: str
     patch_update = None
@@ -122,16 +122,20 @@ def _make_embed():
 def get_patch_image():
     """ Returns the image that summaries every patch """
     soup = LoLPatchnotes.soup
-    images = soup.find_all('img')
-    image_url = [image['src'] for image in images if "Patch-Highlights" in image['src']]
-    description = soup.find_all('blockquote', class_="blockquote context")[0]
-    description = description.get_text("\n")
-    description = description[:500] + "..."
-    embed = _make_embed()
-    embed.description = description
-    embed.set_image(image_url[0])
 
-    return embed
+    images = soup.find_all('div', class_="white-stone accent-before")
+
+    for i in range(len(images)):
+        try: image = images[i].find('a')['href']
+        except TypeError: continue
+        else:
+            text = images[i].get_text()
+            if len(text) > 500: text = text[:500] + "..."
+            embed = _make_embed()
+            embed.description = text
+            embed.set_image(image)
+            return embed
+    return util.get_error_embed("error")
 
 
 def get_patch_summaries():
@@ -193,13 +197,36 @@ def _get_champion_embeds(champion_changes, name_filter):
     for champ_change in champion_changes:
         name = champ_change.find('h3', class_="change-title").text
         if _is_not_in_filter(name, name_filter): continue
-        change_name = champ_change.find_all('h4')
+        change_names = champ_change.find_all('h4')
         change_numbers = champ_change.find_all('ul')
         change_text = ""
-        for j in range(len(change_name)): change_text += f"- {change_name[j].text}: {change_numbers[j].text}"
+        for j in range(len(change_names)): change_text += f"- {change_names[j].text}: {change_numbers[j].text}"
         change_text = (change_text
                        .replace("Fähigkeitsstärke", "AP")
                        .replace("Angriffsschaden", "AD"))
+
+        if len(change_text) > 1023:
+            change_text = ""
+            for j in range(len(change_names)):
+                numbers = change_numbers[j].text
+                numbers = numbers.replace("Fähigkeitsstärke", "AP").replace("Angriffsschaden", "AD")
+                if len(numbers) > 1024:
+                    embed_fields.append(interactions.EmbedField(name=name, value=change_text))
+                    change_text = f"- {change_names[j].text}: "
+                    for li in change_numbers[j].find_all('li'):
+                        li_text = li.text
+                        li_text = li_text.replace("Fähigkeitsstärke", "AP").replace("Angriffsschaden", "AD")
+                        if len(change_text) + len(li.text) > 1024:
+                            embed_fields.append(interactions.EmbedField(name=name, value=change_text))
+                            change_text = f"- {change_names[j].text}: "
+                        change_text += li_text
+                    continue
+                if len(change_text) + len(change_names[j].text) + len(numbers) > 1024:
+                    embed_fields.append(interactions.EmbedField(name=name, value=change_text))
+                    change_text = f"- {change_names[j].text}: {numbers}"
+                    continue
+                change_text += f"- {change_names[j].text}: {numbers}"
+
         if change_text == "": change_text = f"“{champ_change.find('blockquote').text.strip()}”"
         embed_fields.append(interactions.EmbedField(name=name, value=change_text))
 
@@ -212,10 +239,16 @@ def _get_system_embeds(system_changes, name_filter):
     for system_change in system_changes:
         title = system_change.find('h3', class_="change-title")
         if not title:
-            name = system_change.find('p').text
+            p = system_change.find('p')
+            name = p.text if p else system_change.find('h4').text
             if _is_not_in_filter(name, name_filter): continue
             value = ""
-            for li in system_change.find_all('li'): value += f"- {li.text}"
+            for li in system_change.find_all('li'):
+                if len(value) + len(li.text) > 1023:
+                    embed_fields.append(interactions.EmbedField(name=name, value=value))
+                    value = f"- {li.text}"
+                    continue
+                value += f"- {li.text}"
             if value == "": value = system_change.find('blockquote').text
             embed_fields.append(interactions.EmbedField(name=name, value=value))
             continue
@@ -224,6 +257,16 @@ def _get_system_embeds(system_changes, name_filter):
         change_text = ""
         changes = system_change.find_all('li')
         for li in changes: change_text += f"- {li.text}"
+        if len(change_text) > 1023:
+            change_text = ""
+            for li in changes:
+                text = li.text
+                text = text.replace("Fähigkeitsstärke", "AP").replace("Angriffsschaden", "AD")
+                if len(change_text) + len(text) > 1023:
+                    embed_fields.append(interactions.EmbedField(name=name, value=change_text))
+                    change_text = f"- {text}"
+                    continue
+                change_text += f"- {text}"
         embed_fields.append(interactions.EmbedField(name=name, value=change_text))
 
     return embed_fields
@@ -247,14 +290,18 @@ def get_patch_details(type_filter, name_filter):
         """ Converts the fields to one or more embeds """
         result = []
         if len(fields) == 0: return result
-        page_amount = max(round(len(fields) / 10), 1)
-        fields_per_page = round(len(fields) / page_amount)
-        for i in range(page_amount):
-            result.append(_make_embed())
-            result[i].description = f"{text} Seite: {i + 1}"
-            start, end = i * fields_per_page, (i + 1) * fields_per_page
-            if i == page_amount - 1: end += 1
-            result[i].add_fields(*fields[start:end])
+
+        total_length = sum(len(field.value) for field in fields)
+        page_amount = int(total_length / 4000) + 1
+        field_counter = 0
+        for j in range(page_amount):
+            embed = _make_embed()
+            embed.description = f"{text} Seite: {j + 1}"
+            while field_counter < len(fields):
+                embed.add_fields(fields[field_counter])
+                field_counter += 1
+                if sum(len(field.value) for field in embed.fields) > 4000: break
+            result.append(embed)
         return result
 
     embeds = []

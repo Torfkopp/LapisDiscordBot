@@ -13,6 +13,7 @@ async def start_procedure(bot):
     channel = bot.get_channel(log_channel)
     await channel.send(file=discord.File("strunt/log.txt"))  # Send the log into a channel
     open('strunt/log.txt', 'w').close()  # Clear the log data
+    print("LOG CLEARED")
 
 
 def write(log):
