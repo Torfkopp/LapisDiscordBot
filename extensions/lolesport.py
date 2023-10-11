@@ -42,7 +42,7 @@ LIVE PART
 
 def create_schedule():
     start_times = set()
-    events = get_schedule(LIVE_LEAGUES)  # Embed gets returned if fault
+    events = get_schedule(LIVE_LEAGUES)  # Embed gets returned if faulty
     if isinstance(events, interactions.Embed): return list(start_times)
 
     now = datetime.datetime.now()
