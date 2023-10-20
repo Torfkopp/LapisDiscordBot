@@ -153,6 +153,7 @@ def _make_result(response):
     if response['roundType'] == "RACE" or response['roundType'] == "SPRINT":
         result += "Gesamt".center(14) + "Schnellste".center(14) + "P".rjust(3) + "\n"
         for position in response['results']:
+            if 'position' not in position: continue
             result += str(position['position']).ljust(6)
             result += f"{position['person']['firstName']} {position['person']['lastName']}".center(20)
 
@@ -167,6 +168,7 @@ def _make_result(response):
     elif response['roundType'] == "QUALIFYING" or response['roundType'] == "SPRINT_SHOOTOUT":
         result += "Schnellste".center(20) + "\n"
         for position in response['results']:
+            if 'position' not in position: continue
             result += str(position['position']).ljust(6)
             result += f"{position['person']['firstName']} {position['person']['lastName']}".center(20)
             result += str(position['fastestLap']).center(20)
@@ -174,6 +176,7 @@ def _make_result(response):
     else:
         result += "Schnellste".center(20) + "Stops".rjust(3) + "\n"
         for position in response['results']:
+            if 'position' not in position: continue
             result += str(position['position']).ljust(6)
             result += f"{position['person']['firstName']} {position['person']['lastName']}".center(20)
             result += str(position['fastestLap']).center(20)
