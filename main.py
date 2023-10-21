@@ -29,7 +29,7 @@ live_league_task = None
 LIVE_F1_MESSAGE = ""
 live_f1_task = None
 
-TEST_MODE_ON = True
+TEST_MODE_ON = False
 
 try: locale.setlocale(locale.LC_ALL, 'de_DE')  # Changes local to Deutsch for time display
 except locale.Error:
