@@ -29,7 +29,7 @@ live_league_task = None
 LIVE_F1_MESSAGE = ""
 live_f1_task = None
 
-TEST_MODE_ON = False
+TEST_MODE_ON = True
 
 try: locale.setlocale(locale.LC_ALL, 'de_DE')  # Changes local to Deutsch for time display
 except locale.Error:
@@ -197,11 +197,11 @@ async def live_f1():
     """ Send the live F1 results to the channel and keeps it updated until the session has ended """
     global LIVE_F1_MESSAGE
     if LIVE_F1_MESSAGE == "":
-        LIVE_F1_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=formula1.auto_result(False)[0])
+        LIVE_F1_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(formula1.auto_result(False)[0])
     else:
-        embeds, still_going = formula1.auto_result(False)
-        try: await LIVE_F1_MESSAGE.edit(embeds=embeds)
-        except HTTPException: LIVE_F1_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=embeds)
+        result, still_going = formula1.auto_result(False)
+        try: await LIVE_F1_MESSAGE.edit(content=result)
+        except HTTPException: LIVE_F1_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result)
         if not still_going:
             # noinspection PyUnresolvedReferences
             live_f1_task.stop()

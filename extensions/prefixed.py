@@ -53,13 +53,15 @@ class Prefixed(Extension):
         """ Function to update the bot remotely;
         shuts down the bot and calls a script that pulls the git changes and restarts the bot """
         if ctx.author_id not in self.bot.owner_ids: return
+        print("HELLO")
         embed = interactions.Embed(title="UPGRADE!", color=COLOUR)
         embed.set_image(url=util.get_gif("update"))
+        await ctx.send(embed=embed)
         await self.bot.change_presence(status=discord.Status.DND,
                                        activity=discord.activity.Activity.create(
                                            name="Updates auf",
                                            type=discord.activity.ActivityType.GAME))
-        await ctx.send(embed=embed)
+
         await self.bot.stop()
         subprocess.call(["bash", "./strunt/update.sh"])  # Adapt to os
 
