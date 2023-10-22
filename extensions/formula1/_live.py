@@ -157,7 +157,7 @@ def _make_result(response):
             result += str(position['position']).ljust(6)
             result += f"{position['person']['firstName']} {position['person']['lastName']}".center(20)
 
-            if position['status'] != "FINISHED": result += position['status'].center(14)
+            if 'status' in position and position['status'] != "FINISHED": result += position['status'].center(14)
             else: result += str(position['time']).center(14)
 
             if 'fastestLap' in position: result += str(position['fastestLap']).center(14)
