@@ -273,7 +273,7 @@ async def on_startup():
         if "Practice" in formula1_schedule.get(start_time):  # If practice session, send the result 1 hour after start
             Task(formula1_result, DateTrigger(start_time + datetime.timedelta(hours=1))).start()
         else:
-            if datetime.timedelta(minutes=0) < (datetime.datetime.now() - start_time) < datetime.timedelta(minutes=30):
+            if datetime.timedelta(minutes=0) < (datetime.datetime.now() - start_time) < datetime.timedelta(minutes=45):
                 await start_live_f1()  # When the session is underway, start the live_f1 manually
             Task(start_live_f1, DateTrigger(start_time)).start()
 
