@@ -147,7 +147,8 @@ def _make_result(response):
     :return: The result
     """
     result = "```"
-    result += f"Ergebnis - {util.germanise(response['competition']['name'])} - {response['roundTitle']}" + "\n"
+    live = "Live" if response['isLive'] else "Ergebnis"
+    result += f"{live} - {util.germanise(response['competition']['name'])} - {response['roundTitle']}" + "\n"
     result += "\n"
     result += "#".ljust(6) + "Name".center(20)
     if response['roundType'] == "RACE" or response['roundType'] == "SPRINT":
