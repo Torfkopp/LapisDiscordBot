@@ -239,8 +239,9 @@ def _get_system_embeds(system_changes, name_filter):
     for system_change in system_changes:
         title = system_change.find('h3', class_="change-title")
         if not title:
-            p = system_change.find('p')
-            name = p.text if p else system_change.find('h4').text
+            if system_change.find('p'): name = system_change.find('p').text
+            elif system_change.find('h4'): name = system_change.find('h4').text
+            else: name = system_change.parent.find_previous_sibling('header').find('h2').text
             if _is_not_in_filter(name, name_filter): continue
             value = ""
             for li in system_change.find_all('li'):
@@ -276,15 +277,12 @@ def get_patch_details(type_filter, name_filter):
     """ Returns embeds with the detailed change of every champion """
     soup = LoLPatchnotes.soup
     changes = soup.find_all('div', class_="patch-change-block white-stone accent-before")
-    champ_amount = 0
+    other_changes, champion_changes, system_changes = [], [], []
     for change in changes:
-        if change == changes[0] and change.find('a') != None and "champions" in change.find('a')['href']:  # New Champ Releases
-            champ_amount += 1
-            continue
-        if change.find('p'): champ_amount += 1
-        else: break
-    champion_changes = changes[:champ_amount]
-    system_changes = changes[champ_amount:]
+        category_id = change.parent.find_previous_sibling('header', class_='header-primary').find('h2')['id']
+        if category_id == "patch-champions": champion_changes.append(change)
+        elif category_id in ["patch-items", "patch-runes"]: system_changes.append(change)
+        else: other_changes.append(change)  # TODO these changes
 
     def make_embeds(fields, text):
         """ Converts the fields to one or more embeds """
