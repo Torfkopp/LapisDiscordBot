@@ -278,7 +278,7 @@ def get_patch_details(type_filter, name_filter):
     changes = soup.find_all('div', class_="patch-change-block white-stone accent-before")
     champ_amount = 0
     for change in changes:
-        if change == changes[0] and change.find('a')['href'] and "champions" in change.find('a')['href']:  # New Champ Releases
+        if change == changes[0] and change.find('a')['href'] != None and "champions" in change.find('a')['href']:  # New Champ Releases
             champ_amount += 1
             continue
         if change.find('p'): champ_amount += 1
