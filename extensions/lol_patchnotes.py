@@ -282,7 +282,7 @@ def get_patch_details(type_filter, name_filter):
         category_id = change.parent.find_previous_sibling('header', class_='header-primary').find('h2')['id']
         if category_id == "patch-champions": champion_changes.append(change)
         elif category_id in ["patch-items", "patch-runes"]: system_changes.append(change)
-        else: other_changes.append(change)  # TODO these changes
+        else: system_changes.append(change)  # other_changes.append(change)
 
     def make_embeds(fields, text):
         """ Converts the fields to one or more embeds """
