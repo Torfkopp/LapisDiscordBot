@@ -217,8 +217,8 @@ def get_upcoming(league):
     for event in upcoming:
         team1 = event['match']['teams'][0]
         team2 = event['match']['teams'][1]
-        record1 = f"{team1['record']['wins']}-{team1['record']['losses']}"
-        record2 = f"{team2['record']['wins']}-{team2['record']['losses']}"
+        record1 = f"{team1['record']['wins']}-{team1['record']['losses']}" if team1['record'] is not None else ""
+        record2 = f"{team2['record']['wins']}-{team2['record']['losses']}" if team2['record'] is not None else ""
         start_time = datetime.datetime.fromisoformat(event['startTime'].replace("Z", "+00:00"))
         start_time = start_time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
         start_time = datetime.datetime.strftime(start_time, "%d.%m %H:%M")
