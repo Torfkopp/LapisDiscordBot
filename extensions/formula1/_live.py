@@ -164,7 +164,7 @@ def _make_result(response):
             if 'fastestLap' in position: result += str(position['fastestLap']).center(14)
             else: result += " ".center(14)
 
-            result += str(position['pitStopCount']).rjust(3)
+            result += str(position['pitStopCount']).rjust(3) if 'pitStopCount' in position['pitStopCount'] else " "
             result += "\n"
     elif response['roundType'] == "QUALIFYING" or response['roundType'] == "SPRINT_SHOOTOUT":
         result += "Schnellste".center(20) + "\n"
@@ -172,7 +172,7 @@ def _make_result(response):
             if 'position' not in position: continue
             result += str(position['position']).ljust(6)
             result += f"{position['person']['firstName']} {position['person']['lastName']}".center(20)
-            result += str(position['fastestLap']).center(20)
+            result += str(position['fastestLap']).center(20) if 'fastestLap' in position['fastestLap'] else " "
             result += "\n"
     else:
         result += "Schnellste".center(20) + "Stops".rjust(3) + "\n"
@@ -180,8 +180,8 @@ def _make_result(response):
             if 'position' not in position: continue
             result += str(position['position']).ljust(6)
             result += f"{position['person']['firstName']} {position['person']['lastName']}".center(20)
-            result += str(position['fastestLap']).center(20)
-            result += str(position['pitStopCount']).rjust(3)
+            result += str(position['fastestLap']).center(20) if 'fastestLap' in position['fastestLap'] else " "
+            result += str(position['pitStopCount']).rjust(3) if 'pitStopCount' in position['pitStopCount'] else " "
             result += "\n"
 
     result += "```"
