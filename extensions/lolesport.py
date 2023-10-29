@@ -306,7 +306,6 @@ def get_standings(league):
     url = "https://esports-api.lolesports.com/persisted/gw/getStandingsV3"
     querystring = {"hl": "de-DE", "tournamentId": tournament_id}
 
-
     try:
         log.write("Api-Call lolesports: " + url)
         response = requests.request("GET", url, data=payload, headers=headers, params=querystring)

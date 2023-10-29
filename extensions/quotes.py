@@ -1,3 +1,4 @@
+import json
 import random
 
 import interactions
@@ -29,6 +30,10 @@ class Quotes(Extension):
     async def advice_function(self, ctx: SlashContext, theme: str = ""):
         await ctx.send(embed=get_advice(theme))
 
+    @slash_command(name="sparkasse", description="Erhalte eine Sparkassenweisheit")
+    async def sparkasse_function(self, ctx: SlashContext):
+        await ctx.send(embed=get_sparkasse())
+
 
 def get_advice(term):
     """ Returns a random advice or one fitting the theme """
@@ -59,4 +64,13 @@ def get_advice(term):
 
     embed = interactions.Embed(title=rat, color=COLOUR)
 
+    return util.uwuify_by_chance(embed)
+
+
+def get_sparkasse():
+    """ Gets a sparkassen quote"""
+    with open("resources/sparkasse.json", encoding="utf-8") as f: sparkasse = json.load(f)
+
+    embed = interactions.Embed(title=random.choice(sparkasse), color=COLOUR)
+    embed.set_thumbnail("https://www.grischamentgen.com/uploads/1/3/4/2/134263635/published/image-2.jpeg?1644096545")
     return util.uwuify_by_chance(embed)
