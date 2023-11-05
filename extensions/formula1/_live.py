@@ -159,7 +159,9 @@ def _make_result(response):
             result += f"{position['person']['firstName']} {position['person']['lastName']}".center(20)
 
             if 'status' in position and position['status'] != "FINISHED": result += position['status'].center(14)
-            else: result += str(position['time']).center(14)
+            else:
+                if 'time' in position:
+                    result += str(position['time']).center(14)
 
             if 'fastestLap' in position: result += str(position['fastestLap']).center(14)
             else: result += " ".center(14)
