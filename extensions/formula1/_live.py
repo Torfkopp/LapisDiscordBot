@@ -36,22 +36,31 @@ def get_current():
     next_event = event_schedule.iloc[0]
     date_today = datetime.datetime.today()
 
+    # FastF1's remaining events removes an event somewhere between Saturday and Sunday during the race weekend
+    # If today is Sat/Sun and the next event's date is further away than 3 days, then
+    if date_today.weekday() >= 4 and next_event['EventDate'] > date_today + datetime.timedelta(days=3):
+        temp_event = fastf1.get_event(date_today.year, next_event['RoundNumber'] - 1)
+        # If the event before the first remaining event is within two days, set it as current event
+        if (temp_event['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
+            < date_today + datetime.timedelta(days=3)): next_event = temp_event
+
     session_list = [next_event['Session1Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
                     next_event['Session2Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
                     next_event['Session3Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
                     next_event['Session4Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
                     next_event['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)]
 
-    latest_finished_session = 5
+    latest_finished_session = 0
     for i in range(0, len(session_list)):  # A session should be finished 1.5 hours after the start
         if session_list[i] + datetime.timedelta(hours=1.5) <= date_today: latest_finished_session = i + 1
 
+    # Set current_gp and session to the latest race
     current_gp = next_event['RoundNumber'] - 1
     current_session = 5
 
-    # If a session of the 'next event' has finished,
+    # If one session of the 'next event' has finished,
     # set the next_event as current_gp and the finished session as current_session
-    if latest_finished_session < 5:
+    if latest_finished_session > 0:
         current_gp = next_event['RoundNumber']
         current_session = latest_finished_session
 
@@ -88,22 +97,25 @@ def f1_info():
         embed.set_image(url=image_url)
 
     # On friday of every race weekend, send the schedule to the channel
-    if (date_today.weekday() == 4) and ((first_session_date - date_today).days == 0): embed = no_group.next_race()
+    if (date_today.weekday() == 4) and ((first_session_date.date() - date_today.date()) == datetime.timedelta(days=0)):
+        embed = no_group.next_race()
 
     return embed
 
 
 def create_schedule():
     """ Returns today's formula1 sessions """
-    date_today = datetime.datetime.today()
+    date_today = datetime.datetime.today() + datetime.timedelta(hours=56)
     event_schedule = fastf1.get_events_remaining()
     next_event = event_schedule.iloc[0]
 
-    # On Sundays before the race, the current event is already removed from fastf1's remaining events
-    if date_today.weekday() == 6:
-        race = fastf1.get_event(2023, next_event['RoundNumber'] - 1)
-        race_time = race['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
-        return {race_time: race['Session5']}
+    # FastF1's remaining events removes an event somewhere between Saturday and Sunday during the race weekend
+    # If today is Sat/Sun and the next event's date is further away than 3 days, then
+    if date_today.weekday() >= 4 and next_event['EventDate'] > date_today + datetime.timedelta(days=3):
+        temp_event = fastf1.get_event(date_today.year, next_event['RoundNumber'] - 1)
+        # If the event before the first remaining event is within two days, set it as current event
+        if (temp_event['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
+            < date_today + datetime.timedelta(days=3)): next_event = temp_event
 
     session_map = {
         next_event['Session1Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None):
