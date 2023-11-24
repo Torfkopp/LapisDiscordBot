@@ -34,6 +34,8 @@ def get_help():
                     value="/anime action: Tue einer Person eine Animeaktion an"
                           "/anime quote: Zufälliges Anime Zitat\n"
                           "/anime reaction: Zufällige Anime Bewegtbildreaktion")
+    embed.add_field(name="Embed",
+                    value="/embed link: Gibt den Link in von Discord embeddebarem Format zurück")
     embed.add_field(name="Free Games", value="/freegames: Erhalte momentan kostenlos erhaltbare PC-Spiele")
     embed.add_field(name="Hangman", value="/hangman: Spiele Galgenmännchen")
     embed.add_field(name="Help", value="/help: Siehste selber")
