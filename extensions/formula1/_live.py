@@ -105,7 +105,7 @@ def f1_info():
 
 def create_schedule():
     """ Returns today's formula1 sessions """
-    date_today = datetime.datetime.today() + datetime.timedelta(hours=56)
+    date_today = datetime.datetime.today()
     event_schedule = fastf1.get_events_remaining()
     next_event = event_schedule.iloc[0]
 

@@ -303,7 +303,7 @@ async def on_startup():
     # AUTOMATIC LOL_PATCHNOTES PART
     await update_patchnotes()
     if datetime.datetime.now().date() == 1:  # Patchnotes are (normally) posted on tuesday at 20:00
-        Task(update_patchnotes, DateTrigger(datetime.datetime.now().replace(hour=20, minute=1))).start()
+        Task(update_patchnotes, DateTrigger(datetime.datetime.now().replace(hour=20, minute=5))).start()
     Task(update_patchnotes, IntervalTrigger(hours=2)).start()
 
 

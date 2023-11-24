@@ -103,19 +103,23 @@ def get_quote():
     # result += "Quote: " + response['english']
     quote = "**„" + response['english'] + "“**"
 
-    url = f"https://myanimelist.net/search/all?cat=all&q={character}"
-    response = requests.get(url)
-    log.write("Site-Call: " + url)
-    soup = BeautifulSoup(response.content, 'html.parser')
-    character_url = soup.find('div', class_="picSurround di-tc thumb").find('a')['href']
+    try:
+        url = f"https://myanimelist.net/search/all?cat=all&q={character}"
+        log.write("Site-Call: " + url)
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        character_url = soup.find('div', class_="picSurround di-tc thumb").find('a')['href']
 
-    response = requests.get(character_url)
-    log.write("Site-Call: " + character_url)
-    soup = BeautifulSoup(response.content, 'html.parser')
-    picture_url = soup.find('td', class_="borderClass").find('img')['data-src']
+        response = requests.get(character_url)
+        log.write("Site-Call: " + character_url)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        picture_url = soup.find('td', class_="borderClass").find('img')['data-src']
+        # noinspection PyTypeChecker
+        embed = interactions.Embed(title="Anime Quote", description=result, color=COLOUR, thumbnail=picture_url)
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+        log.write("SITE DOWN")
+        embed = interactions.Embed(title="Anime Quote", description=result, color=COLOUR)
 
-    # noinspection PyTypeChecker
-    embed = interactions.Embed(title="Anime Quote", description=result, color=COLOUR, thumbnail=picture_url)
     embed.add_field(value=quote, name="\u200b")
 
     return util.uwuify_by_chance(embed)
