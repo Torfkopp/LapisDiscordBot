@@ -73,6 +73,7 @@ def f1_info():
 
     date_today = datetime.datetime.today()
     event_schedule = fastf1.get_events_remaining()
+    if len(event_schedule) == 0: return embed
     first_session_date = event_schedule.iloc[0]['Session1Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(
         tzinfo=None)
 
@@ -105,6 +106,7 @@ def f1_info():
 
 def create_schedule():
     """ Returns today's formula1 sessions """
+    # TODO Error Last Race of the season
     date_today = datetime.datetime.today()
     event_schedule = fastf1.get_events_remaining()
     next_event = event_schedule.iloc[0]
