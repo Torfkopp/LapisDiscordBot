@@ -53,7 +53,9 @@ def update():
 
     if patch_update:
         # If a midpatch update exists in the iteration but didn't exist in the last one, call the method
-        if LoLPatchnotes.patch_update is not None and not LoLPatchnotes.patch_update: return get_midpatch_update()
+        if LoLPatchnotes.patch_update is not None and not LoLPatchnotes.patch_update:
+            LoLPatchnotes.patch_update = patch_update
+            return get_midpatch_update()
     LoLPatchnotes.patch_update = patch_update
 
     if new_patchnotes: return get_patch_image()

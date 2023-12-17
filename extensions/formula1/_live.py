@@ -33,7 +33,10 @@ result_url = None  # Is set when auto_result is called but the session isn't fin
 def get_current():
     """ Gets the current gp and session """
     event_schedule = fastf1.get_events_remaining()
-    next_event = event_schedule.iloc[0]
+    if len(event_schedule) == 0:  # If no remaining races, set next_event to last race
+        next_event = fastf1.get_event(util.CURRENT_F1_SEASON,
+                                      len(fastf1.get_event_schedule(util.CURRENT_F1_SEASON))-1)
+    else: next_event = event_schedule.iloc[0]
     date_today = datetime.datetime.today()
 
     # FastF1's remaining events removes an event somewhere between Saturday and Sunday during the race weekend
@@ -106,10 +109,12 @@ def f1_info():
 
 def create_schedule():
     """ Returns today's formula1 sessions """
-    # TODO Error Last Race of the season
     date_today = datetime.datetime.today()
     event_schedule = fastf1.get_events_remaining()
-    next_event = event_schedule.iloc[0]
+    if len(event_schedule) == 0:  # If no remaining races, set next_event to last race
+        next_event = fastf1.get_event(util.CURRENT_F1_SEASON,
+                                      len(fastf1.get_event_schedule(util.CURRENT_F1_SEASON)) - 1)
+    else: next_event = event_schedule.iloc[0]
 
     # FastF1's remaining events removes an event somewhere between Saturday and Sunday during the race weekend
     # If today is Sat/Sun and the next event's date is further away than 3 days, then
