@@ -27,7 +27,9 @@ class Embed(Extension):
 def get_embed_link(link):
     """ Returns the link in a for discord embedable format """
     if "tiktok." in link: link = link.replace("tiktok.com", "vxtiktok.com")
-    elif "instagram." in link: link = link.replace("instagram.com", "instagramez.com")
+    elif "instagram." in link:
+        # link = link.replace("instagram.com", "instagramez.com") # (Maybe deprecated)
+        link = link.replace("instagram.com", "ddinstagram.com")
     elif "x." in link or "twitter." in link: link = link.replace("x.com", "vxtwitter.com")
     elif "reddit." in link:
         log.write("Site-Call: " + link)
