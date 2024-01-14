@@ -302,7 +302,9 @@ async def on_startup():
 
     # AUTOMATIC FREE GAMES PART
     if datetime.datetime.now().weekday() == 4 and not util.message_sent("games"):
-        await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=freegames.get_giveaways())
+        # await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=freegames.get_giveaways())
+        # Krabs hijacking the condition
+        await bot.get_channel(util.LABAR_CHANNEL_ID).send(file="resources/congratssailer.mp4")
 
     # AUTOMATIC LOL_PATCHNOTES PART
     await update_patchnotes()

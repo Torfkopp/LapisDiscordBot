@@ -41,6 +41,7 @@ async def on_hangman_component(event: Component):
     if win or loss:
         for actionrows in Hangman.COMPONENTS:
             for comp in actionrows.components: comp.disabled = True
+            Hangman.stage = 0
 
     component.disabled = True
     await ctx.edit_origin(embed=build_embed(win, loss), components=Hangman.COMPONENTS)
@@ -55,7 +56,7 @@ class Hangman(Extension):
     @slash_command(name="hangman", description="Spiele Galgenmännchen")
     @slash_option(
         name="language",
-        description="Sprache des Wortes",
+        description="Sprache ist Deutsch (alt. Englisch)",
         required=False,
         opt_type=OptionType.BOOLEAN,
         choices=[
