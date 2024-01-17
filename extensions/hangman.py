@@ -38,13 +38,14 @@ async def on_hangman_component(event: Component):
 
     win = Hangman.word.find("_") == -1
     loss = Hangman.stage == 11
+    embed = build_embed(win, loss)
     if win or loss:
         for actionrows in Hangman.COMPONENTS:
             for comp in actionrows.components: comp.disabled = True
             Hangman.stage = 0
 
     component.disabled = True
-    await ctx.edit_origin(embed=build_embed(win, loss), components=Hangman.COMPONENTS)
+    await ctx.edit_origin(embed=embed, components=Hangman.COMPONENTS)
 
 
 class Hangman(Extension):
@@ -125,7 +126,9 @@ def build_embed(win, loss):
     embed = interactions.Embed(title="Galgenmännchen", color=util.Colour.HANGMAN.value)
     name = ""
     if win: name += "GEWONNEN\n"
-    if loss: name += "VERLOREN\n"
+    if loss:
+        name += "VERLOREN\n"
+        name += f"Wort: {Hangman.WORD_TO_GUESS}\n"
     name += f"```{Hangman.word}```"
     value = build_stage()
 
