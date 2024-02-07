@@ -48,6 +48,6 @@ def get_embed_link(link, alt):
             link = a['playbackMp4s']['permutations'][0]['source']['url']
         except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError): log.write("SITE DOWN")
         except requests.exceptions.MissingSchema: log.write("Invalid URL")
-        link = f"[Reddit Post-Link](<{original_link}>)\n[Video Link]{link}"
+        link = f"[Reddit Post-Link](<{original_link}>)\n[Video Link]({link})"
 
     return link
