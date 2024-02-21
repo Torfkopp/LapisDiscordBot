@@ -266,9 +266,6 @@ async def on_startup():
         task = Task(start_live_scoring, DateTrigger(start_time))
         task.start()
 
-    # TODO Vorm 2. März entauskommentieren
-    formula1_schedule = []
-    '''
     # FORMULA 1 AUTOMATIC RESULTS PART
     formula1_schedule = formula1.create_schedule()
     log.write("Today's formula1 sessions: " + str(formula1_schedule))
@@ -286,7 +283,6 @@ async def on_startup():
         if ((datetime.datetime.now().weekday() == 0 and not util.message_sent("rawe_ceek")) or
                 (datetime.datetime.now().weekday() == 4 and not util.message_sent("race_schedule"))):
             await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
-    '''
 
     # AUTOMATIC LOLESPORTS RESULTS PART
     league_schedule = lolesport.create_schedule()
@@ -309,7 +305,7 @@ async def on_startup():
     # AUTOMATIC LOL_PATCHNOTES PART
     await update_patchnotes()
     if datetime.datetime.now().weekday() == 1:  # Patchnotes are (normally) posted on tuesday at 20:00
-        Task(update_patchnotes, DateTrigger(datetime.datetime.now().replace(hour=20, minute=5))).start()
+        Task(update_patchnotes, DateTrigger(datetime.datetime.now().replace(hour=20, minute=10))).start()
     Task(update_patchnotes, IntervalTrigger(hours=2)).start()
 
 
