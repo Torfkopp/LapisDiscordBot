@@ -36,7 +36,9 @@ def get_current():
     if len(event_schedule) == 0:  # If no remaining races, set next_event to last race
         next_event = fastf1.get_event(util.CURRENT_F1_SEASON,
                                       len(fastf1.get_event_schedule(util.CURRENT_F1_SEASON))-1)
-    else: next_event = event_schedule.iloc[0]
+    else:
+        next_event = event_schedule.iloc[0]
+        if next_event['RoundNumber'] == 0: next_event = event_schedule.iloc[1]
     date_today = datetime.datetime.today()
 
     # FastF1's remaining events removes an event somewhere between Saturday and Sunday during the race weekend
@@ -114,7 +116,9 @@ def create_schedule():
     if len(event_schedule) == 0:  # If no remaining races, set next_event to last race
         next_event = fastf1.get_event(util.CURRENT_F1_SEASON,
                                       len(fastf1.get_event_schedule(util.CURRENT_F1_SEASON)) - 1)
-    else: next_event = event_schedule.iloc[0]
+    else:
+        next_event = event_schedule.iloc[0]
+        if next_event['RoundNumber'] == 0: next_event = event_schedule.iloc[1]
 
     # FastF1's remaining events removes an event somewhere between Saturday and Sunday during the race weekend
     # If today is Sat/Sun and the next event's date is further away than 3 days, then
