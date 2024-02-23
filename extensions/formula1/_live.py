@@ -35,19 +35,13 @@ def get_current():
     event_schedule = fastf1.get_events_remaining()
     if len(event_schedule) == 0:  # If no remaining races, set next_event to last race
         next_event = fastf1.get_event(util.CURRENT_F1_SEASON,
-                                      len(fastf1.get_event_schedule(util.CURRENT_F1_SEASON))-1)
+                                      len(fastf1.get_event_schedule(util.CURRENT_F1_SEASON)) - 1)
     else:
         next_event = event_schedule.iloc[0]
         if next_event['RoundNumber'] == 0: next_event = event_schedule.iloc[1]
     date_today = datetime.datetime.today()
 
-    # FastF1's remaining events removes an event somewhere between Saturday and Sunday during the race weekend
-    # If today is Sat/Sun and the next event's date is further away than 3 days, then
-    if date_today.weekday() >= 4 and next_event['EventDate'] > date_today + datetime.timedelta(days=3):
-        temp_event = fastf1.get_event(date_today.year, next_event['RoundNumber'] - 1)
-        # If the event before the first remaining event is within two days, set it as current event
-        if (temp_event['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
-            < date_today + datetime.timedelta(days=3)): next_event = temp_event
+    next_event = _handle_event_change_during_weekend(date_today, next_event)
 
     session_list = [next_event['Session1Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
                     next_event['Session2Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None),
@@ -70,6 +64,20 @@ def get_current():
         current_session = latest_finished_session
 
     return current_gp, current_session
+
+
+def _handle_event_change_during_weekend(date_today, next_event):
+    """
+    FastF1's remaining events removes an event somewhere between Saturday and Sunday during the race weekend
+    If today is Sat/Sun and the next event's date is further away than 3 days, then set the event before the
+    first remaining event as current event if it is within two days
+    """
+    if next_event['RoundNumber'] == 1: return next_event  # FastF1 can't handle RoundNumber 0
+    if date_today.weekday() > 4 and next_event['EventDate'] > date_today + datetime.timedelta(days=3):
+        temp_event = fastf1.get_event(date_today.year, next_event['RoundNumber'] - 1)
+        if (temp_event['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
+            < date_today + datetime.timedelta(days=3)): next_event = temp_event
+    return next_event
 
 
 def f1_info():
@@ -120,13 +128,7 @@ def create_schedule():
         next_event = event_schedule.iloc[0]
         if next_event['RoundNumber'] == 0: next_event = event_schedule.iloc[1]
 
-    # FastF1's remaining events removes an event somewhere between Saturday and Sunday during the race weekend
-    # If today is Sat/Sun and the next event's date is further away than 3 days, then
-    if date_today.weekday() >= 4 and next_event['EventDate'] > date_today + datetime.timedelta(days=3):
-        temp_event = fastf1.get_event(date_today.year, next_event['RoundNumber'] - 1)
-        # If the event before the first remaining event is within two days, set it as current event
-        if (temp_event['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
-            < date_today + datetime.timedelta(days=3)): next_event = temp_event
+    next_event = _handle_event_change_during_weekend(date_today, next_event)
 
     session_map = {
         next_event['Session1Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None):
@@ -138,7 +140,8 @@ def create_schedule():
         next_event['Session4Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None):
             next_event['Session4'],
         next_event['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None):
-            next_event['Session5']}
+            next_event['Session5']
+    }
 
     return {date: session_map.get(date) for date in session_map.keys() if date.date() == date_today.date()}
 
