@@ -13,7 +13,7 @@ import secret
 import util
 from core import log
 from core.extensions_loader import load_extensions
-from extensions import lolesport, lol_patchnotes, freegames
+from extensions import lolesport, lol_patchnotes, freegames, reddit
 from extensions.football import football
 from extensions.formula1 import formula1
 
@@ -307,6 +307,13 @@ async def on_startup():
     if datetime.datetime.now().weekday() == 1:  # Patchnotes are (normally) posted on tuesday at 20:00
         Task(update_patchnotes, DateTrigger(datetime.datetime.now().replace(hour=20, minute=10))).start()
     Task(update_patchnotes, IntervalTrigger(hours=2)).start()
+
+    # AUTOMATIC JOJO MEME PART
+    sent_already, day_count = util.day_counter()
+    if not sent_already:
+        message = (f"Jeden Tag ein JoJo-Meme senden bis Jakob mit JoJo fertig ist. Tag {day_count}\n"
+                   + reddit.get_reddit_link("ShitPostCrusaders"))
+        await bot.get_channel(util.COMEDY_CHANNEL_ID).send(message)
 
 
 # load all extensions in the ./extensions folder

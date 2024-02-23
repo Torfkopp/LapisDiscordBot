@@ -87,7 +87,7 @@ def get_reddit_link(subreddit):
         loop_prevent += 1
         number = random.randint(0, len(data))
         post = data[number]['data']
-    link, is_video = post['permalink'], post['is_video']
-    if is_video:
-        return get_embed_link(link, False)
-    return f"[{post['title']}](<https://www.reddit.com{post['permalink']}>) | [Bild Link]({post['url']})"
+
+    link, is_video = f"https://www.reddit.com{post['permalink']}", post['is_video']
+    if is_video: return get_embed_link(link, False)
+    return f"[{post['title']}](<{link}>) | [Bild Link]({post['url']})"
