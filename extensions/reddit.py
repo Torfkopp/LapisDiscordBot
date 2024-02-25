@@ -90,4 +90,4 @@ def get_reddit_link(subreddit):
 
     link, is_video = f"https://www.reddit.com{post['permalink']}", post['is_video']
     if is_video: return get_embed_link(link, False)
-    return f"[{post['title']}](<{link}>) | [Bild Link]({post['url']})"
+    return f"[`{post['title']}`](<{link}>) | [Bild Link]({post['url']})"
