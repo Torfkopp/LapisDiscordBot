@@ -1,11 +1,13 @@
 import json
 
+import interactions
 import requests
 from bs4 import BeautifulSoup
 from interactions import (
     Extension, slash_command, SlashContext, slash_option, OptionType
 )
 
+import util
 from core import log
 
 
@@ -28,7 +30,9 @@ class Embed(Extension):
 
     )
     async def embed_function(self, ctx: SlashContext, link, alt=False):
-        await ctx.send(get_embed_link(link, alt))
+        link = get_embed_link(link, alt)
+        if isinstance(link, interactions.Embed): await ctx.send(embed=link)
+        await ctx.send(link)
 
 
 def get_embed_link(link, alt):
@@ -48,6 +52,10 @@ def get_embed_link(link, alt):
             link = a['playbackMp4s']['permutations'][0]['source']['url']
         except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError): log.write("SITE DOWN")
         except requests.exceptions.MissingSchema: log.write("Invalid URL")
+        except KeyError:
+            return util.get_error_embed("too_big", "\nBei zu großen Videos holt sich Reddit das Video"
+                                                   "häppchenweise von einer anderen Seite, wodurch ich es nicht "
+                                                   "kriegen kann .·´¯`(>▂<)´¯`·..")
         link = f"[Reddit Post-Link](<{original_link}>) | [Video Link]({link})"
 
     return link

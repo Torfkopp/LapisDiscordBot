@@ -60,5 +60,11 @@
     "3" : "https://media.tenor.com/M1zdN66fUdkAAAAd/zzz-sleep.gif",
     "4" : "https://media.tenor.com/3sgB0YbYtkgAAAAC/sleeping-anime.gif",
     "5" : "https://media.tenor.com/tIuprgLY4c4AAAAC/sleeping-drool.gif"
+  },
+  "too_big" : {
+    "0" : "https://c.tenor.com/3iOZbtPy4XgAAAAC/tenor.gif",
+    "1" : "https://c.tenor.com/JKpyKdUIXe4AAAAd/tenor.gif",
+    "2" : "https://c.tenor.com/EMnh21qab5cAAAAC/tenor.gif",
+    "3" : "https://c.tenor.com/DpxbfGibVwwAAAAC/tenor.gif"
   }
 }

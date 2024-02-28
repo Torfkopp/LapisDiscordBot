@@ -1,5 +1,6 @@
 import random
 
+import interactions
 import requests
 from interactions import (
     Extension, slash_command, SlashContext, slash_option, OptionType, SlashCommandChoice
@@ -89,5 +90,7 @@ def get_reddit_link(subreddit):
         post = data[number]['data']
 
     link, is_video = f"https://www.reddit.com{post['permalink']}", post['is_video']
-    if is_video: return get_embed_link(link, False)
+    if is_video:
+        link = get_embed_link(link, False)
+        return link if not isinstance(link, interactions.Embed) else get_reddit_link(subreddit)
     return f"[`{post['title']}`](<{link}>) | [Bild Link]({post['url']})"

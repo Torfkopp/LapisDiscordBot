@@ -71,7 +71,7 @@ def get_gif(term: str):
     return gifs
 
 
-def get_error_embed(term: str):
+def get_error_embed(term: str, add_text: str = ""):
     """ Gets an error embed
     :parameter "error", "wrong_channel", "limit_reached", "faulty_value", "api_down"
     """
@@ -101,6 +101,10 @@ def get_error_embed(term: str):
         case "api_down":
             embed.title = "API down"
             embed.description = "Die angefragte API ist momentan down und ich kann nix dagegen tun. （；´д｀）ゞ"
+            embed.set_image(url=get_gif(term))
+        case "too_big":
+            embed.title = "Too big"
+            embed.description = f"Das Video oder Datei ist zu groß (´。＿。｀){add_text}"
             embed.set_image(url=get_gif(term))
         case _:
             embed.title = "Öhm"
