@@ -52,13 +52,20 @@ def get_insult(lang):
         response = requests.request("GET", url, data=payload, params=querystring)
         response = response.json()
         insult = response['insult']
-    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+    except Exception:  # Very broad, but should be fine ¯\_(ツ)_/¯
         log.write("API DOWN")
-        return util.get_error_embed("api_down")
+        return get_insult_from_resources()
 
     if lang != "en" and response['comment'] != "": insult += f" (Translation: {response['comment']}"
 
     embed = interactions.Embed(title=insult, color=COLOUR)
+    return util.uwuify_by_chance(embed)
+
+
+def get_insult_from_resources():
+    # Thanks to: https://gist.github.com/HBIDamian/7791dcbbf3f92e0ce252a9ca3bcb7800
+    with open("resources/insult.json", encoding="utf-8") as f: insult = json.load(f)
+    embed = interactions.Embed(title=random.choice(insult), color=COLOUR)
     return util.uwuify_by_chance(embed)
 
 
