@@ -86,7 +86,7 @@ def get_reddit_link(subreddit):
     loop_prevent = 0
     while post['distinguished'] and loop_prevent < len(data):
         loop_prevent += 1
-        number = random.randint(0, len(data))
+        number = random.randrange(len(data))
         post = data[number]['data']
 
     link, is_video = f"https://www.reddit.com{post['permalink']}", post['is_video']
