@@ -81,7 +81,7 @@ def get_reddit_link(subreddit):
         return None
 
     data = response['data']['children']
-    number = random.randint(0, len(data))
+    number = random.randrange(len(data))
     post = data[number]['data']
     loop_prevent = 0
     while post['distinguished'] and loop_prevent < len(data):
