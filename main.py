@@ -252,16 +252,17 @@ async def on_startup():
         activity = ActivityClass([])
         await activity.test_mode()
         return
+    now = datetime.datetime.now()
     reduce_command_calls.start()
     await log.start_procedure(bot)
-    if datetime.datetime.now().weekday() == 1: util.reset_message_tracker()  # Reset on Tuesday
+    if now.weekday() == 1: util.reset_message_tracker()  # Reset on Tuesday
 
     # FOOTBALL LIVE SCORING PART
     football_schedule = football.create_schedule()
     log.write("Starting times of today's games: " + str(football_schedule))
     for start_time in football_schedule:
         # When the start time was less than 90 minutes ago, start the live scoring manually
-        if datetime.timedelta(minutes=0) < (datetime.datetime.now() - start_time) < datetime.timedelta(minutes=90):
+        if datetime.timedelta(minutes=0) < (now - start_time) < datetime.timedelta(minutes=90):
             await start_live_scoring()
         task = Task(start_live_scoring, DateTrigger(start_time))
         task.start()
@@ -270,23 +271,31 @@ async def on_startup():
     formula1_schedule = formula1.create_schedule()
     log.write("Today's formula1 sessions: " + str(formula1_schedule))
     for start_time in formula1_schedule:
-        if "Practice" in formula1_schedule.get(start_time):  # If practice session, send the result 1 hour after start
-            Task(formula1_result, DateTrigger(start_time + datetime.timedelta(hours=1))).start()
+        if start_time + datetime.timedelta(hours=2) < now:
+            # If the session is long gone, send in the result
+            result = formula1.result(formula1_schedule.get(start_time))
+            await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result)
+            continue
+        elif start_time < now:
+            # When the session is underway, start the live_f1 manually
+            if (datetime.timedelta(minutes=0) < (now - start_time) < datetime.timedelta(minutes=45)
+                and "Practice" not in formula1_schedule.get(start_time)): await start_live_f1()
+            else: await formula1_result()
         else:
-            if datetime.timedelta(minutes=0) < (datetime.datetime.now() - start_time) < datetime.timedelta(minutes=45):
-                await start_live_f1()  # When the session is underway, start the live_f1 manually
-            Task(start_live_f1, DateTrigger(start_time)).start()
+            if "Practice" in formula1_schedule.get(start_time):  # If practice session, send result 1 hour after start
+                Task(formula1_result, DateTrigger(start_time + datetime.timedelta(hours=1))).start()
+            else: Task(start_live_f1, DateTrigger(start_time)).start()
 
     # FORMULA 1 AUTOMATIC INFO PART
     embed = formula1.auto_info()
     if embed is not None:
-        if ((datetime.datetime.now().weekday() == 0 and not util.message_sent("rawe_ceek")) or
-                (datetime.datetime.now().weekday() == 4 and not util.message_sent("race_schedule"))):
+        if ((now.weekday() == 0 and not util.message_sent("rawe_ceek")) or
+                (now.weekday() == 3 and not util.message_sent("race_schedule"))):
             await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
 
     # AUTOMATIC LOLESPORTS RESULTS PART
     league_schedule = lolesport.create_schedule()
-    if len(league_schedule) > 0 and sorted(league_schedule)[-1] < datetime.datetime.now():
+    if len(league_schedule) > 0 and sorted(league_schedule)[-1] < now:
         await live_league()  # When every start time has already passed, start live league once to get results
     log.write("Starting times of today's lol esport matches: " + str(league_schedule))
     for start_time in league_schedule: Task(start_live_league, DateTrigger(start_time)).start()

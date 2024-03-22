@@ -55,6 +55,11 @@ def auto_info():
     return live.f1_info()
 
 
+def result(session):
+    """ Returns the result of the session """
+    gp, _ = get_current()
+    return no_group.result(CURRENT_SEASON, gp, session)
+
 '''
 ##################################################
 COMMAND PART
