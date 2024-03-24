@@ -270,21 +270,28 @@ async def on_startup():
     # FORMULA 1 AUTOMATIC RESULTS PART
     formula1_schedule = formula1.create_schedule()
     log.write("Today's formula1 sessions: " + str(formula1_schedule))
-    for start_time in formula1_schedule:
-        if start_time + datetime.timedelta(hours=2) < now:
-            # If the session is long gone, send in the result
-            result = formula1.result(formula1_schedule.get(start_time))
-            await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result)
-            continue
-        elif start_time < now:
-            # When the session is underway, start the live_f1 manually
-            if (datetime.timedelta(minutes=0) < (now - start_time) < datetime.timedelta(minutes=45)
-                and "Practice" not in formula1_schedule.get(start_time)): await start_live_f1()
-            else: await formula1_result()
-        else:
-            if "Practice" in formula1_schedule.get(start_time):  # If practice session, send result 1 hour after start
+    if len(formula1_schedule) == 1:  # Race
+        start_time = formula1_schedule[0]
+        if start_time > now: Task(start_live_f1, DateTrigger(start_time)).start()
+        elif datetime.timedelta(minutes=0) < (now - start_time) < datetime.timedelta(minutes=60): await start_live_f1()
+        else: await formula1_result()
+    elif len(formula1_schedule) > 1:  # Non Race Days
+        if formula1_schedule[0] > now and formula1_schedule[1] > now:  # Both in future
+            for start_time in formula1_schedule:
+                if "Practice" in formula1_schedule.get(start_time):  # If practice session, send result 1 h after start
+                    Task(formula1_result, DateTrigger(start_time + datetime.timedelta(hours=1))).start()
+                else: Task(start_live_f1, DateTrigger(start_time)).start()  # Else, start live tracker at given time
+        elif formula1_schedule[0] < now < formula1_schedule[1]:  # First session gone and second to be
+            await formula1_result()
+            start_time = formula1_schedule[1]
+            if "Practice" in formula1_schedule.get(start_time):
                 Task(formula1_result, DateTrigger(start_time + datetime.timedelta(hours=1))).start()
             else: Task(start_live_f1, DateTrigger(start_time)).start()
+        else:  # Both Gone
+            start_time = formula1_schedule[0]
+            result_first_session = formula1.result(formula1_schedule.get(start_time))
+            await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result_first_session)  # First sessions result
+            await formula1_result()  # Second sessions result
 
     # FORMULA 1 AUTOMATIC INFO PART
     embed = formula1.auto_info()
