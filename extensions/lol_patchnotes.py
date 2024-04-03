@@ -144,6 +144,7 @@ def get_patch_summaries():
     """ Returns an embed with the summary of every champion's change"""
     soup = LoLPatchnotes.soup
     champ_names = soup.find_all('h3', class_="change-title")
+    champ_names = [p for p in champ_names if "champion" in p.find('a')['href']]
     champ_summaries = soup.find_all('p', class_="summary")
 
     embed = _make_embed()
