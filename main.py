@@ -297,7 +297,7 @@ async def on_startup():
     embed = formula1.auto_info()
     if embed is not None:
         if ((now.weekday() == 0 and not util.message_sent("rawe_ceek")) or
-                (now.weekday() == 3 and not util.message_sent("race_schedule"))):
+                (now.weekday() == 4 and not util.message_sent("race_schedule"))):
             await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
 
     # AUTOMATIC LOLESPORTS RESULTS PART
