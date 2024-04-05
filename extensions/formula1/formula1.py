@@ -60,6 +60,7 @@ def result(session):
     gp, _ = get_current()
     return no_group.result(CURRENT_SEASON, gp, session)
 
+
 '''
 ##################################################
 COMMAND PART

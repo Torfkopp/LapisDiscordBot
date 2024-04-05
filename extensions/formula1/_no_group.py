@@ -116,7 +116,7 @@ def next_race():
     response = requests.get(url)
     soup = BeautifulSoup(response.content, 'html.parser')
     image = soup.find_all('picture', {'class': 'track'})
-    image_url = image[round_number].find('img')['data-src']
+    image_url = image[round_number-1].find('img')['data-src']
 
     embed.set_image(url=image_url)
 

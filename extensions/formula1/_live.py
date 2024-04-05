@@ -93,25 +93,20 @@ def f1_info():
     # When it's monday on a race week, send bad meme
     if (date_today.weekday() == 0) and ((first_session_date - date_today).days < 7):
         embed = interactions.Embed(title="Es ist Rawe Ceek!", color=COLOUR)
-        rand_numb = random.randint(0, 100)
-        if 0 < rand_numb < 16:
-            image_url = "https://i.kym-cdn.com/photos/images/original/002/084/695/e13.jpg"
-        elif 17 < rand_numb < 33:
-            image_url = "https://i.kym-cdn.com/photos/images/original/002/085/358/310.jpg"
-        elif 34 < rand_numb < 50:
-            image_url = "https://i.kym-cdn.com/photos/images/original/002/085/351/0be.jpg"
-        elif 51 < rand_numb < 67:
-            image_url = "https://i.kym-cdn.com/photos/images/original/002/085/357/38a.jpg"
-        elif 68 < rand_numb < 84:
-            image_url = "https://i.kym-cdn.com/photos/images/original/002/085/361/7bd.jpg"
-        elif 65 < rand_numb < 100:
-            image_url = "https://i.kym-cdn.com/photos/images/original/002/085/360/27f.jpg"
-        else:
-            image_url = "https://i.kym-cdn.com/photos/images/original/002/085/367/32f.jpg"
+        image_list = [
+            "https://i.kym-cdn.com/photos/images/original/002/084/695/e13.jpg",
+            "https://i.kym-cdn.com/photos/images/original/002/085/358/310.jpg",
+            "https://i.kym-cdn.com/photos/images/original/002/085/351/0be.jpg",
+            "https://i.kym-cdn.com/photos/images/original/002/085/357/38a.jpg",
+            "https://i.kym-cdn.com/photos/images/original/002/085/361/7bd.jpg",
+            "https://i.kym-cdn.com/photos/images/original/002/085/360/27f.jpg",
+        ]
+        if random.randrange(100) <= 2: image_url = "https://i.kym-cdn.com/photos/images/original/002/085/367/32f.jpg"
+        else: image_url = random.choice(image_list)
         embed.set_image(url=image_url)
 
-    # On friday of every race weekend, send the schedule to the channel
-    if (date_today.weekday() == 4) and ((first_session_date.date() - date_today.date()) == datetime.timedelta(days=0)):
+    # On thursday of every race weekend, send the schedule to the channel
+    if (date_today.weekday() == 3) and ((first_session_date.date() - date_today.date()) == datetime.timedelta(days=-1)):
         embed = no_group.next_race()
 
     return embed

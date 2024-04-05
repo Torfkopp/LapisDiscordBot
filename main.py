@@ -271,24 +271,25 @@ async def on_startup():
     formula1_schedule = formula1.create_schedule()
     log.write("Today's formula1 sessions: " + str(formula1_schedule))
     if len(formula1_schedule) == 1:  # Race
-        start_time = formula1_schedule[0]
+        start_time = list(formula1_schedule)[0]
         if start_time > now: Task(start_live_f1, DateTrigger(start_time)).start()
         elif datetime.timedelta(minutes=0) < (now - start_time) < datetime.timedelta(minutes=60): await start_live_f1()
         else: await formula1_result()
     elif len(formula1_schedule) > 1:  # Non Race Days
-        if formula1_schedule[0] > now and formula1_schedule[1] > now:  # Both in future
-            for start_time in formula1_schedule:
+        start_times = list(formula1_schedule)
+        if start_times[0] > now and start_times[1] > now:  # Both in future
+            for start_time in start_times:
                 if "Practice" in formula1_schedule.get(start_time):  # If practice session, send result 1 h after start
                     Task(formula1_result, DateTrigger(start_time + datetime.timedelta(hours=1))).start()
                 else: Task(start_live_f1, DateTrigger(start_time)).start()  # Else, start live tracker at given time
-        elif formula1_schedule[0] < now < formula1_schedule[1]:  # First session gone and second to be
+        elif start_times[0] < now < start_times[1]:  # First session gone and second to be
             await formula1_result()
-            start_time = formula1_schedule[1]
+            start_time = start_times[1]
             if "Practice" in formula1_schedule.get(start_time):
                 Task(formula1_result, DateTrigger(start_time + datetime.timedelta(hours=1))).start()
             else: Task(start_live_f1, DateTrigger(start_time)).start()
         else:  # Both Gone
-            start_time = formula1_schedule[0]
+            start_time = start_times[0]
             result_first_session = formula1.result(formula1_schedule.get(start_time))
             await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result_first_session)  # First sessions result
             await formula1_result()  # Second sessions result
@@ -297,7 +298,7 @@ async def on_startup():
     embed = formula1.auto_info()
     if embed is not None:
         if ((now.weekday() == 0 and not util.message_sent("rawe_ceek")) or
-                (now.weekday() == 4 and not util.message_sent("race_schedule"))):
+                (now.weekday() == 3 and not util.message_sent("race_schedule"))):
             await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
 
     # AUTOMATIC LOLESPORTS RESULTS PART
