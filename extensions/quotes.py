@@ -71,6 +71,7 @@ def get_sparkasse():
     """ Gets a sparkassen quote"""
     with open("resources/sparkasse.json", encoding="utf-8") as f: sparkasse = json.load(f)
 
-    embed = interactions.Embed(title=random.choice(sparkasse), color=COLOUR)
-    embed.set_thumbnail("https://www.grischamentgen.com/uploads/1/3/4/2/134263635/published/image-2.jpeg?1644096545")
+    embed = interactions.Embed(title="Sparkassen Hänno sagt:", color=COLOUR)
+    embed.set_thumbnail(url="https://www.grischamentgen.com/uploads/1/3/4/2/134263635/published/image-2.jpeg?1644096545")
+    embed.description = random.choice(sparkasse)
     return util.uwuify_by_chance(embed)
