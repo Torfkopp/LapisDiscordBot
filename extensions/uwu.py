@@ -22,13 +22,14 @@ class UwU(Extension):
         required=True,
         opt_type=OptionType.STRING
     )
-    async def anime_function(self, ctx: SlashContext, text):
+    async def uwu_function(self, ctx: SlashContext, text):
         await ctx.defer()
         await ctx.send(embed=get_uwu(text))
 
 
-def get_uwu(text: str):
+def get_uwu(text):
     embed = interactions.Embed(title="\u200b", color=COLOUR)
-    embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Stylized_uwu_emoticon.svg/1280px-Stylized_uwu_emoticon.svg.png")
+    embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/"
+                            "Stylized_uwu_emoticon.svg/1280px-Stylized_uwu_emoticon.svg.png")
     embed.description = UwUify(text)
     return embed
