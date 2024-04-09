@@ -31,6 +31,7 @@ class Colour(Enum):
     INSULTS = discord.MaterialColors.BROWN
     JOKES = discord.MaterialColors.YELLOW
     MODMAIL = discord.MaterialColors.GREY
+    POLL = discord.MaterialColors.AMBER
     PREFIXED = discord.BrandColors.BLURPLE
     QUOTES = discord.FlatUIColors.ASBESTOS
     SECRET = discord.MaterialColors.DEEP_PURPLE

@@ -51,12 +51,13 @@ def get_help():
                           "/patch summary: Erhalte die Zusammenfassungstexte der Änderungen\n"
                           "/patch details: Erhalte die Änderungen des Patches im Details")
     embed.add_field(name="Modmail", value="/modmail: Schreibe eine Mail an die Mods")
-    embed.add_field(name="Reddit", value="/reddit: Erhalte einen zufälligen Pfosten aus dem Unter")
+    embed.add_field(name="Poll", value="/poll: Erstelle eine Umfrage")
     embed.add_field(name="Quotes", value="/advice: Erhalte einen zufälligen Ratschlag")
+    embed.add_field(name="Reddit", value="/reddit: Erhalte einen zufälligen Pfosten aus dem Unter")
     embed.add_field(name="Tierlist", value="/tierlist: Erstelle eine Tierlist")
     embed.add_field(name="Trivia", value="/trivia: Erhalte eine Trivia-Frage")
-    embed.add_field(name="UwU", value="/uwu: UwUify deinyen Text")
-
+    embed.add_field(name="UwU", value="/uwu: UwUify deinyen Texy-Wexy")
+    # Current amount: 15 (maximum: 25) | Soon: Pages
     return util.uwuify_by_chance(embed), file
 
 
