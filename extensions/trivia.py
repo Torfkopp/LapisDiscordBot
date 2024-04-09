@@ -59,7 +59,7 @@ async def on_trivia_component(event: Component):
         # noinspection PyUnresolvedReferences
         if component.label == Trivia.right: component.style = ButtonStyle.GREEN  # warning ignorable
     if ctx.message.content != "": return  # To prevent an overwriting when two answer contemporaneously
-    await ctx.edit_origin(components=Trivia.components, content=f"Beantwortet von: {ctx.author}")
+    await ctx.edit_origin(components=Trivia.components, content=f"Beantwortet von: {ctx.author.display_name}")
 
 
 class Trivia(Extension):
