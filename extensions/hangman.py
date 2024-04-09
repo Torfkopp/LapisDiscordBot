@@ -22,37 +22,101 @@ def setup(bot):
 async def on_hangman_component(event: Component):
     ctx = event.ctx
     if not ctx.custom_id.startswith("hangman"): return
-    component = None
-    for actionrows in Hangman.COMPONENTS:
-        for comp in actionrows.components:
-            if comp == ctx.component:
-                component = comp
-                break
-        if component is not None: break
-
     # noinspection PyUnresolvedReferences
-    if not build_censored_word(component.label):
-        component.style = ButtonStyle.RED
-        Hangman.stage += 1
-    else: component.style = ButtonStyle.GREEN
+    hangmanclass = Hangman.hangmanClasses.get(ctx.component.custom_id.split("_")[1])
+    embed, component = hangmanclass.on_component(ctx)
+    await ctx.edit_origin(embed=embed, components=component)
 
-    win = Hangman.word.find("_") == -1
-    loss = Hangman.stage == 11
-    embed = build_embed(win, loss)
-    if win or loss:
-        for actionrows in Hangman.COMPONENTS:
-            for comp in actionrows.components: comp.disabled = True
-            Hangman.stage = 0
 
-    component.disabled = True
-    await ctx.edit_origin(embed=embed, components=Hangman.COMPONENTS)
+class HangmanClass:
+    def __init__(self, word, author):
+        self.word_to_guess = word
+        self.word = "_ " * len(self.word_to_guess)
+        self.stage = 0
+        self.id = self.create_id()
+        self.participants: set = {author}
+
+        ar1, ar2, ar3, ar4, ar5 = ActionRow(), ActionRow(), ActionRow(), ActionRow(), ActionRow()
+        for c in ['A', 'B', 'C', 'D', 'E']: ar1.add_component(
+            Button(custom_id=f"hangman_{self.id}_{c}", style=ButtonStyle.GREY, label=c))
+        for c in ['F', 'G', 'H', 'I', 'J/Q']: ar2.add_component(
+            Button(custom_id=f"hangman_{self.id}_{c}", style=ButtonStyle.GREY, label=c))
+        for c in ['K', 'L', 'M', 'N', 'O']: ar3.add_component(
+            Button(custom_id=f"hangman_{self.id}_{c}", style=ButtonStyle.GREY, label=c))
+        for c in ['P', 'R', 'S', 'T', 'U']: ar4.add_component(
+            Button(custom_id=f"hangman_{self.id}_{c}", style=ButtonStyle.GREY, label=c))
+        for c in ['V', 'W', 'X', 'Y', 'Z']: ar5.add_component(
+            Button(custom_id=f"hangman_{self.id}_{c}", style=ButtonStyle.GREY, label=c))
+
+        self.components = [ar1, ar2, ar3, ar4, ar5]
+
+    def create_id(self):
+        return str(hash(self.word_to_guess + str(random.randrange(10))))
+
+    def build_censored_word(self, letter=None):
+        """ Builds a censored word and changes it according to the given letter """
+        if letter is None:
+            self.word = "_ " * len(self.word_to_guess)
+            return True
+        if letter in self.word_to_guess:
+            indices = [i for i, ltr in enumerate(self.word_to_guess) if ltr == letter]
+            word = self.word.split(" ")
+            for i in range(len(word)):
+                if i in indices: word[i] = word[i].replace("_", letter)
+            word = " ".join(word)
+            self.word = word
+            return True
+        return False
+
+    def build_embed(self, win, loss):
+        """ Returns an embed """
+        embed = interactions.Embed(title="Galgenmännchen", color=util.Colour.HANGMAN.value)
+        name = ""
+        if win: name += "GEWONNEN\n"
+        if loss:
+            name += "VERLOREN\n"
+            name += f"Wort: {self.word_to_guess}\n"
+        name += f"```{self.word}```"
+        value = build_stage(self.stage)
+        embed.add_field(name, value)
+        embed.add_field("An diesem Galgenmännchen beteiligte Personen:", ', '.join(self.participants))
+        return embed, self.components
+
+    def on_component(self, ctx):
+        component = None
+        self.participants.add(ctx.author.display_name)
+        for actionrows in self.components:
+            for comp in actionrows.components:
+                if comp == ctx.component:
+                    component = comp
+                    break
+            if component is not None: break
+
+        # noinspection PyUnresolvedReferences
+        if not self.build_censored_word(component.label):
+            component.style = ButtonStyle.RED
+            self.stage += 1
+        else: component.style = ButtonStyle.GREEN
+
+        win = self.word.find("_") == -1
+        loss = self.stage == 11
+        embed, _ = self.build_embed(win, loss)
+        if win or loss:
+            for actionrows in self.components:
+                for comp in actionrows.components: comp.disabled = True
+                self.stage = 0
+
+        component.disabled = True
+
+        return embed, self.components
+
+    async def sent(self, ctx):
+        embed, components = self.build_embed(False, False)
+        await ctx.send(embed=embed, components=components)
 
 
 class Hangman(Extension):
-    COMPONENTS: list[ActionRow]
-    WORD_TO_GUESS: str
-    word: str
-    stage = 0
+    hangmanClasses = {}
 
     @slash_command(name="hangman", description="Spiele Galgenmännchen")
     @slash_option(
@@ -77,23 +141,9 @@ class Hangman(Extension):
         ]
     )
     async def hangman_function(self, ctx: SlashContext, language: bool = True, difficulty: str = ""):
-        ar1, ar2, ar3, ar4, ar5 = ActionRow(), ActionRow(), ActionRow(), ActionRow(), ActionRow()
-        for c in ['A', 'B', 'C', 'D', 'E']: ar1.add_component(
-            Button(custom_id=f"hangman_{c}", style=ButtonStyle.GREY, label=c))
-        for c in ['F', 'G', 'H', 'I', 'J/Q']: ar2.add_component(
-            Button(custom_id=f"hangman_{c}", style=ButtonStyle.GREY, label=c))
-        for c in ['K', 'L', 'M', 'N', 'O']: ar3.add_component(
-            Button(custom_id=f"hangman_{c}", style=ButtonStyle.GREY, label=c))
-        for c in ['P', 'R', 'S', 'T', 'U']: ar4.add_component(
-            Button(custom_id=f"hangman_{c}", style=ButtonStyle.GREY, label=c))
-        for c in ['V', 'W', 'X', 'Y', 'Z']: ar5.add_component(
-            Button(custom_id=f"hangman_{c}", style=ButtonStyle.GREY, label=c))
-
-        Hangman.COMPONENTS = [ar1, ar2, ar3, ar4, ar5]
-
-        Hangman.WORD_TO_GUESS = get_word(language, difficulty)
-        build_censored_word()
-        await ctx.send(embed=build_embed(False, False), components=Hangman.COMPONENTS)
+        hc = HangmanClass(get_word(language, difficulty), ctx.author.display_name)
+        Hangman.hangmanClasses[hc.id] = hc
+        await hc.sent(ctx)
 
 
 def get_word(in_german, difficulty_option):
@@ -105,44 +155,13 @@ def get_word(in_german, difficulty_option):
     return word.upper()
 
 
-def build_censored_word(letter=None):
-    """ Builds a censored word and changes it according to the given letter """
-    if letter is None:
-        Hangman.word = "_ " * len(Hangman.WORD_TO_GUESS)
-        return True
-    if letter in Hangman.WORD_TO_GUESS:
-        indices = [i for i, ltr in enumerate(Hangman.WORD_TO_GUESS) if ltr == letter]
-        word = Hangman.word.split(" ")
-        for i in range(len(word)):
-            if i in indices: word[i] = word[i].replace("_", letter)
-        word = " ".join(word)
-        Hangman.word = word
-        return True
-    return False
-
-
-def build_embed(win, loss):
-    """ Returns an embed """
-    embed = interactions.Embed(title="Galgenmännchen", color=util.Colour.HANGMAN.value)
-    name = ""
-    if win: name += "GEWONNEN\n"
-    if loss:
-        name += "VERLOREN\n"
-        name += f"Wort: {Hangman.WORD_TO_GUESS}\n"
-    name += f"```{Hangman.word}```"
-    value = build_stage()
-
-    embed.add_field(name, value)
-    return embed
-
-
-def build_stage():
+def build_stage(current_stage):
     """ Returns the game stage """
     with open("resources/hangman.json", encoding="utf-8") as f: graphic = json.load(f)
     stage = "```\n"
     stage += f"{graphic['ceiling']}\n"
-    for line in graphic['stages'][Hangman.stage]:
-        stage += f"{graphic['stageLinePrefix']}{graphic['stages'][Hangman.stage][line]}{graphic['stageLineSuffix']}\n"
+    for line in graphic['stages'][current_stage]:
+        stage += f"{graphic['stageLinePrefix']}{graphic['stages'][current_stage][line]}{graphic['stageLineSuffix']}\n"
     stage += f"{graphic['floor']}\n"
     stage += "```"
     return stage
