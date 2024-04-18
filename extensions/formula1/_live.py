@@ -106,7 +106,7 @@ def f1_info():
         embed.set_image(url=image_url)
 
     # On thursday of every race weekend, send the schedule to the channel
-    if (date_today.weekday() == 3) and ((first_session_date.date() - date_today.date()) == datetime.timedelta(days=-1)):
+    if (date_today.weekday() == 3) and ((first_session_date.date() - date_today.date()) == datetime.timedelta(days=1)):
         embed = no_group.next_race()
 
     return embed
