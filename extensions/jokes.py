@@ -143,7 +143,9 @@ def get_norris():
     except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("API DOWN")
         return util.get_error_embed("api_down")
-    joke = joke.replace("Chuck Norris", random.choice(name_list))
+    random_name = random.choice(name_list)
+    joke = joke.replace("Chuck Norris", random_name)
+    joke = joke.replace("Chuck", random_name)
     joke = joke.replace("' ", "'s ")
 
     embed = interactions.Embed(title=joke, color=COLOUR)
