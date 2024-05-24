@@ -119,11 +119,11 @@ class ActivityClass:
 
 
 @Task.create(IntervalTrigger(minutes=1))
-def reduce_command_calls():
+def limit_command_calls():
     """ Task to regularly call the extension's command calls reduction """
-    football.reduce_command_calls()
-    formula1.reduce_command_calls()
-    lolesport.reduce_command_calls()
+    football.limit_command_calls()
+    formula1.limit_command_calls()
+    lolesport.limit_command_calls()
 
 
 async def live_scoring():
@@ -253,7 +253,7 @@ async def on_startup():
         await activity.test_mode()
         return
     now = datetime.datetime.now()
-    reduce_command_calls.start()
+    limit_command_calls.start()
     await log.start_procedure(bot)
     if now.weekday() == 1: util.reset_message_tracker()  # Reset on Tuesday
 
@@ -320,10 +320,12 @@ async def on_startup():
         await bot.get_channel(util.LABAR_CHANNEL_ID).send(file="resources/congratssailer.mp4")
 
     # AUTOMATIC LOL_PATCHNOTES PART
-    await update_patchnotes()
-    if datetime.datetime.now().weekday() == 1:  # Patchnotes are (normally) posted on tuesday at 20:00
-        Task(update_patchnotes, DateTrigger(datetime.datetime.now().replace(hour=20, minute=10))).start()
-    Task(update_patchnotes, IntervalTrigger(hours=2)).start()
+    try:
+        await update_patchnotes()
+        if now.weekday() == 1:  # Patchnotes are (normally) posted on tuesday at 20:00
+            Task(update_patchnotes, DateTrigger(now.replace(hour=20, minute=20))).start()
+        Task(update_patchnotes, IntervalTrigger(hours=3.25)).start()
+    except Exception as e: log.error(e)
 
     # AUTOMATIC JOJO MEME PART
     sent_already, day_count = util.day_counter()

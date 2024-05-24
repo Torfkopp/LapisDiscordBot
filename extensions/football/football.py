@@ -59,7 +59,7 @@ command_calls = 0
 limit_reached = False
 
 
-def reduce_command_calls():
+def limit_command_calls():
     """ Used to reduce the command_calls counter
     Called regularly in main """
     global command_calls, limit_reached

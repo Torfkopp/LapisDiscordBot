@@ -40,7 +40,7 @@ def update():
     log.write("Request page LoLPatch: " + url)
     soup = BeautifulSoup(response.content, 'html.parser')
 
-    title = soup.find('h1', class_="style__Title-sc-vd48si-5 kDFvhf").text
+    title = soup.find('h1', class_="title").text
 
     patch_update = soup.find('h2', id="patch-midpatch-updates")
     patch_update = patch_update is not None
