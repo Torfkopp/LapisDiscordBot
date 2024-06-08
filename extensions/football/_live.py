@@ -11,7 +11,7 @@ from util import germanise
 """ All methods for the football live scoring """
 
 # List of Leagues fully interested in
-UNFILTERED_COMPETITIONS = ["Bundesliga", "2. Bundesliga", "DFB-Pokal", "Supercup", "EM 2023"]
+UNFILTERED_COMPETITIONS = ["Bundesliga", "2. Bundesliga", "DFB-Pokal", "Supercup", "EM 2024"]
 # List of Leagues partially interested in
 FILTERED_COMPETITIONS = ["Champions League", "Europa League", "Europa Conference League", "Länderspiele"]
 COMPETITION_LIST = UNFILTERED_COMPETITIONS + FILTERED_COMPETITIONS  # List of all Leagues with at least some interest in
