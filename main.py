@@ -323,7 +323,7 @@ async def on_startup():
     try:
         await update_patchnotes()
         if now.weekday() == 1:  # Patchnotes are (normally) posted on tuesday at 20:00
-            Task(update_patchnotes, DateTrigger(now.replace(hour=20, minute=20))).start()
+            for i in range(4): Task(update_patchnotes, DateTrigger(now.replace(hour=(20+i), minute=20))).start()
         Task(update_patchnotes, IntervalTrigger(hours=3.25)).start()
     except Exception as e: log.error(e)
 
