@@ -111,15 +111,15 @@ def next_race():
     sessions += "```"
 
     embed.add_field(name="Sessions", value=sessions)
-
-    url = f"https://www.formula1.com/en/racing/{CURRENT_SEASON}.html"
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, 'html.parser')
-    image = soup.find_all('picture', {'class': 'track'})
-    image_url = image[round_number-1].find('img')['data-src']
-
-    embed.set_image(url=image_url)
-
+    try:
+        url = f"https://www.formula1.com/en/racing/{CURRENT_SEASON}.html"
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        image = soup.find_all('picture', {'class': 'track'})
+        image_url = image[round_number-1].find('img')['data-src']
+        embed.set_image(url=image_url)
+    except: ...
+    
     return util.uwuify_by_chance(embed)
 
 
