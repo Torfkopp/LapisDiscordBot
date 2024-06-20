@@ -177,3 +177,10 @@ class Football(Extension):
     async def table_function(self, ctx: SlashContext, liga: str = LEAGUE_CHOICES[0].value,
                              saison: int = CURRENT_SEASON):
         await command_function(ctx, commands.table, liga, saison)
+
+    @goalgetter_function.subcommand(
+        sub_cmd_name="euro_where",
+        sub_cmd_description="Sagt, wo die nächsten Spiele übertragen werden"
+    )
+    async def euro_where(self, ctx: SlashContext):
+        await command_function(ctx, commands.euro_where())

@@ -2,6 +2,7 @@ import datetime
 
 import interactions
 import requests
+from bs4 import BeautifulSoup
 
 import util
 from core import log
@@ -146,5 +147,35 @@ def table(liga, saison):
     tabelle += "```"
 
     embed = interactions.Embed(title="Tabelle", description=tabelle, color=COLOUR)
+
+    return util.uwuify_by_chance(embed)
+
+
+def euro_where():
+    url = (
+        "https://www.sportschau.de/fussball/uefa-euro-2024/euro-2024-spielplan-"
+        "und-sendezeiten,uefa-euro24-spielplan-100.html"
+    )
+    log.write("API-Call Euro: " + url)
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    games = soup.findAll('tr')
+
+    next_games = ""
+    counter = 0
+    for game in games:
+        subs = game.findAll('td')
+        if len(subs) == 0: continue
+        num4 = subs[4].text.strip()
+        if ":" in num4 or len(num4) == 0: continue
+        counter += 1
+
+        next_games += f"`{subs[0].text.strip()} {subs[1].text.strip()} {subs[3].text.strip()}".ljust(30)
+        next_games += f"{subs[2].text.strip()}".ljust(30)
+        next_games += f"{num4}"
+        next_games += "`\n"
+
+    embed = interactions.Embed(title="Nächste Europameisterschaftsspiele", description=next_games, color=COLOUR)
 
     return util.uwuify_by_chance(embed)
