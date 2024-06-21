@@ -183,4 +183,4 @@ class Football(Extension):
         sub_cmd_description="Sagt, wo die nächsten Spiele übertragen werden"
     )
     async def euro_where(self, ctx: SlashContext):
-        await command_function(ctx, commands.euro_where())
+        await command_function(ctx, commands.euro_where)
