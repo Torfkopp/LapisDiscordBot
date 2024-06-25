@@ -145,7 +145,7 @@ def get_live(content=""):
             if 'homePenaltyScore' in match and 'awayPenaltyScore' in match:
                 penalty_score = f" {match['homePenaltyScore']}:{match['awayPenaltyScore']} nE"
             # Put in Values
-            new_name = f"```{team1:<30} {score1:^3}:{score2:^4}{penalty_score} {team2:>30}```"
+            new_name = f"```{team1:<20} {score1:^3}:{score2:^4}{penalty_score} {team2:>20}```"
             new_value = f"```{str(minute).zfill(2)}```"
             # If the score changes in the new message, get the goalscorers and put them as the new value
             if not content == "" and not minute.startswith("Startet"):
