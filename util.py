@@ -118,7 +118,7 @@ def get_error_embed(term: str, add_text: str = ""):
 
 def message_sent(message: str):
     """ Returns whether the message was already sent, and if it wasn't, sets the tracker to true
-    :param 'rawe_ceek', 'games', or 'race_schedule' """
+    :param 'rawe_ceek', 'race_schedule', 'friday_krabs', or 'monday_krabs' """
     with open("strunt/message_tracker.json", "r") as message_tracker: trackers = json.load(message_tracker)
     if trackers[message]: return True
     else:

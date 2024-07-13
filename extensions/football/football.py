@@ -182,5 +182,5 @@ class Football(Extension):
         sub_cmd_name="euro_where",
         sub_cmd_description="Sagt, wo die nächsten Spiele übertragen werden"
     )
-    async def euro_where(self, ctx: SlashContext):
+    async def euro_where(self, ctx: SlashContext):  # TODO: Change or remove after Euros
         await command_function(ctx, commands.euro_where)

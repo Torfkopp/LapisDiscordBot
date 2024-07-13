@@ -13,7 +13,7 @@ import secret
 import util
 from core import log
 from core.extensions_loader import load_extensions
-from extensions import lolesport, lol_patchnotes, freegames, reddit
+from extensions import lolesport, lol_patchnotes, reddit
 from extensions.football import football
 from extensions.formula1 import formula1
 
@@ -245,19 +245,8 @@ async def on_ready():
     for font in font_manager.findSystemFonts(["formula1/font"]): font_manager.fontManager.addfont(font)
 
 
-@listen()
-async def on_startup():
-    """ Is called when the bot starts up (used for schedule things) """
-    if TEST_MODE_ON:
-        activity = ActivityClass([])
-        await activity.test_mode()
-        return
-    now = datetime.datetime.now()
-    limit_command_calls.start()
-    await log.start_procedure(bot)
-    if now.weekday() == 1: util.reset_message_tracker()  # Reset on Tuesday
-
-    # FOOTBALL LIVE SCORING PART
+async def startup_football_scoring(now):
+    # FOOTBALL LIVE SCORING
     football_schedule = football.create_schedule()
     log.write("Starting times of today's games: " + str(football_schedule))
     for start_time in football_schedule:
@@ -267,8 +256,9 @@ async def on_startup():
         task = Task(start_live_scoring, DateTrigger(start_time))
         task.start()
 
-    # FORMULA 1 AUTOMATIC RESULTS PART
-    formula1_schedule = formula1.create_schedule()
+
+async def startup_formula1_results(formula1_schedule, now):
+    # FORMULA 1 AUTOMATIC RESULTS
     log.write("Today's formula1 sessions: " + str(formula1_schedule))
     if len(formula1_schedule) == 1:  # Race
         start_time = list(formula1_schedule)[0]
@@ -294,45 +284,77 @@ async def on_startup():
             await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result_first_session)  # First sessions result
             await formula1_result()  # Second sessions result
 
-    # FORMULA 1 AUTOMATIC INFO PART
+
+async def startup_formula1_info(now):
+    # FORMULA 1 AUTOMATIC INFO
     embed = formula1.auto_info()
     if embed is not None:
         if ((now.weekday() == 0 and not util.message_sent("rawe_ceek")) or
                 (now.weekday() == 3 and not util.message_sent("race_schedule"))):
             await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
 
-    # AUTOMATIC LOLESPORTS RESULTS PART
+
+async def startup_lolesports_results(now):
+    # AUTOMATIC LOLESPORTS RESULTS
     league_schedule = lolesport.create_schedule()
     if len(league_schedule) > 0 and sorted(league_schedule)[-1] < now:
         await live_league()  # When every start time has already passed, start live league once to get results
     log.write("Starting times of today's lol esport matches: " + str(league_schedule))
     for start_time in league_schedule: Task(start_live_league, DateTrigger(start_time)).start()
 
-    # AUTOMATIC ACTIVITY CHANGE PART
-    activity = ActivityClass(formula1_schedule)
-    await activity.rotate_activity()
-    Task(activity.rotate_activity, IntervalTrigger(minutes=2)).start()
 
-    # AUTOMATIC FREE GAMES PART
-    if datetime.datetime.now().weekday() == 4 and not util.message_sent("games"):
-        # await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=freegames.get_giveaways())
-        # Krabs hijacking the condition
-        await bot.get_channel(util.LABAR_CHANNEL_ID).send(file="resources/congratssailer.mp4")
-
-    # AUTOMATIC LOL_PATCHNOTES PART
+async def startup_patchnotes(now):
+    # AUTOMATIC LOL_PATCHNOTES
     try:
         await update_patchnotes()
         if now.weekday() == 1:  # Patchnotes are (normally) posted on tuesday at 20:00
-            for i in range(4): Task(update_patchnotes, DateTrigger(now.replace(hour=(20+i), minute=20))).start()
+            for i in range(4): Task(update_patchnotes, DateTrigger(now.replace(hour=(20 + i), minute=20))).start()
         Task(update_patchnotes, IntervalTrigger(hours=3.25)).start()
     except Exception as e: log.error(e)
 
-    # AUTOMATIC JOJO MEME PART
+
+async def startup_krabs():
+    # AUTOMATIC KRABS
+    if datetime.datetime.now().weekday() == 4 and not util.message_sent("friday_krabs"):
+        await bot.get_channel(util.LABAR_CHANNEL_ID).send(file="resources/congratssailer.mp4")
+    elif datetime.datetime.now().weekday() == 0 and not util.message_sent("monday_krabs"):
+        await bot.get_channel(util.LABAR_CHANNEL_ID).send(file="resources/risesailer.mp4")
+
+
+async def startup_daily_meme():
+    # AUTOMATIC JOJO MEME
     sent_already, day_count = util.day_counter()
     if not sent_already:
         message = (f"Jeden Tag ein JoJo-Meme senden bis Jakob mit JoJo fertig ist. Tag {day_count}\n"
                    + reddit.get_reddit_link("ShitPostCrusaders"))
         await bot.get_channel(util.COMEDY_CHANNEL_ID).send(message)
+
+
+@listen()
+async def on_startup():
+    """ Is called when the bot starts up (used for schedule things) """
+    if TEST_MODE_ON:
+        activity = ActivityClass([])
+        await activity.test_mode()
+        return
+    now = datetime.datetime.now()
+    limit_command_calls.start()
+    await log.start_procedure(bot)
+    if now.weekday() == 1: util.reset_message_tracker()  # Reset on Tuesday
+
+    await startup_football_scoring(now)
+    formula1_schedule = formula1.create_schedule()
+    await startup_formula1_results(formula1_schedule, now)
+    await startup_formula1_info(now)
+    await startup_lolesports_results(now)
+    await startup_patchnotes(now)
+    await startup_krabs()
+    await startup_daily_meme()
+
+    # AUTOMATIC ACTIVITY CHANGE PART
+    activity = ActivityClass(formula1_schedule)
+    await activity.rotate_activity()
+    Task(activity.rotate_activity, IntervalTrigger(minutes=2)).start()
 
 
 # load all extensions in the ./extensions folder
