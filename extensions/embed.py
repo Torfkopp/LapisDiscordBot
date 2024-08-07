@@ -36,26 +36,29 @@ class Embed(Extension):
 
 
 def get_embed_link(link, alt):
-    """ Returns the link in a for discord embedable format """
+    """ Returns the link in a for discord embeddable format """
     if "tiktok." in link: link = link.replace("tiktok.com", "vxtiktok.com")
     elif "instagram." in link:
         if alt: link = link.replace("instagram.com", "instagramez.com")
         else: link = link.replace("instagram.com", "ddinstagram.com")
     elif "x." in link or "twitter." in link: link = link.replace("x.com", "vxtwitter.com")
     elif "reddit." in link:
-        log.write("Site-Call: " + link)
-        original_link = link
-        try:
-            response = requests.get(link)
-            soup = BeautifulSoup(response.content, 'html.parser')
-            a = json.loads(soup.find('shreddit-player')['packaged-media-json'])
-            link = a['playbackMp4s']['permutations'][0]['source']['url']
-        except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError): log.write("SITE DOWN")
-        except requests.exceptions.MissingSchema: log.write("Invalid URL")
-        except KeyError:
-            return util.get_error_embed("too_big", "\nBei zu großen Videos holt sich Reddit das Video"
-                                                   "häppchenweise von einer anderen Seite, wodurch ich es nicht "
-                                                   "kriegen kann .·´¯`(>▂<)´¯`·..")
-        link = f"[Reddit Post-Link](<{original_link}>) | [Video Link]({link})"
+        if not alt:
+            link = link.replace("reddit", "rxddit")
+        else:
+            log.write("Site-Call: " + link)
+            original_link = link
+            try:
+                response = requests.get(link)
+                soup = BeautifulSoup(response.content, 'html.parser')
+                a = json.loads(soup.find('shreddit-player')['packaged-media-json'])
+                link = a['playbackMp4s']['permutations'][0]['source']['url']
+            except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError): log.write("SITE DOWN")
+            except requests.exceptions.MissingSchema: log.write("Invalid URL")
+            except KeyError:
+                return util.get_error_embed("too_big", "\nBei zu großen Videos holt sich Reddit das Video"
+                                                       "häppchenweise von einer anderen Seite, wodurch ich es nicht "
+                                                       "kriegen kann .·´¯`(>▂<)´¯`·..")
+            link = f"[Reddit Post-Link](<{original_link}>) | [Video Link]({link})"
 
     return link
