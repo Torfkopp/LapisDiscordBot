@@ -34,6 +34,12 @@ class Prefixed(Extension):
     async def Moin(self, ctx: PrefixedContext): await ctx.reply(embed=hello())
 
     @prefixed_command()
+    async def danke(self, ctx: PrefixedContext): await ctx.reply(embed=thanks())
+
+    @prefixed_command()
+    async def thanks(self, ctx: PrefixedContext): await ctx.reply(embed=thanks())
+
+    @prefixed_command()
     async def goodbye(self, ctx: PrefixedContext):
         """ Shuts down the bot"""
         if ctx.author_id not in self.bot.owner_ids: return
@@ -69,4 +75,10 @@ class Prefixed(Extension):
 def hello():
     embed = interactions.Embed(title="Hallo zurück!", color=COLOUR)
     embed.set_image(url=util.get_gif("hello"))
+    return embed
+
+
+def thanks():
+    embed = interactions.Embed(title="Da nicht für!", color=COLOUR)
+    embed.set_image(url=util.get_gif("thanks"))
     return embed
