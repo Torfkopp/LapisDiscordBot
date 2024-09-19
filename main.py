@@ -313,8 +313,8 @@ async def startup_patchnotes(now):
     except Exception as e: log.error(e)
 
 
-async def startup_krabs():
-    # AUTOMATIC KRABS
+async def startup_day_dependent():
+    # AUTOMATIC ACTIONS DEPENDING ON SPECIAL DAYS
     if datetime.datetime.now().weekday() == 4 and not util.message_sent("friday_krabs"):
         await bot.get_channel(util.LABAR_CHANNEL_ID).send(file="resources/congratssailer.mp4")
     elif datetime.datetime.now().weekday() == 0 and not util.message_sent("monday_krabs"):
@@ -348,7 +348,7 @@ async def on_startup():
     await startup_formula1_info(now)
     await startup_lolesports_results(now)
     await startup_patchnotes(now)
-    await startup_krabs()
+    await startup_day_dependent()
     await startup_daily_meme()
 
     # AUTOMATIC ACTIVITY CHANGE PART

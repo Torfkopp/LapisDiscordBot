@@ -28,6 +28,7 @@ def match_interested_in(match):
     #       2.1 has either one German team participating or 2.2 is late enough in the tournament to be interesting
     if match['competition']['name'] in UNFILTERED_COMPETITIONS: return True
     elif match['competition']['name'] in FILTERED_COMPETITIONS:
+        if match['homeTeam']['country'] == "Deutschland" or match['awayTeam']['country'] == "Deutschland": return True
         if match['homeTeam']['country'] == "Germany" or match['awayTeam']['country'] == "Germany": return True
         match match['competition']['name']:
             case "Champions League": return match["roundType"] in ["ROUND_OF_16", "QUARTER_FINALS", "SEMI_FINALS",

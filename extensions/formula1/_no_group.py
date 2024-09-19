@@ -115,8 +115,8 @@ def next_race():
         url = f"https://www.formula1.com/en/racing/{CURRENT_SEASON}.html"
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
-        image = soup.find_all('picture', {'class': 'track'})
-        image_url = image[round_number-1].find('img')['data-src']
+        image = soup.find_all("img", {"class": "f1-c-image h-full w-full object-contain"})
+        image_url = image[0]["src"]
         embed.set_image(url=image_url)
     except: ...
     
