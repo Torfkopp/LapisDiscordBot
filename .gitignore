@@ -5,3 +5,4 @@ secret.py
 /formula1/*.png
 /lapis_pics/
 __pycache__
+.idea/
