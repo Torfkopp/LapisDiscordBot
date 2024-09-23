@@ -1,7 +1,4 @@
-import datetime
-
 import interactions
-import pytz
 import requests
 from bs4 import BeautifulSoup
 from interactions import (

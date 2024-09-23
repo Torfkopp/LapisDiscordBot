@@ -2,7 +2,6 @@ import interactions
 from interactions import (
     Extension, slash_command, SlashContext
 )
-from interactions.ext.paginators import Paginator
 
 import util
 
