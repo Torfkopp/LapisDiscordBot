@@ -27,7 +27,7 @@ headers = {
     "Sec-GPC": "1",
     "TE": "trailers"
 }  # Headers for the sport1 api
-result_url = None  # Is set when auto_result is called but the session isn't finished yet
+result_url, round_name = None, ""  # Is set when auto_result is called but the session isn't finished yet
 
 
 def get_current():
@@ -154,12 +154,15 @@ def _get_result_url():
         return
 
     current_comp_id = response['currentCompetitionId']
-    current_match_id = ""
+    current_match_id, current_match_name = "", ""
     for compo in response['competitions']:
-        if compo['id'] == current_comp_id: current_match_id = compo['currentMatchId']
+        if compo['id'] == current_comp_id:
+            current_match_id = compo['currentMatchId']
+            current_match_name = compo["name"]
+            break
 
     url = f"https://api.sport1.info/v2/de/motorsport/sport/sr:stage:7668/match/{current_match_id}"
-    return url
+    return url, current_match_name
 
 
 def _make_result(response):
@@ -169,7 +172,7 @@ def _make_result(response):
     """
     result = "```"
     live = "Live" if response['isLive'] else "Ergebnis"
-    result += f"{live} - {util.germanise(response['competition']['name'])} - {response['roundTitle']}" + "\n"
+    result += f"{live} - {round_name} - {response['roundTitle']}" + "\n"
     result += "\n"
     result += "#".ljust(6) + "Name".center(20)
     if response['roundType'] == "RACE" or response['roundType'] == "SPRINT":
@@ -214,8 +217,8 @@ def _make_result(response):
 
 def auto_result(result_only: bool):
     """ Returns the result of the latest session and sets the current paras to it """
-    global result_url  # If result_url is set, use it, else get the url of the current session
-    url = result_url if result_url else _get_result_url()
+    global result_url, round_name  # If result_url is set, use it, else get the url of the current session
+    url, round_name = result_url if result_url else _get_result_url()
     try:
         log.write("API Call Formula1: " + url)
         response = requests.request("GET", url, data=payload, headers=headers)

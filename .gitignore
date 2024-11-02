@@ -1,8 +1,12 @@
+__pycache__
+*.py[cod]
+
 config.json
 test.py
 secret.py
 /strunt/
 /formula1/*.png
 /lapis_pics/
-__pycache__
 .idea/
+*.pyc
+*.pyc
