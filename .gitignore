@@ -1,5 +1,6 @@
 __pycache__
 *.py[cod]
+*.pyc
 
 config.json
 test.py
@@ -8,5 +9,3 @@ secret.py
 /formula1/*.png
 /lapis_pics/
 .idea/
-*.pyc
-*.pyc
