@@ -1,5 +1,3 @@
-import datetime
-
 import fastf1
 import interactions
 import pandas as pd
@@ -117,9 +115,10 @@ def next_race():
         soup = BeautifulSoup(response.content, 'html.parser')
         image = soup.find_all("img", {"class": "f1-c-image h-full w-full object-contain"})
         image_url = image[0]["src"]
+        image_url = image_url.replace(" ", "%20")
         embed.set_image(url=image_url)
     except: ...
-    
+
     return util.uwuify_by_chance(embed)
 
 
