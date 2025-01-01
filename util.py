@@ -38,13 +38,14 @@ class Colour(Enum):
     TIERLIST = discord.FlatUIColors.SILVER
     TRIVIA = discord.MaterialColors.LIGHT_BLUE
     UWU = discord.MaterialColors.PINK
+    VERSUS = discord.MaterialColors.DEEP_ORANGE
 
     ERROR = discord.BrandColors.RED
 
 
 # Other settings
-CURRENT_F1_SEASON = datetime.datetime.now().year  # An F1 Season starts and ends within one year
-CURRENT_FOOTBALL_SEASON = now.year if (now := datetime.datetime.now()).month > 7 else now.year - 1  # 2023/2024 -> 2023
+CURRENT_F1_SEASON = now.year if (now := datetime.datetime.now()).month > 1 else now.year - 1  # An F1 Season starts at the end of February
+CURRENT_FOOTBALL_SEASON = now.year if now.month > 7 else now.year - 1  # 2023/2024 -> 2023
 
 UWUCHANCE = 5  # D-De chance dat a commyand wesponse gets u-u-uwuified
 
@@ -73,9 +74,9 @@ def get_gif(term: str):
     return gifs
 
 
-def get_error_embed(term: str, add_text: str = ""):
+def get_error_embed(term: str, add_text: str | list[str] = ""):
     """ Gets an error embed
-    :parameter "error", "wrong_channel", "limit_reached", "faulty_value", "api_down"
+    :parameter "error", "wrong_channel", "limit_reached", "faulty_value", "api_down", "too_big", "custom"
     """
     embed = interactions.Embed(color=Colour.ERROR.value)
     match term:
@@ -108,6 +109,10 @@ def get_error_embed(term: str, add_text: str = ""):
             embed.title = "Too big"
             embed.description = f"Das Video oder Datei ist zu groß (´。＿。｀){add_text}"
             embed.set_image(url=get_gif(term))
+        case "custom":
+            embed.title = add_text[0]
+            embed.description = add_text[1]
+            embed.set_image(url=get_gif(add_text[2]))
         case _:
             embed.title = "Öhm"
             embed.description = "Ähm"

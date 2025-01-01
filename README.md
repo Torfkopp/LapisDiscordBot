@@ -1,3 +1,3 @@
 # DiscordBot
 
-Ich nenne ihn Lapis, da seine Aufgabe APIs sind
+Ich nenne sie Lapis, da ihre Aufgabe APIs ist.

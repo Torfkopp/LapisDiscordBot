@@ -5,6 +5,7 @@ __pycache__
 config.json
 test.py
 secret.py
+plan.*
 /strunt/
 /formula1/*.png
 /lapis_pics/

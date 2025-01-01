@@ -10,7 +10,7 @@ from interactions.api.events import Component
 
 import util
 
-""" Hangman based on https://github.com/Sv443/Node-Hangman#readme """
+""" Hangman based on https://github.com/Sv443/Node-Hangman """
 
 
 def setup(bot):
