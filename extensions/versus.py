@@ -64,8 +64,7 @@ class Versus(Extension):
     participants, one, two = {}, {}, {}
     game = ""
 
-    @slash_command(name="versus", description="Teile deinen jetzigen Channel in Teams auf und kämpfe um Elo",
-                   scopes=[1134856890669613210])
+    @slash_command(name="versus", description="Teile deinen jetzigen Channel in Teams auf und kämpfe um Elo")
     @slash_option(
         name="partition",
         description="Wie die Teams aufgeteilt werden sollen",
