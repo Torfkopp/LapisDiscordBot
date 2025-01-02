@@ -39,6 +39,7 @@ title_options = {
 @listen()
 async def on_versus_component(event: Component):
     ctx = event.ctx
+    if not str(ctx.author_id) == util.AUTHOR_ID: return
     if not ctx.custom_id.startswith("versus"): return
 
     for component in Versus.components.components: component.disabled = True
@@ -123,17 +124,17 @@ class Versus(Extension):
 
     @slash_command(name="versus_elo_graph", description="Zeige den Elo-Graphen an")
     @slash_option(
-        name="people",
-        description="Die zu anzeigenden Personen (Komma getrennt)",
-        required=False,
-        opt_type=OptionType.STRING,
-    )
-    @slash_option(
         name="game",
         description="Um welches Game es sich handelt",
         required=False,
         opt_type=OptionType.STRING,
         choices=[SlashCommandChoice(k, game_dict[k]) for k in game_dict]
+    )
+    @slash_option(
+        name="people",
+        description="Die zu anzeigenden Personen (Komma getrennt)",
+        required=False,
+        opt_type=OptionType.STRING,
     )
     @slash_option(
         name="timeframe",
@@ -145,6 +146,25 @@ class Versus(Extension):
         await ctx.defer()
         embed, file = get_elo_graph(people, game, timeframe)
         await ctx.send(embed=embed, file=file)
+
+    @slash_command(name="versus_win_rate", description="Zeige die Winrate der Spieler an")
+    @slash_option(
+        name="game",
+        description="Um welches Game es sich handelt",
+        required=False,
+        opt_type=OptionType.STRING,
+        choices=[SlashCommandChoice(k, game_dict[k]) for k in game_dict]
+    )
+    @slash_option(
+        name="people",
+        description="Die zu anzeigenden Personen (Komma getrennt)",
+        required=False,
+        opt_type=OptionType.STRING,
+    )
+    async def win_rate_function(self, ctx: SlashContext, people="", game=list(game_dict.values())[0]):
+        await ctx.defer()
+        embed = get_win_rates(people, game)
+        await ctx.send(embed=embed)
 
 
 def pre_match(partition):
@@ -163,6 +183,8 @@ def pre_match(partition):
             player_elos[str(p)] = {
                 "name": [Versus.participants[p]],
                 "elo": 1000,
+                "wins": 0,
+                "losses": 0,
                 "history": {
                     str(datetime.min.strftime("%Y-%m-%d %H:%M:%S.%f")): 1000,
                 }
@@ -214,54 +236,6 @@ def post_match(winner):
     fields[1].name = f"Red Side ({red_elo})"
 
 
-def get_elo_dict(winner):
-    elo_dict = {}
-
-    with open("strunt/elo.json", "r") as f: elo_json = json.load(f)
-    player_elos = elo_json[Versus.game]
-    elo_gains = calculate_elo(player_elos, winner)
-    for p in Versus.participants:
-        x = round(elo_gains[str(p)])
-        elo_dict[p] = (elo := player_elos[str(p)]["elo"] + x), x
-        player_elos[str(p)]["elo"] = elo
-        player_elos[str(p)]["history"][str(datetime.now())] = elo
-
-    with open("strunt/elo.json", "w") as f: json.dump(elo_json, f, indent=4)
-
-    return elo_dict
-
-
-def calculate_elo(player_elos, winner):
-    # Based on https://en.wikipedia.org/wiki/Elo_rating_system#Mathematical_details
-    elo_gains = {}
-    team_ratings = {'one': 0, 'two': 0}
-    team_elos = {'one': {}, 'two': {}}
-    # Separate players into teams and calculate total ratings
-    for p, data in player_elos.items():
-        team = 'one' if p in Versus.one else 'two'
-        team_elos[team][p] = data["elo"]
-        team_ratings[team] += data["elo"]
-
-    # Total team elo divided by the opponent's size in case of number advantage
-    team_ratings['one'] /= len(Versus.two)
-    team_ratings['two'] /= len(Versus.one)
-
-    # Calculate expected scores for each team
-    e_one = 1 / (1 + 10 ** ((team_ratings['two'] - team_ratings['one']) / 480))
-    e_two = 1 / (1 + 10 ** ((team_ratings['one'] - team_ratings['two']) / 480))
-    team_expectations = {'one': e_one, 'two': e_two}
-
-    # Calculate elo gains for each player
-    for team, players in team_elos.items():
-        expectation = team_expectations[team]
-        for p, elo in players.items():
-            s = 1 if p in winner else 0
-            k = 32 if elo < 2100 else 24 if elo < 2400 else 16
-            elo_gains[p] = (k * (s - expectation))
-
-    return elo_gains
-
-
 def get_elo_graph(people, game, timeframe):
     with open("strunt/elo.json", "r") as f: player_elos = json.load(f)
     player_elos = player_elos[game]
@@ -309,6 +283,93 @@ def get_elo_graph(people, game, timeframe):
     file = discord.File('strunt/elo.png', file_name="elo.png")
 
     return None, file
+
+
+def get_win_rates(people, game):
+    with open("strunt/elo.json", "r") as f: player_elos = json.load(f)
+    player_elos = player_elos[game]
+    people = [p.strip() for p in people.split(",")] if people != "" else ""
+
+    ids = []
+    if people != "":
+        ids.extend(x for p in people for x in player_elos if p in player_elos[x]["name"])
+    if len(ids) == 0: ids = list(player_elos.keys())
+
+    ids.sort(reverse=True, key=lambda x: player_elos[x]["elo"])
+
+    def linemaker(player, elo, w, l, wr):
+        return "| ".join(
+            ["", player.ljust(10), str(elo).ljust(5), str(w).ljust(4), str(l).ljust(4), str(wr).ljust(8)]) + "|\n"
+
+    string = linemaker("Spieler", "Elo", " W", " L", "WR in % ")
+    string += "|".join(["", "-" * 11, "-" * 6, "-" * 5, "-" * 5, "-" * 9]) + "|\n"
+
+    for p in ids:
+        string += linemaker(
+            player_elos[p]["name"][0],
+            player_elos[p]["elo"],
+            w := player_elos[p]["wins"],
+            l := player_elos[p]["losses"],
+            round(w / (w + l) * 100, 3)
+        )
+
+    embed = interactions.Embed(title="Siegesratentabelle für " + [k for k, v in game_dict.items() if v == game][0],
+                               color=COLOUR)
+    embed.description = "```markdown\n" + string + "\n```"
+
+    return embed
+
+
+def get_elo_dict(winner):
+    elo_dict = {}
+
+    with open("strunt/elo.json", "r") as f: elo_json = json.load(f)
+    player_elos = elo_json[Versus.game]
+    elo_gains = calculate_elo(player_elos, winner)
+    for p in Versus.participants:
+        player = player_elos[str(p)]
+        x = round(elo_gains[str(p)])
+        elo_dict[p] = (elo := player["elo"] + x), x
+        player["elo"] = elo
+        player["history"][str(datetime.now())] = elo
+        win = 1 if player in winner else -1
+        player["wins"] += win
+        player["losses"] += -win
+
+    with open("strunt/elo.json", "w") as f: json.dump(elo_json, f, indent=4)
+
+    return elo_dict
+
+
+def calculate_elo(player_elos, winner):
+    # Based on https://en.wikipedia.org/wiki/Elo_rating_system#Mathematical_details
+    elo_gains = {}
+    team_ratings = {'one': 0, 'two': 0}
+    team_elos = {'one': {}, 'two': {}}
+    # Separate players into teams and calculate total ratings
+    for p, data in player_elos.items():
+        team = 'one' if p in Versus.one else 'two'
+        team_elos[team][p] = data["elo"]
+        team_ratings[team] += data["elo"]
+
+    # Total team elo divided by the opponent's size in case of number advantage
+    team_ratings['one'] /= len(Versus.two)
+    team_ratings['two'] /= len(Versus.one)
+
+    # Calculate expected scores for each team
+    e_one = 1 / (1 + 10 ** ((team_ratings['two'] - team_ratings['one']) / 480))
+    e_two = 1 / (1 + 10 ** ((team_ratings['one'] - team_ratings['two']) / 480))
+    team_expectations = {'one': e_one, 'two': e_two}
+
+    # Calculate elo gains for each player
+    for team, players in team_elos.items():
+        expectation = team_expectations[team]
+        for p, elo in players.items():
+            s = 1 if p in winner else 0
+            k = 32 if elo < 2100 else 24 if elo < 2400 else 16
+            elo_gains[p] = (k * (s - expectation))
+
+    return elo_gains
 
 
 def get_participants(channels, invoker):
