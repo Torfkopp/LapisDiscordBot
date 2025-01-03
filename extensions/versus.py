@@ -332,9 +332,9 @@ def get_elo_dict(winner):
         elo_dict[p] = (elo := player["elo"] + x), x
         player["elo"] = elo
         player["history"][str(datetime.now())] = elo
-        win = 1 if player in winner else -1
+        win = 1 if p in winner else 0
         player["wins"] += win
-        player["losses"] += -win
+        player["losses"] += abs(win-1)
 
     with open("strunt/elo.json", "w") as f: json.dump(elo_json, f, indent=4)
 
@@ -378,8 +378,7 @@ def get_participants(channels, invoker):
     Returns: Dictionary of (id: display_name)
     """
     id_name_dict = {}
-    voice_channels = [channel for channel in channels if
-                      channel.category is not None and channel.category.name == "Sprachkanäle"]
+    voice_channels = [channel for channel in channels if channel.type == 2]
     for channel in voice_channels:
         if invoker in (members := channel.voice_members):
             for member in members:
