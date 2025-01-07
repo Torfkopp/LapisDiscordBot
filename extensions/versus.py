@@ -186,7 +186,7 @@ def pre_match(partition):
                 "wins": 0,
                 "losses": 0,
                 "history": {
-                    str(datetime.min.strftime("%Y-%m-%d %H:%M:%S.%f")): 1000,
+                    datetime.fromisocalendar(2001, 1, 1).strftime("%Y-%m-%d %H:%M:%S.%f"): 1000,
                 }
             }
         if Versus.participants[p] not in player_elos[str(p)]["name"]: player_elos[str(p)]["name"].append(
@@ -259,7 +259,7 @@ def get_elo_graph(people, game, timeframe):
         history = player_elos[p]["history"]
         # Put the key-value-pair into the dictionary when date is between the two boundaries
         history = {
-            k: v for k, v in history.items()
+            k[:-10]: v for k, v in history.items()
             if (no_low or datetime.strptime(start_date, "%d.%m.%y") < datetime.strptime(k, "%Y-%m-%d %H:%M:%S.%f"))
                and (no_high or datetime.strptime(k, "%Y-%m-%d %H:%M:%S.%f") < datetime.strptime(end_date, "%d.%m.%y"))
         }
@@ -271,6 +271,7 @@ def get_elo_graph(people, game, timeframe):
 
     labels = [item.get_text() for item in ax.get_xticklabels()]
     labels = [lab[:10] for lab in labels]
+    labels[0] = "1000 Elo"
     with warnings.catch_warnings(action="ignore"):
         ax.set_xticklabels(labels)
 
