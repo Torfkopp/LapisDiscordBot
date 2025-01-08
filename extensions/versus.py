@@ -77,17 +77,23 @@ class Versus(Extension):
         ]
     )
     @slash_option(
+        name="excludee",
+        description="Personen, die nicht in die Teambildung aufgenommen werden sollen",
+        required=False,
+        opt_type=OptionType.USER,
+    )
+    @slash_option(
         name="game",
         description="Um welches Game es sich handelt",
         required=False,
         opt_type=OptionType.STRING,
         choices=[SlashCommandChoice(k, game_dict[k]) for k in game_dict],
-
     )
-    async def versus_function(self, ctx: SlashContext, partition="Random", game=list(game_dict.values())[0]):
+    async def versus_function(self, ctx: SlashContext, partition="Random", excludee="",
+                              game=list(game_dict.values())[0]):
         await ctx.defer()
         Versus.game = game
-        Versus.participants = get_participants(ctx.guild.channels, ctx.user)
+        Versus.participants = get_participants(ctx.guild.channels, ctx.user, excludee)
         if len(Versus.participants) < 2:
             return await ctx.send(
                 embed=util.get_error_embed(
@@ -335,7 +341,7 @@ def get_elo_dict(winner):
         player["history"][str(datetime.now())] = elo
         win = 1 if p in winner else 0
         player["wins"] += win
-        player["losses"] += abs(win-1)
+        player["losses"] += abs(win - 1)
 
     with open("strunt/elo.json", "w") as f: json.dump(elo_json, f, indent=4)
 
@@ -373,7 +379,7 @@ def calculate_elo(player_elos, winner):
     return elo_gains
 
 
-def get_participants(channels, invoker):
+def get_participants(channels, invoker, excludee):
     """
     Gets: The channel list, the command's invoker
     Returns: Dictionary of (id: display_name)
@@ -383,6 +389,7 @@ def get_participants(channels, invoker):
     for channel in voice_channels:
         if invoker in (members := channel.voice_members):
             for member in members:
+                if member == excludee: continue
                 id_name_dict[str(member.id)] = member.display_name
 
     return id_name_dict
