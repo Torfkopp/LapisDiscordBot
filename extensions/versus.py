@@ -177,6 +177,7 @@ def pre_match(partition):
     file = interactions.models.discord.File("lapis_pics/boxing.png", "boxing.png")
     embed = interactions.Embed(title=random.choice(title_options[Versus.game]), color=COLOUR)
     embed.set_thumbnail(url="attachment://boxing.png")
+    embed.set_footer("Sollte ein Team Yuumi bekommen, wird das Game abgebrochen. Fuck Yuumi!")
     change = False
     elo_dict = {}
     with open("strunt/elo.json", "r") as f: elo_json = json.load(f)
@@ -355,6 +356,7 @@ def calculate_elo(player_elos, winner):
     team_elos = {'one': {}, 'two': {}}
     # Separate players into teams and calculate total ratings
     for p, data in player_elos.items():
+        if p not in list(Versus.one.keys()) + list(Versus.two.keys()): continue
         team = 'one' if p in Versus.one else 'two'
         team_elos[team][p] = data["elo"]
         team_ratings[team] += data["elo"]
@@ -373,7 +375,7 @@ def calculate_elo(player_elos, winner):
         expectation = team_expectations[team]
         for p, elo in players.items():
             s = 1 if p in winner else 0
-            k = 32 if elo < 2100 else 24 if elo < 2400 else 16
+            k = 60 if elo < 1900 else 45 if elo < 2400 else 30
             elo_gains[p] = (k * (s - expectation))
 
     return elo_gains
