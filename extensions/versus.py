@@ -62,7 +62,8 @@ async def on_versus_component(event: Component):
 class Versus(Extension):
     components = ActionRow()
     match_embed = None
-    participants, one, two = {}, {}, {}
+    participants = {}
+    one, two = [], []
     game = ""
 
     @slash_command(name="versus", description="Teile deinen jetzigen Channel in Teams auf und kämpfe um Elo")
@@ -356,7 +357,7 @@ def calculate_elo(player_elos, winner):
     team_elos = {'one': {}, 'two': {}}
     # Separate players into teams and calculate total ratings
     for p, data in player_elos.items():
-        if p not in list(Versus.one.keys()) + list(Versus.two.keys()): continue
+        if p not in Versus.one + Versus.two: continue
         team = 'one' if p in Versus.one else 'two'
         team_elos[team][p] = data["elo"]
         team_ratings[team] += data["elo"]
