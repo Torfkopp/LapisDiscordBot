@@ -25,15 +25,6 @@ class Prefixed(Extension):
     async def moin(self, ctx: PrefixedContext): await ctx.reply(embed=hello())
 
     @prefixed_command()
-    async def Hello(self, ctx: PrefixedContext): await ctx.reply(embed=hello())
-
-    @prefixed_command()
-    async def Hallo(self, ctx: PrefixedContext): await ctx.reply(embed=hello())
-
-    @prefixed_command()
-    async def Moin(self, ctx: PrefixedContext): await ctx.reply(embed=hello())
-
-    @prefixed_command()
     async def danke(self, ctx: PrefixedContext): await ctx.reply(embed=thanks())
 
     @prefixed_command()
@@ -59,7 +50,7 @@ class Prefixed(Extension):
         """ Function to update the bot remotely;
         shuts down the bot and calls a script that pulls the git changes and restarts the bot """
         if ctx.author_id not in self.bot.owner_ids: return
-        print("HELLO")
+
         embed = interactions.Embed(title="UPGRADE!", color=COLOUR)
         embed.set_image(url=util.get_gif("update"))
         await ctx.send(embed=embed)
@@ -73,7 +64,7 @@ class Prefixed(Extension):
 
 
 def hello():
-    embed = interactions.Embed(title="Hallo zurück!", color=COLOUR)
+    embed = interactions.Embed(title="Hallo!", color=COLOUR)
     embed.set_image(url=util.get_gif("hello"))
     return embed
 

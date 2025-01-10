@@ -2,6 +2,7 @@ __pycache__
 *.py[cod]
 *.pyc
 
+*config.json
 config.json
 test.py
 secret.py
