@@ -1,23 +1,28 @@
 import datetime
 import locale
 import random
+from matplotlib import font_manager
 
 from interactions import Client, Intents, listen, Task, IntervalTrigger, DateTrigger
 from interactions.api.events import Error
 from interactions.client.errors import HTTPException
 from interactions.ext import prefixed_commands
 from interactions.models import discord
-from matplotlib import font_manager
 
-import secret
-import util
 from core import log
 from core.extensions_loader import load_extensions
-from extensions import lolesport, lol_patchnotes, reddit
+import secret
+import talking
+import util
+
+from extensions import lolesport, lol_patchnotes, reddit, karma
 from extensions.football import football
 from extensions.formula1 import formula1
 
 bot = Client(intents=Intents.DEFAULT, send_command_tracebacks=False)
+TEST_MODE_ON = False
+intents = Intents.DEFAULT | Intents.MESSAGES | Intents.MESSAGE_CONTENT
+bot = Client(intents=intents, send_command_tracebacks=False)
 prefixed_commands.setup(bot)
 
 LIVE_SCORE_MESSAGE = ""
@@ -28,8 +33,6 @@ live_league_task = None
 
 LIVE_F1_MESSAGE = ""
 live_f1_task = None
-
-TEST_MODE_ON = False
 
 try: locale.setlocale(locale.LC_ALL, 'de_DE')  # Changes local to Deutsch for time display
 except locale.Error:
@@ -116,6 +119,37 @@ class ActivityClass:
         activity = discord.activity.Activity.create(name=activity_name, type=activity_type)
         await bot.change_presence(status=self.status, activity=activity)
         return
+
+
+@listen(Error, disable_default_listeners=True)
+async def on_error(event: Error):
+    log.error(event.error)
+    await event.ctx.send(embed=util.get_error_embed("error"))
+
+
+@listen()
+async def on_ready():
+    """ Is called when the bot is ready """
+    log.write("Ready")
+    log.write(f"This bot is owned by {bot.owner}")
+    await secret.main(bot)
+    # Loads the Formula1 font
+    for font in font_manager.findSystemFonts(["formula1/font"]): font_manager.fontManager.addfont(font)
+
+
+@listen()
+async def on_message_create(event):
+    await karma.on_message(event.message)
+
+
+@listen()
+async def on_message_reaction_add(event):
+    await karma.on_reaction(event)
+
+
+@listen()
+async def on_message_reaction_remove(event):
+    await karma.on_reaction_remove(event)
 
 
 @Task.create(IntervalTrigger(minutes=1))
@@ -227,22 +261,6 @@ async def update_patchnotes():
     """ When called, updates the lol_patchnotes and, if need be, sends in the patchnotes """
     embed = lol_patchnotes.update()
     if embed: await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=embed)
-
-
-@listen(Error, disable_default_listeners=True)
-async def on_error(event: Error):
-    log.error(event.error)
-    await event.ctx.send(embed=util.get_error_embed("error"))
-
-
-@listen()
-async def on_ready():
-    """ Is called when the bot is ready """
-    log.write("Ready")
-    log.write(f"This bot is owned by {bot.owner}")
-    await secret.main(bot)
-    # Loads the Formula1 font
-    for font in font_manager.findSystemFonts(["formula1/font"]): font_manager.fontManager.addfont(font)
 
 
 async def startup_football_scoring(now):

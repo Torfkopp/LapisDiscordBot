@@ -11,6 +11,7 @@ import uwuifier
 # CHANNELS
 with open("config.json") as f: config = json.load(f)
 TOKEN = config['token']
+SERVER_ID = config['server_id']
 SPORTS_CHANNEL_ID = config['sport_channel_id']
 LABAR_CHANNEL_ID = config['labar_channel_id']
 STAMMRUNDEN_CHANNEL_ID = config['stammrunden_channel_id']
@@ -31,6 +32,7 @@ class Colour(Enum):
     HELP = discord.BrandColors.BLURPLE
     INSULTS = discord.MaterialColors.BROWN
     JOKES = discord.MaterialColors.YELLOW
+    KARMA = discord.FlatUIColors.WETASPHALT
     MODMAIL = discord.MaterialColors.GREY
     POLL = discord.MaterialColors.AMBER
     PREFIXED = discord.BrandColors.BLURPLE
