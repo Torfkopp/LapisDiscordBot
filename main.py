@@ -12,7 +12,6 @@ from interactions.models import discord
 from core import log
 from core.extensions_loader import load_extensions
 import secret
-import talking
 import util
 
 from extensions import lolesport, lol_patchnotes, reddit, karma
