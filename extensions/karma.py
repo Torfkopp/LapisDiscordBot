@@ -21,7 +21,7 @@ def setup(bot):
 
 class Karma(Extension):
 
-    @slash_command(name="karma", description="Karma Stuff", scopes=[1134856890669613210])
+    @slash_command(name="karma", description="Karma Stuff")
     async def karma_function(self, ctx: SlashContext): await ctx.send("Karma")
 
     @karma_function.subcommand(sub_cmd_name="author_ranking", sub_cmd_description="Ein Ranking aller Komödianten hier")
@@ -48,35 +48,36 @@ async def on_reaction(reac):
     # Set the author of the message reacted to or the one making lapis embed something
     if (author := str(reac.message.author)) == "Lapis#7072":
         try: author = "@" + reac.message.interaction_metadata.user.username
-        except: ...  # Author is reac.message.author
+        except: pass  # Author is reac.message.author
 
     with open("strunt/karma.json", "r") as f: karma = json.load(f)
-
-    # Add 1 Karma for a reaction to the one reacting
-    if (reacter := str(reac.author)) != "Lapis#7072" and reacter != author:
-        if reacter not in karma: karma[reacter] = 0
-        karma[reacter] += 1
 
     if author not in karma: karma[author] = 0
 
     msg_id = str(reac.message.id)
-    upvotes, downvotes = set(), set()
+    upvotes, mehvotes, downvotes = set(), set(), set()
     con = sqlite3.connect("strunt/karma.db")
     cur = con.cursor()
 
     post = cur.execute("SELECT * FROM posts WHERE id = ?", [msg_id]).fetchone()
-    if post: upvotes, downvotes = set(post[2].split(", ")), set(post[4].split(", "))
+    if post: upvotes, mehvotes, downvotes = set(post[2].split(", ")), set(post[4].split(", ")), set(post[6].split(", "))
     # Add reacter to the list of up/downvoters
-    if author != reacter and reacter != "Lapis#7072":
+    if author != (reacter := str(reac.author)) and reacter != "Lapis#7072":
+        if reacter not in upvotes | mehvotes | downvotes:  # Add 1 Karma for a reaction to the one reacting
+            if reacter not in karma: karma[reacter] = 0
+            karma[reacter] += 1
         if reac.emoji.id == UPVOTE_ID: upvotes.add(reacter)
+        elif reac.emoji.id == MEH_ID: mehvotes.add(reacter)
         elif reac.emoji.id == DOWNVOTE_ID: downvotes.add(reacter)
 
-    up, down = ", ".join(filter(None, upvotes)), ", ".join(filter(None, downvotes))
-    if post: cur.execute("UPDATE posts SET upvoters = ?, upvotes = ?, downvoters = ?, downvotes = ? WHERE id = ?",
-                         [up, len(upvotes), down, len(downvotes), msg_id])
+    up, meh, down = ", ".join(filter(None, upvotes)), ", ".join(filter(None, mehvotes)), ", ".join(
+        filter(None, downvotes))
+    if post: cur.execute(
+        "UPDATE posts SET upvoters = ?, upvotes = ?, mehvoters = ?, mehvotes = ?, downvoters = ?, downvotes = ? WHERE id = ?",
+        [up, len(upvotes), meh, len(mehvotes), down, len(downvotes), msg_id])
     else:
-        cur.execute("INSERT INTO posts VALUES(?, ?, ?, ?, ?, ?)",
-                    [author, msg_id, up, len(upvotes), down, len(downvotes)])
+        cur.execute("INSERT INTO posts VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
+                    [author, msg_id, up, len(upvotes), meh, len(mehvotes), down, len(downvotes)])
         karma[author] += 3  # Bonus Karma Points for every post
 
     con.commit()
@@ -99,9 +100,7 @@ async def on_reaction_remove(reac):
     with open("strunt/karma.json", "r") as f: karma = json.load(f)
     if (author := str(reac.message.author)) == "Lapis#7072":
         try: author = "@" + reac.message.interaction_metadata.user.username
-        except: ...
-
-    if (reacter := str(reac.author)) != author: karma[reacter] -= 1
+        except: pass
 
     msg_id = str(reac.message.id)
 
@@ -109,13 +108,18 @@ async def on_reaction_remove(reac):
     cur = con.cursor()
 
     post = cur.execute("SELECT * FROM posts WHERE id = ?", [msg_id]).fetchone()
-    upvotes, downvotes = set(post[2].split(", ")), set(post[4].split(", "))
+    upvotes, mehvotes, downvotes = set(post[2].split(", ")), set(post[4].split(", ")), set(post[6].split(", "))
 
+    if (reacter := str(reac.author)) != author: karma[reacter] -= 1
     if reac.emoji.id == UPVOTE_ID: upvotes.discard(reacter)
+    elif reac.emoji.id == MEH_ID: mehvotes.discard(reacter)
     elif reac.emoji.id == DOWNVOTE_ID: downvotes.discard(reacter)
 
-    up, down = ", ".join(filter(None, upvotes)), ", ".join(filter(None, downvotes))
-    cur.execute("UPDATE posts SET upvotes = ?, downvotes = ? WHERE id = ?", [up, down, msg_id])
+    up, meh, down = ", ".join(filter(None, upvotes)), ", ".join(filter(None, mehvotes)), ", ".join(
+        filter(None, downvotes))
+    cur.execute(
+        "UPDATE posts SET upvoters = ?, upvotes = ?, mehvoters = ?, mehvotes = ?, downvoters = ?, downvotes = ? WHERE id = ?",
+        [up, len(upvotes), meh, len(mehvotes), down, len(downvotes), msg_id])
 
     con.commit()
     con.close()
@@ -146,14 +150,16 @@ def get_author_ranking():
 
     con.close()
 
-    def rowmaker(u, k, p, up, d):
-        return "| ".join(["", u.ljust(10), str(k).ljust(5), str(p).ljust(5), str(up).ljust(5), str(d).ljust(5)]) + "|\n"
+    def rowmaker(u, k, p, up, m, d):
+        return "| ".join(["", u.ljust(10), str(k).ljust(5), str(p).ljust(5), str(up).ljust(5), str(m).ljust(5),
+                          str(d).ljust(5)]) + "|\n"
 
-    table = rowmaker("Komödiant", "Karma", "Posts", "Ups", "Downs")
-    table += "|".join(["", "-" * 11, "-" * 6, "-" * 6, "-" * 6, "-" * 6]) + "|\n"
+    table = rowmaker("Komödiant", "Karma", "Posts", "Ups", "Mehs", "Downs")
+    table += "|".join(["", "-" * 11, "-" * 6, "-" * 6, "-" * 6, "-" * 6, "-" * 6]) + "|\n"
 
     for user, posts in post_dict.items():
-        table += rowmaker(user, karma[user], len(posts), sum(x[3] for x in posts), sum(x[5] for x in posts))
+        table += rowmaker(user, karma[user], len(posts), sum(x[3] for x in posts), sum(x[5] for x in posts),
+                          sum(x[7] for x in posts))
 
     embed = interactions.Embed(title="Karmatabelle", color=COLOUR)
     embed.description = "```markdown\n" + table + "```"
@@ -165,7 +171,7 @@ def get_post_ranking():
     con = sqlite3.connect("strunt/karma.db")
     cur = con.cursor()
     posts = cur.execute(
-        "SELECT author, id, upvotes, downvotes FROM posts ORDER BY upvotes DESC, downvotes ASC;").fetchall()
+        "SELECT author, id, upvotes, mehvotes, downvotes FROM posts ORDER BY upvotes DESC, downvotes ASC, mehvotes DESC;").fetchall()
     con.close()
 
     embed = interactions.Embed(title="Postranking", color=COLOUR)
@@ -174,7 +180,7 @@ def get_post_ranking():
 
     for i, p in enumerate(posts[:12]):
         link = "https://discord.com/channels/" + "/".join([server_id, channel_id, p[1]])
-        name = f"{i + 1}. {p[0]} | {p[2]} {PartialEmoji(id=UPVOTE_ID)}| {p[3]} {PartialEmoji(id=DOWNVOTE_ID)}"
+        name = f"{i + 1}. {p[0]} {PartialEmoji(id=UPVOTE_ID)} {p[2]} {PartialEmoji(id=MEH_ID)} {p[3]} {PartialEmoji(id=DOWNVOTE_ID)} {p[4]}"
         embed.add_field(name=name, value=link, inline=True)
 
     return embed
