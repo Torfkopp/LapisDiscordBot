@@ -2,7 +2,7 @@ import json
 import sqlite3
 
 import interactions
-from interactions import (PartialEmoji, Extension, slash_command, SlashContext)
+from interactions import (PartialEmoji, Extension, slash_command, slash_option, OptionType, SlashContext)
 
 import util
 
@@ -29,8 +29,14 @@ class Karma(Extension):
         await ctx.send(embed=get_author_ranking())
 
     @karma_function.subcommand(sub_cmd_name="post_ranking", sub_cmd_description="Die besten Posts")
-    async def post_ranking_function(self, ctx: SlashContext):
-        await ctx.send(embed=get_post_ranking())
+    @slash_option(
+        name="reverse",
+        description="Zeige die schlechtesten anstatt der besten an",
+        required=False,
+        opt_type=OptionType.BOOLEAN,
+    )
+    async def post_ranking_function(self, ctx: SlashContext, reverse: False):
+        await ctx.send(embed=get_post_ranking(reverse))
 
 
 async def on_message(msg):
@@ -119,7 +125,8 @@ async def on_reaction_remove(reac):
         filter(None, downvotes))
     cur.execute(
         "UPDATE posts SET upvoters = ?, upvotes = ?, mehvoters = ?, mehvotes = ?, downvoters = ?, downvotes = ? WHERE id = ?",
-        [up, len(upvotes), meh, len(mehvotes), down, len(downvotes), msg_id])
+        [up, len(upvotes), meh, len(mehvotes), down, len(downvotes), msg_id]
+    )
 
     con.commit()
     con.close()
@@ -167,11 +174,12 @@ def get_author_ranking():
     return embed
 
 
-def get_post_ranking():
+def get_post_ranking(reverse):
     con = sqlite3.connect("strunt/karma.db")
     cur = con.cursor()
-    posts = cur.execute(
-        "SELECT author, id, upvotes, mehvotes, downvotes FROM posts ORDER BY upvotes DESC, downvotes ASC, mehvotes DESC;").fetchall()
+    statement = "SELECT author, id, upvotes, mehvotes, downvotes FROM posts ORDER BY " + (
+        "upvotes DESC, downvotes ASC, mehvotes DESC;" if not reverse else "downvotes DESC, upvotes ASC, mehvotes ASC;")
+    posts = cur.execute(statement).fetchall()
     con.close()
 
     embed = interactions.Embed(title="Postranking", color=COLOUR)
@@ -180,7 +188,8 @@ def get_post_ranking():
 
     for i, p in enumerate(posts[:12]):
         link = "https://discord.com/channels/" + "/".join([server_id, channel_id, p[1]])
-        name = f"{i + 1}. {p[0]} {PartialEmoji(id=UPVOTE_ID)} {p[2]} {PartialEmoji(id=MEH_ID)} {p[3]} {PartialEmoji(id=DOWNVOTE_ID)} {p[4]}"
+        name = (f"{i + 1}. {p[0]} {PartialEmoji(id=UPVOTE_ID)} {p[2]} " +
+                f"{PartialEmoji(id=MEH_ID)} {p[3]} {PartialEmoji(id=DOWNVOTE_ID)} {p[4]}")
         embed.add_field(name=name, value=link, inline=True)
 
     return embed
