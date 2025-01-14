@@ -1,5 +1,6 @@
 import json
 import random
+import sqlite3
 import warnings
 from datetime import datetime
 
@@ -63,6 +64,7 @@ class Versus(Extension):
     components = ActionRow()
     match_embed = None
     participants = {}
+    champs = ()
     one, two = [], []
     game = ""
 
@@ -174,11 +176,24 @@ class Versus(Extension):
         await ctx.send(embed=embed)
 
 
+def get_participants(channels, invoker, excludee):
+    """
+    Gets: The channel list, the command's invoker
+    Returns: Dictionary of (id: display_name)
+    """
+    id_name_dict = {}
+    voice_channels = [channel for channel in channels if channel.type == 2]
+    for channel in voice_channels:
+        if invoker in (members := channel.voice_members):
+            for member in members:
+                if member == excludee: continue
+                id_name_dict[str(member.id)] = member.display_name
+
+    return id_name_dict
+
+
 def pre_match(partition):
-    file = interactions.models.discord.File("lapis_pics/boxing.png", "boxing.png")
-    embed = interactions.Embed(title=random.choice(title_options[Versus.game]), color=COLOUR)
-    embed.set_thumbnail(url="attachment://boxing.png")
-    embed.set_footer("Sollte ein Team Yuumi bekommen, wird das Game abgebrochen. Fuck Yuumi!")
+    """ The procedure before the embed is sent """
     change = False
     elo_dict = {}
     with open("strunt/elo.json", "r") as f: elo_json = json.load(f)
@@ -194,7 +209,7 @@ def pre_match(partition):
                 "wins": 0,
                 "losses": 0,
                 "history": {
-                    datetime.fromisocalendar(2001, 1, 1).strftime("%Y-%m-%d %H:%M:%S.%f"): 1000,
+                    datetime.fromisocalendar(2001, 1, 1).strftime("%Y-%m-%d %H:%M"): 1000,
                 }
             }
         if Versus.participants[p] not in player_elos[str(p)]["name"]: player_elos[str(p)]["name"].append(
@@ -204,26 +219,95 @@ def pre_match(partition):
     if change:
         with open("strunt/elo.json", "w") as f: json.dump(elo_json, f, indent=4)
 
+    one, two = random_teams() if partition == "Random" else elo_teams(player_elos)
+    if Versus.game == "lol": Versus.champs = random_champions(one)
+
+    embed, file = build_pre_game_embed(elo_dict, one, two)
+
+    return embed, one, two, file
+
+
+def random_teams():
+    """ Returns two random teams """
+    names = list(Versus.participants.keys())
+    random.shuffle(names)
+    one = names[len(names) // 2:]
+    two = names[:len(names) // 2]
+
+    return one, two
+
+
+def elo_teams(player_elos):
+    """ Returns two teams with minimal elo difference """
+    import itertools
+    elo_dict = {}
+    for p in Versus.participants: elo_dict[p] = player_elos[str(p)]["elo"]
+
+    dicc = {}
+
+    for combi in itertools.combinations(list(elo_dict.keys()), len(elo_dict) // 2):
+        one, two = [], []
+        one_elo, two_elo = 0, 0
+        for t in elo_dict:
+            if t in combi:
+                one.append(t)
+                one_elo += elo_dict[t]
+            else:
+                two.append(t)
+                two_elo += elo_dict[t]
+
+        dicc[(tuple(one), tuple(two))] = abs(one_elo - two_elo)
+
+    lowest = 10000
+    partition = []
+    for k, v in dicc.items():
+        if v < lowest:
+            lowest = v
+            partition = [k]
+        elif v == lowest: partition.append(k)
+
+    one, two = random.choice(partition)
+
+    return one, two
+
+
+def random_champions(one):
+    """ Returns a tuple of random champs for both teams """
+    with open("resources/champions.txt") as f: champions = f.read().splitlines()
+
+    champs = random.sample(champions, len(Versus.participants))
+    print(champs)
+    return champs[:len(one)], champs[len(one):]
+
+
+def build_pre_game_embed(elo_dict, one, two):
+    """ Build the embed """
+    file = interactions.models.discord.File("lapis_pics/boxing.png", "boxing.png")
+    embed = interactions.Embed(title=random.choice(title_options[Versus.game]), color=COLOUR)
+    embed.set_thumbnail(url="attachment://boxing.png")
+
     def field_text(team):
         team_elo, string = 0, ""
         for player in team:
             team_elo += elo_dict[player]
             string += f"`- {Versus.participants[player]:<15} {elo_dict[player]:>4} `\n"
+        if Versus.game == "lol": string += "Champs: " + ", ".join(Versus.champs[0 if team == one else 1]) + ""
         return string, team_elo
-
-    one, two = random_teams() if partition == "Random" else elo_teams(player_elos)
 
     value, name = field_text(one)
     embed.add_field(name=f"Blue Side ({name})", value=value, inline=False)
     value, name = field_text(two)
     embed.add_field(name=f"Red Side ({name})", value=value, inline=False)
-    return util.uwuify_by_chance(embed), one, two, file
+
+    return util.uwuify_by_chance(embed), file
 
 
 def post_match(winner):
+    """ After the game is finished and the button was pressed """
     fields = Versus.match_embed.fields
 
-    elo_dict = get_elo_dict(winner)
+    elo_dict, player_elos = get_elo_dict(winner)
+    if Versus.champs: update_database(player_elos, winner)
 
     def field_text(team):
         team_elo = 0
@@ -234,6 +318,7 @@ def post_match(winner):
                 f"`- {Versus.participants[player]:<15} {elo_dict[player][0]:>4} "
                 f"({'+' + str(e) if (e := elo_dict[player][1]) > 0 else e:>3})`\n"
             )
+        if Versus.game: string += "`Champs: " + ", ".join(Versus.champs[0 if team == Versus.one else 1]) + "`"
         return string, team_elo
 
     blue_side, blue_elo = field_text(Versus.one)
@@ -244,7 +329,103 @@ def post_match(winner):
     fields[1].name = f"Red Side ({red_elo})"
 
 
+def get_elo_dict(winner):
+    """ Updates the elo, wins etc. of every player """
+    elo_dict = {}
+
+    with open("strunt/elo.json", "r") as f: elo_json = json.load(f)
+    player_elos = elo_json[Versus.game]
+    elo_gains = calculate_elo(player_elos, winner)
+    for p in Versus.participants:
+        player = player_elos[str(p)]
+        x = round(elo_gains[str(p)])
+        elo_dict[p] = (elo := player["elo"] + x), x
+        player["elo"] = elo
+        player["history"][str(datetime.now().isoformat(sep=" ", timespec="minutes"))] = elo
+        win = 1 if p in winner else 0
+        player["wins"] += win
+        player["losses"] += abs(win - 1)
+
+    with open("strunt/elo.json", "w") as f: json.dump(elo_json, f, indent=4)
+
+    return elo_dict, player_elos
+
+
+def calculate_elo(player_elos, winner):
+    """ Calculates the elo gained of every player based on:
+        https://en.wikipedia.org/wiki/Elo_rating_system#Mathematical_details
+
+        returns: dict{ player: gained_elo }
+    """
+
+    elo_gains = {}
+    team_ratings = {'one': 0, 'two': 0}
+    team_elos = {'one': {}, 'two': {}}
+    # Separate players into teams and calculate total ratings
+    for p, data in player_elos.items():
+        if p not in Versus.one + Versus.two: continue
+        team = 'one' if p in Versus.one else 'two'
+        team_elos[team][p] = data["elo"]
+        team_ratings[team] += data["elo"]
+
+    # Total team elo divided by the opponent's size in case of number advantage
+    team_ratings['one'] /= len(Versus.two)
+    team_ratings['two'] /= len(Versus.one)
+
+    # Calculate expected scores for each team
+    e_one = 1 / (1 + 10 ** ((team_ratings['two'] - team_ratings['one']) / 480))
+    e_two = 1 / (1 + 10 ** ((team_ratings['one'] - team_ratings['two']) / 480))
+    team_expectations = {'one': e_one, 'two': e_two}
+
+    # Calculate elo gains for each player
+    for team, players in team_elos.items():
+        expectation = team_expectations[team]
+        for p, elo in players.items():
+            s = 1 if p in winner else 0
+            k = 60 if elo < 1900 else 45 if elo < 2400 else 30
+            elo_gains[p] = (k * (s - expectation))
+
+    return elo_gains
+
+
+def update_database(player_elos, winner):
+    """ Puts the game into the database and updates the champions' stats"""
+    con = sqlite3.connect("strunt/elo.db")
+    cur = con.cursor()
+
+    def get_names(li): return ", ".join([player_elos[x]["name"][0] for x in li])
+
+    cur.execute(
+        "INSERT INTO games VALUES(?, ?, ?, ?, ?, ?, ?)",
+        [
+            str(datetime.now().isoformat(sep=" ", timespec="minutes")),
+            f"{len(Versus.one)}v{len(Versus.two)}",
+            get_names(Versus.one),
+            ", ".join((Versus.champs[0])),
+            get_names(Versus.two),
+            ", ".join(Versus.champs[1]),
+            get_names(winner),
+        ]
+    )
+
+    for team, result in [(Versus.champs[0], winner == Versus.one), (Versus.champs[1], winner == Versus.two)]:
+        for champ in team:
+            cur.execute(
+                f"UPDATE champs SET picks=picks+1, {'wins=wins+1' if result else 'losses=losses+1'} WHERE champ = ?",
+                [champ]
+            )
+
+    con.commit()
+    con.close()
+
+
+#####################################################
+#  COMMANDS
+#####################################################
+
+
 def get_elo_graph(people, game, timeframe):
+    """ Method for the elo_graph function """
     with open("strunt/elo.json", "r") as f: player_elos = json.load(f)
     player_elos = player_elos[game]
     people = [p.strip() for p in people.split(",")] if people != "" else ""
@@ -295,6 +476,7 @@ def get_elo_graph(people, game, timeframe):
 
 
 def get_win_rates(people, game):
+    """ Method for the win_rate-table command"""
     with open("strunt/elo.json", "r") as f: player_elos = json.load(f)
     player_elos = player_elos[game]
     people = [p.strip() for p in people.split(",")] if people != "" else ""
@@ -327,114 +509,3 @@ def get_win_rates(people, game):
     embed.description = "```markdown\n" + string + "\n```"
 
     return embed
-
-
-def get_elo_dict(winner):
-    elo_dict = {}
-
-    with open("strunt/elo.json", "r") as f: elo_json = json.load(f)
-    player_elos = elo_json[Versus.game]
-    elo_gains = calculate_elo(player_elos, winner)
-    for p in Versus.participants:
-        player = player_elos[str(p)]
-        x = round(elo_gains[str(p)])
-        elo_dict[p] = (elo := player["elo"] + x), x
-        player["elo"] = elo
-        player["history"][str(datetime.now())] = elo
-        win = 1 if p in winner else 0
-        player["wins"] += win
-        player["losses"] += abs(win - 1)
-
-    with open("strunt/elo.json", "w") as f: json.dump(elo_json, f, indent=4)
-
-    return elo_dict
-
-
-def calculate_elo(player_elos, winner):
-    # Based on https://en.wikipedia.org/wiki/Elo_rating_system#Mathematical_details
-    elo_gains = {}
-    team_ratings = {'one': 0, 'two': 0}
-    team_elos = {'one': {}, 'two': {}}
-    # Separate players into teams and calculate total ratings
-    for p, data in player_elos.items():
-        if p not in Versus.one + Versus.two: continue
-        team = 'one' if p in Versus.one else 'two'
-        team_elos[team][p] = data["elo"]
-        team_ratings[team] += data["elo"]
-
-    # Total team elo divided by the opponent's size in case of number advantage
-    team_ratings['one'] /= len(Versus.two)
-    team_ratings['two'] /= len(Versus.one)
-
-    # Calculate expected scores for each team
-    e_one = 1 / (1 + 10 ** ((team_ratings['two'] - team_ratings['one']) / 480))
-    e_two = 1 / (1 + 10 ** ((team_ratings['one'] - team_ratings['two']) / 480))
-    team_expectations = {'one': e_one, 'two': e_two}
-
-    # Calculate elo gains for each player
-    for team, players in team_elos.items():
-        expectation = team_expectations[team]
-        for p, elo in players.items():
-            s = 1 if p in winner else 0
-            k = 60 if elo < 1900 else 45 if elo < 2400 else 30
-            elo_gains[p] = (k * (s - expectation))
-
-    return elo_gains
-
-
-def get_participants(channels, invoker, excludee):
-    """
-    Gets: The channel list, the command's invoker
-    Returns: Dictionary of (id: display_name)
-    """
-    id_name_dict = {}
-    voice_channels = [channel for channel in channels if channel.type == 2]
-    for channel in voice_channels:
-        if invoker in (members := channel.voice_members):
-            for member in members:
-                if member == excludee: continue
-                id_name_dict[str(member.id)] = member.display_name
-
-    return id_name_dict
-
-
-def random_teams():
-    names = list(Versus.participants.keys())
-    random.shuffle(names)
-    one = names[len(names) // 2:]
-    two = names[:len(names) // 2]
-
-    return one, two
-
-
-def elo_teams(player_elos):
-    import itertools
-    elo_dict = {}
-    for p in Versus.participants: elo_dict[p] = player_elos[str(p)]["elo"]
-
-    dicc = {}
-
-    for combi in itertools.combinations(list(elo_dict.keys()), len(elo_dict) // 2):
-        one, two = [], []
-        one_elo, two_elo = 0, 0
-        for t in elo_dict:
-            if t in combi:
-                one.append(t)
-                one_elo += elo_dict[t]
-            else:
-                two.append(t)
-                two_elo += elo_dict[t]
-
-        dicc[(tuple(one), tuple(two))] = abs(one_elo - two_elo)
-
-    lowest = 10000
-    partition = []
-    for k, v in dicc.items():
-        if v < lowest:
-            lowest = v
-            partition = [k]
-        elif v == lowest: partition.append(k)
-
-    one, two = random.choice(partition)
-
-    return one, two
