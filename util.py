@@ -17,6 +17,7 @@ LABAR_CHANNEL_ID = config['labar_channel_id']
 STAMMRUNDEN_CHANNEL_ID = config['stammrunden_channel_id']
 MODERATOREN_CHANNEL_ID = config['moderatoren_channel_id']
 COMEDY_CHANNEL_ID = config['comedy_channel_id']
+LOGBUCH_ID = config['logbuch']
 AUTHOR_ID = config['bot_author_id']
 
 
