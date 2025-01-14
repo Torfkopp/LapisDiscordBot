@@ -1,4 +1,5 @@
 import json
+import re
 import sqlite3
 
 import interactions
@@ -41,7 +42,10 @@ class Karma(Extension):
 
 async def on_message(msg):
     if str(msg.channel.id) != util.COMEDY_CHANNEL_ID: return
-    if not (msg.attachments or msg.embeds or msg.interaction_metadata): return  # Return if not picture or embed
+    regex = re.match(
+        "^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(-nocookie)?\.com|youtu\.be))(\/(?:[\w\-]+\?v=|embed\/|live\/|v\/)?)([\w\-]+)(\S+)?$",
+        msg.content)  # Allow YouTube Links
+    if not (msg.attachments or msg.embeds or msg.interaction_metadata or regex): return  # Return if not pic or embed
 
     await msg.add_reaction(PartialEmoji(id=UPVOTE_ID))
     await msg.add_reaction(PartialEmoji(id=MEH_ID))
@@ -157,15 +161,20 @@ def get_author_ranking():
 
     con.close()
 
+    users = list(post_dict.keys())
+    users.sort(reverse=True, key=lambda x: karma[x])
+
     def rowmaker(u, k, p, up, m, d):
-        return "| ".join(["", u.ljust(10), str(k).ljust(5), str(p).ljust(5), str(up).ljust(5), str(m).ljust(5),
+        return "| ".join(["", u.ljust(13), str(k).ljust(6), str(p).ljust(5), str(up).ljust(5), str(m).ljust(5),
                           str(d).ljust(5)]) + "|\n"
 
-    table = rowmaker("Komödiant", "Karma", "Posts", "Ups", "Mehs", "Downs")
-    table += "|".join(["", "-" * 11, "-" * 6, "-" * 6, "-" * 6, "-" * 6, "-" * 6]) + "|\n"
+    table = rowmaker("Komödiant", "Karma", "Posts", "Up", "Meh", "Down")
+    table += "|".join(["", "-" * 14, "-" * 7, "-" * 6, "-" * 6, "-" * 6, "-" * 6]) + "|\n"
 
-    for user, posts in post_dict.items():
-        table += rowmaker(user, karma[user], len(posts), sum(x[3] for x in posts), sum(x[5] for x in posts),
+    for user in users:
+        posts = post_dict[user]
+        table += rowmaker(user.replace("@", ""), karma[user], len(posts), sum(x[3] for x in posts),
+                          sum(x[5] for x in posts),
                           sum(x[7] for x in posts))
 
     embed = interactions.Embed(title="Karmatabelle", color=COLOUR)
@@ -186,10 +195,10 @@ def get_post_ranking(reverse):
 
     server_id, channel_id = util.SERVER_ID, util.COMEDY_CHANNEL_ID
 
-    for i, p in enumerate(posts[:12]):
+    for i, p in enumerate(posts[:10]):
         link = "https://discord.com/channels/" + "/".join([server_id, channel_id, p[1]])
         name = (f"{i + 1}. {p[0]} {PartialEmoji(id=UPVOTE_ID)} {p[2]} " +
                 f"{PartialEmoji(id=MEH_ID)} {p[3]} {PartialEmoji(id=DOWNVOTE_ID)} {p[4]}")
-        embed.add_field(name=name, value=link, inline=True)
+        embed.add_field(name=name, value=link, inline=False)
 
     return embed
