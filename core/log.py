@@ -1,19 +1,37 @@
 import datetime
-import json
 import traceback
 
 from interactions.models import discord
+
+import util
 
 """ Own logging class since bot runs remotely """
 
 
 async def start_procedure(bot):
     """ Sends the logfile into the channel and then cleans the file """
-    with open("config.json") as f: log_channel = json.load(f)['logbuch']
-    channel = bot.get_channel(log_channel)
+    channel = bot.get_channel(util.LOGBUCH_ID)
+    if datetime.datetime.now().weekday() == 0:
+        await delete_old_messages(channel)
+        await backup(channel)
     await channel.send(file=discord.File("strunt/log.txt"))  # Send the log into a channel
     open('strunt/log.txt', 'w').close()  # Clear the log data
     print("LOG CLEARED")
+
+
+async def delete_old_messages(channel):
+    i = 0  # Safety measure in case the wrong channel gets loaded
+    async for m in channel.history():
+        if i >= 10: break
+        i += 1
+        await m.delete()
+
+
+async def backup(channel):
+    await channel.send(file=discord.File("strunt/karma.db"))
+    await channel.send(file=discord.File("strunt/karma.json"))
+    await channel.send(file=discord.File("strunt/elo.db"))
+    await channel.send(file=discord.File("strunt/elo.json"))
 
 
 def write(log):
