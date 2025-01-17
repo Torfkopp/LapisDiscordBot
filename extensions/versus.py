@@ -448,9 +448,9 @@ def get_elo_graph(people, game, timeframe):
         history = player_elos[p]["history"]
         # Put the key-value-pair into the dictionary when date is between the two boundaries
         history = {
-            k[:-10]: v for k, v in history.items()
-            if (no_low or datetime.strptime(start_date, "%d.%m.%y") < datetime.strptime(k, "%Y-%m-%d %H:%M:%S.%f"))
-               and (no_high or datetime.strptime(k, "%Y-%m-%d %H:%M:%S.%f") < datetime.strptime(end_date, "%d.%m.%y"))
+            k: v for k, v in history.items()
+            if (no_low or datetime.strptime(start_date, "%d.%m.%y") < datetime.strptime(k, "%Y-%m-%d %H:%M"))
+               and (no_high or datetime.strptime(k, "%Y-%m-%d %H:%M") < datetime.strptime(end_date, "%d.%m.%y"))
         }
 
         ax.plot(list(history.keys()), list(history.values()), label=player_elos[p]["name"][0])
