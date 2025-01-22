@@ -151,6 +151,11 @@ async def on_message_create(event):
 
 
 @listen()
+async def on_message_delete(event):
+    await karma.on_message_delete(event.message)
+
+
+@listen()
 async def on_message_reaction_add(event):
     await karma.on_reaction(event)
 
