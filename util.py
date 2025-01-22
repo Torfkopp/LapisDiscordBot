@@ -19,6 +19,7 @@ MODERATOREN_CHANNEL_ID = config['moderatoren_channel_id']
 COMEDY_CHANNEL_ID = config['comedy_channel_id']
 LOGBUCH_ID = config['logbuch']
 AUTHOR_ID = config['bot_author_id']
+SECOND_VERSUS_ID = config['second_versus_id']
 
 
 # COLOURS

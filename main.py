@@ -12,17 +12,19 @@ from interactions.models import discord
 from core import log
 from core.extensions_loader import load_extensions
 import secret
+import talking
 import util
 
 from extensions import lolesport, lol_patchnotes, reddit, karma
 from extensions.football import football
 from extensions.formula1 import formula1
 
-bot = Client(intents=Intents.DEFAULT, send_command_tracebacks=False)
-TEST_MODE_ON = False
+TEST_MODE_ON = True
+TALKING = False
+
 intents = Intents.DEFAULT | Intents.MESSAGES | Intents.MESSAGE_CONTENT
 bot = Client(intents=intents, send_command_tracebacks=False)
-prefixed_commands.setup(bot)
+prefixed_commands.setup(bot, default_prefix="!" if TALKING else None)
 
 LIVE_SCORE_MESSAGE = ""
 live_scoring_task = None
@@ -68,7 +70,8 @@ class ActivityClass:
 
     async def test_mode(self):
         self.status = discord.Status.DND
-        await self._change_activity("nem Test Modus", discord.activity.ActivityType.COMPETING)
+        await self._change_activity("Plauderlaune" if TALKING else "nem Test Modus",
+                                    discord.activity.ActivityType.COMPETING)
 
     async def rotate_activity(self):
         """ Changes the activity depending on the situation """
@@ -134,6 +137,12 @@ async def on_ready():
     await secret.main(bot)
     # Loads the Formula1 font
     for font in font_manager.findSystemFonts(["formula1/font"]): font_manager.fontManager.addfont(font)
+
+
+if TALKING:
+    @listen()
+    async def on_message_create(event):
+        await talking.on_message(event.message, bot.user)
 
 
 @listen()
@@ -375,6 +384,6 @@ async def on_startup():
 
 
 # load all extensions in the ./extensions folder
-load_extensions(bot=bot)
+if not TALKING: load_extensions(bot=bot)
 
 bot.start(util.TOKEN)
