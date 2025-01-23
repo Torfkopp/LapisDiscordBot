@@ -5,6 +5,7 @@ import warnings
 from datetime import datetime
 
 import interactions
+import numpy as np
 from interactions import (
     Extension, slash_command, slash_option, SlashContext, OptionType, SlashCommandChoice, ActionRow, Button,
     ButtonStyle, listen
@@ -40,7 +41,7 @@ title_options = {
 @listen()
 async def on_versus_component(event: Component):
     ctx = event.ctx
-    if not str(ctx.author_id) == util.AUTHOR_ID: return
+    if not (str(ctx.author_id) == util.AUTHOR_ID or str(ctx.author_id) == util.SECOND_VERSUS_ID): return
     if not ctx.custom_id.startswith("versus"): return
 
     for component in Versus.components.components: component.disabled = True
@@ -141,7 +142,7 @@ class Versus(Extension):
     )
     @slash_option(
         name="people",
-        description="Die zu anzeigenden Personen (Komma getrennt)",
+        description="Die zu anzeigenden Personen (@Person)",
         required=False,
         opt_type=OptionType.STRING,
     )
@@ -153,7 +154,7 @@ class Versus(Extension):
     )
     async def elo_graph_function(self, ctx: SlashContext, people="", game=list(game_dict.values())[0], timeframe=","):
         await ctx.defer()
-        embed, file = get_elo_graph(people, game, timeframe)
+        embed, file = get_elo_graph(mention_to_people(people, game), game, timeframe)
         await ctx.send(embed=embed, file=file)
 
     @slash_command(name="versus_win_rate", description="Zeige die Winrate der Spieler an")
@@ -166,14 +167,25 @@ class Versus(Extension):
     )
     @slash_option(
         name="people",
-        description="Die zu anzeigenden Personen (Komma getrennt)",
+        description="Die zu anzeigenden Personen (@Person)",
         required=False,
         opt_type=OptionType.STRING,
     )
     async def win_rate_function(self, ctx: SlashContext, people="", game=list(game_dict.values())[0]):
         await ctx.defer()
-        embed = get_win_rates(people, game)
+        embed = get_win_rates(mention_to_people(people, game), game)
         await ctx.send(embed=embed)
+
+
+def mention_to_people(people, game):
+    if people == "": return people
+    with open("strunt/elo.json") as f: elo = json.load(f)[game]
+    numbers = people.split("@")
+    peops = ""
+    for n in numbers:
+        n = n.replace("<", "").replace(",", "").replace(">", "").strip()
+        if n in elo: peops += elo[n]["name"][0] + ", "
+    return peops
 
 
 def get_participants(channels, invoker, excludee):
@@ -276,7 +288,6 @@ def random_champions(one):
     with open("resources/champions.txt") as f: champions = f.read().splitlines()
 
     champs = random.sample(champions, len(Versus.participants))
-    print(champs)
     return champs[:len(one)], champs[len(one):]
 
 
@@ -444,29 +455,38 @@ def get_elo_graph(people, game, timeframe):
         ids.extend(x for p in people for x in player_elos if p in player_elos[x]["name"])
     if len(ids) == 0: ids = player_elos.keys()
 
+    game_set = set()
+    for x in player_elos:
+        if x not in ids: continue
+        history = player_elos[x]["history"]
+        for k in history.keys(): game_set.add(k)
+
+    game_set = sorted(list(game_set), key=lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M"))
+    if not (no_low and no_high):
+        game_set = [x for x in game_set if
+                    (no_low or datetime.strptime(start_date, "%d.%m.%y") < datetime.strptime(x, "%Y-%m-%d %H:%M"))
+                    and (no_high or datetime.strptime(x, "%Y-%m-%d %H:%M") < datetime.strptime(end_date, "%d.%m.%y"))]
+    dict_of_games = {d: i for i, d in enumerate(game_set)}
+    x_axis = set()
+
     for p in ids:
         history = player_elos[p]["history"]
-        # Put the key-value-pair into the dictionary when date is between the two boundaries
-        history = {
-            k: v for k, v in history.items()
-            if (no_low or datetime.strptime(start_date, "%d.%m.%y") < datetime.strptime(k, "%Y-%m-%d %H:%M"))
-               and (no_high or datetime.strptime(k, "%Y-%m-%d %H:%M") < datetime.strptime(end_date, "%d.%m.%y"))
-        }
-
+        history = {dict_of_games[k]: v for k, v in history.items() if k in dict_of_games}
+        x_axis.update(list(history.keys()))
         ax.plot(list(history.keys()), list(history.values()), label=player_elos[p]["name"][0])
 
     ax.set_xlabel("Date")
     ax.set_ylabel("Elo")
 
-    labels = [item.get_text() for item in ax.get_xticklabels()]
-    labels = [lab[:10] for lab in labels]
+    x_axis = sorted(list(x_axis))
+    labels = [{v: k for k, v in dict_of_games.items()}[lab][:10] for lab in x_axis]
     labels[0] = "1000 Elo"
-    with warnings.catch_warnings(action="ignore"):
-        ax.set_xticklabels(labels)
+    ax.set_xticks(np.arange(0, len(x_axis)))
+    with warnings.catch_warnings(action="ignore"): ax.set_xticklabels(labels)
 
     ax.legend()
     plt.suptitle("Elo Distribution")
-    plt.xticks(rotation=45)
+    plt.xticks(rotation=90)
     plt.tight_layout()
 
     plt.savefig('strunt/elo.png')
