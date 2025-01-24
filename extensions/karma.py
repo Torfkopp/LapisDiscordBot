@@ -100,7 +100,7 @@ async def on_reaction(reac):
     if post: cur.execute(
         "UPDATE posts SET upvoters = ?, mehvoters = ?, downvoters = ? WHERE id = ?", [up, meh, down, msg_id])
     else:
-        cur.execute("INSERT INTO posts VALUES(?, ?, ?, ?, ?)", [author, msg_id, up, meh, down])
+        cur.execute("INSERT OR IGNORE INTO posts VALUES(?, ?, ?, ?, ?)", [author, msg_id, up, meh, down])
 
     con.commit()
     con.close()
