@@ -29,7 +29,6 @@ async def delete_old_messages(channel):
 
 async def backup(channel):
     await channel.send(file=discord.File("strunt/karma.db"))
-    await channel.send(file=discord.File("strunt/karma.json"))
     await channel.send(file=discord.File("strunt/elo.db"))
     await channel.send(file=discord.File("strunt/elo.json"))
 
