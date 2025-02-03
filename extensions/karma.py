@@ -173,19 +173,21 @@ def get_author_ranking():
         author.downvotes += len(down)
         for u in set(up + meh + down): users[u].votings += 1
 
-    def rowmaker(a, k, p, v, upv, m, d):
-        return "| ".join(
-            ["", a.ljust(13), str(k).ljust(5), str(p).ljust(5), str(v).ljust(5), str(upv).ljust(4), str(m).ljust(4),
-             str(d).ljust(4)]) + "|\n"
+    def rowmaker(a, k, p, v, upv, m, d, ur, dr):
+        return "|".join(
+            ["", a.ljust(12), str(k).ljust(5), str(p).ljust(3), str(v).ljust(3), str(upv).ljust(3), str(m).ljust(3),
+             str(d).ljust(3), str(ur).ljust(5), str(dr).ljust(5)]) + "|\n"
 
-    table = rowmaker("Komödiant", "Karma", "Posts", "Votes", "Up", "Meh", "Down")
-    table += "|".join(["", "-" * 14, "-" * 6, "-" * 6, "-" * 6, "-" * 5, "-" * 5, "-" * 5]) + "|\n"
+    table = rowmaker("Komödiant", "Karma", "#P", "#V", " ↑", " →", " ↓", " ↑-%", " ↓-%")
+    table += "|".join(["", "-" * 12, "-" * 5, "-" * 3, "-" * 3, "-" * 3, "-" * 3, "-" * 3, "-" * 5, "-" * 5]) + "|\n"
 
     sorted_users = list(users.keys())
     sorted_users.sort(reverse=True, key=lambda x: users[x].calc_karma())
     for user in sorted_users:
         u = users[user]
-        table += rowmaker(user.replace("@", ""), u.karma, u.posts, u.votings, u.upvotes, u.mehvotes, u.downvotes)
+        r = round(u.upvotes / (total := (u.upvotes + u.mehvotes + u.downvotes)) * 100, 2)
+        r2 = round(u.downvotes / total * 100, 2)
+        table += rowmaker(user.replace("@", ""), u.karma, u.posts, u.votings, u.upvotes, u.mehvotes, u.downvotes, r, r2)
 
     embed = interactions.Embed(title="Karmatabelle", color=COLOUR)
     embed.description = "```markdown\n" + table + "```"
