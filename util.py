@@ -49,7 +49,7 @@ class Colour(Enum):
 
 
 # Other settings
-CURRENT_F1_SEASON = now.year if (now := datetime.datetime.now()).month > 1 else now.year - 1  # An F1 Season starts at the end of February
+CURRENT_F1_SEASON = now.year if (now := datetime.datetime.now()).month > 1 else now.year - 1  # F1 Season end of Feb
 CURRENT_FOOTBALL_SEASON = now.year if now.month > 7 else now.year - 1  # 2023/2024 -> 2023
 
 UWUCHANCE = 5  # D-De chance dat a commyand wesponse gets u-u-uwuified

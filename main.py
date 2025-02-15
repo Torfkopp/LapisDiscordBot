@@ -1,19 +1,21 @@
 import datetime
+import json
 import locale
+import os
 import random
-from matplotlib import font_manager
 
+import interactions
 from interactions import Client, Intents, listen, Task, IntervalTrigger, DateTrigger
 from interactions.api.events import Error
 from interactions.client.errors import HTTPException
 from interactions.ext import prefixed_commands
 from interactions.models import discord
+from matplotlib import font_manager
 
-from core import log
-from core.extensions_loader import load_extensions
 import secret
 import util
-
+from core import log
+from core.extensions_loader import load_extensions
 from extensions import lolesport, lol_patchnotes, reddit, karma
 from extensions.football import football
 from extensions.formula1 import formula1
@@ -24,14 +26,27 @@ intents = Intents.DEFAULT | Intents.MESSAGES | Intents.MESSAGE_CONTENT
 bot = Client(intents=intents, send_command_tracebacks=False)
 prefixed_commands.setup(bot)
 
-LIVE_SCORE_MESSAGE = ""
-live_scoring_task = None
 
-LIVE_LEAGUE_MESSAGE = ""
-live_league_task = None
+class LiveMessageDict(dict):
+    async def init(self):
+        if str(datetime.datetime.now().date()) != datetime.datetime.fromtimestamp(
+                os.path.getmtime("strunt/sport_messages.json")).strftime('%Y-%m-%d'):
+            self.update({"score": "", "league": "", "f1": ""})
+        else:
+            with open("strunt/sport_messages.json") as m: msgs = json.load(m)
+            self.update({k: await bot.get_channel(util.SPORTS_CHANNEL_ID).fetch_message(v) if v else "" for k, v in msgs.items()})
+        log.write("Live messages initialised")
 
-LIVE_F1_MESSAGE = ""
-live_f1_task = None
+    def __setitem__(self, key, value):
+        print(self)
+        super().__setitem__(key, value)
+        print(self)
+        ids = {k: v.id if isinstance(v, interactions.Message) else v for k, v in self.items()}
+        with open("strunt/sport_messages.json", "w") as lmd: json.dump(ids, lmd)
+
+
+LIVE_MESSAGES = LiveMessageDict()
+live_scoring_task, live_league_task, live_f1_task = None, None, None
 
 try: locale.setlocale(locale.LC_ALL, 'de_DE')  # Changes local to Deutsch for time display
 except locale.Error:
@@ -166,13 +181,12 @@ def limit_command_calls():
 
 async def live_scoring():
     """ Sends the live scoring to the channel and keeps it updated until all live games have ended """
-    global LIVE_SCORE_MESSAGE
-    if LIVE_SCORE_MESSAGE == "":
-        LIVE_SCORE_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=football.get_live()[0])
+    if LIVE_MESSAGES["score"] == "":
+        LIVE_MESSAGES["score"] = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=football.get_live()[0])
     else:
-        embeds, still_going = football.get_live(LIVE_SCORE_MESSAGE.embeds)
-        try: await LIVE_SCORE_MESSAGE.edit(embeds=embeds)
-        except HTTPException: LIVE_SCORE_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=embeds)
+        embeds, still_going = football.get_live(LIVE_MESSAGES["score"].embeds)
+        try: await LIVE_MESSAGES["score"].edit(embeds=embeds)
+        except HTTPException: LIVE_MESSAGES["score"] = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=embeds)
         if not still_going:
             # noinspection PyUnresolvedReferences
             live_scoring_task.stop()  # live_scoring_task is a task, thus PyUnresolvedReferences ignorable
@@ -195,13 +209,13 @@ async def start_live_scoring():
 
 async def live_league():
     """ Sends the live league results to the channel and keeps it updated until all live games have ended """
-    global LIVE_LEAGUE_MESSAGE
-    if LIVE_LEAGUE_MESSAGE == "":
-        LIVE_LEAGUE_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=lolesport.get_live()[0])
+    if LIVE_MESSAGES["league"] == "":
+        LIVE_MESSAGES["league"] = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=lolesport.get_live()[0])
     else:
         embeds, still_going = lolesport.get_live()
-        try: await LIVE_LEAGUE_MESSAGE.edit(embeds=embeds)
-        except HTTPException: LIVE_LEAGUE_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=embeds)
+        try: await LIVE_MESSAGES["league"].edit(embeds=embeds)
+        except HTTPException: LIVE_MESSAGES["league"] = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(
+            embeds=embeds)
         if not still_going:
             # noinspection PyUnresolvedReferences
             live_league_task.stop()
@@ -233,17 +247,16 @@ async def formula1_result():
 
 async def live_f1():
     """ Send the live F1 results to the channel and keeps it updated until the session has ended """
-    global LIVE_F1_MESSAGE
-    if LIVE_F1_MESSAGE == "":
-        LIVE_F1_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(formula1.auto_result(False)[0])
+    if LIVE_MESSAGES["f1"] == "":
+        LIVE_MESSAGES["f1"] = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(formula1.auto_result(False)[0])
     else:
         result, still_going = formula1.auto_result(False)
-        try: await LIVE_F1_MESSAGE.edit(content=result)
-        except HTTPException: LIVE_F1_MESSAGE = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result)
+        try: await LIVE_MESSAGES["f1"].edit(content=result)
+        except HTTPException: LIVE_MESSAGES["f1"] = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result)
         if not still_going:
             # noinspection PyUnresolvedReferences
             live_f1_task.stop()
-            LIVE_F1_MESSAGE = ""  # Reset the variable to send a new message for a new session
+            LIVE_MESSAGES["f1"] = ""  # Reset the variable to send a new message for a new session
             log.write("Live F1 stops")
 
 
@@ -362,6 +375,7 @@ async def on_startup():
     now = datetime.datetime.now()
     limit_command_calls.start()
     await log.start_procedure(bot)
+    await LIVE_MESSAGES.init()
     if now.weekday() == 1: util.reset_message_tracker()  # Reset on Tuesday
 
     await startup_football_scoring(now)
