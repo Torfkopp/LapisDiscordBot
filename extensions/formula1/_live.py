@@ -143,7 +143,7 @@ def create_schedule():
 
 def _get_result_url():
     """ Gets the url for the session to get the result from """
-    url = ("https://api.sport1.info/v2/de/motorsport/sport/sr:stage:7668/season/sr:stage:1107547"
+    url = ("https://api.sport1.info/v2/de/motorsport/sport/sr:stage:7668/season/sr:stage:1189123"
            "/minSportEventsWithSessions")
     try:
         log.write("API Call Formula1: " + url)
