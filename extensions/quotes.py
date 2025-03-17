@@ -34,7 +34,7 @@ class Quotes(Extension):
     async def sparkasse_function(self, ctx: SlashContext):
         await ctx.send(embed=get_sparkasse())
 
-    @slash_command(name="wisdom", description="Erhalte eine Weisheit", scopes=[1134856890669613210])
+    @slash_command(name="wisdom", description="Erhalte eine Weisheit")
     @slash_option(
         name="term",
         description="Term(e, abgetrennt durch Komma), der/die im Quote enthalten sein soll (Random, wenn nix gefunden)",
