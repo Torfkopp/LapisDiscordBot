@@ -98,9 +98,9 @@ def get_wisdom(search):
         quote = random.choice(containing) if containing else random.choice(wisdom)
     else: quote = random.choice(wisdom)
 
-    file = interactions.models.discord.File("lapis_pics/lapis2.jpg", "lapis2.jpg")
+    file = interactions.models.discord.File("lapis_pics/Lapis2.jpg", "Lapis2.jpg")
     embed = interactions.Embed(title="Lapis sagt:", color=COLOUR)
-    embed.set_thumbnail(url="attachment://lapis2.jpg")
+    embed.set_thumbnail(url="attachment://Lapis2.jpg")
     embed.description = quote
 
     return embed, file
