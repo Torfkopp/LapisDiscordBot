@@ -4,6 +4,8 @@ import locale
 import os
 import random
 
+import fastf1
+import fastf1.core
 import interactions
 from interactions import Client, Intents, listen, Task, IntervalTrigger, DateTrigger
 from interactions.api.events import Error
@@ -34,7 +36,8 @@ class LiveMessageDict(dict):
             self.update({"score": "", "league": "", "f1": ""})
         else:
             with open("strunt/sport_messages.json") as m: msgs = json.load(m)
-            self.update({k: await bot.get_channel(util.SPORTS_CHANNEL_ID).fetch_message(v) if v else "" for k, v in msgs.items()})
+            self.update({k: await bot.get_channel(util.SPORTS_CHANNEL_ID).fetch_message(v) if v else "" for k, v in
+                         msgs.items()})
         log.write("Live messages initialised")
 
     def __setitem__(self, key, value):
@@ -236,6 +239,15 @@ async def start_live_league():
         log.write("Live league begins")
 
 
+async def formula1_old_result(session, time):
+    """ Tries to send the session mentioned; tries every hour until data loaded """
+    try:
+        result = formula1.result(session)
+        await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result)
+    except fastf1.core.DataNotLoadedError:
+        Task(formula1_old_result, DateTrigger(time + datetime.timedelta(hours=1))).start(session, time)
+
+
 async def formula1_result():
     """ When called, sends in the result of the latest Formula1 session"""
     result, still_going = formula1.auto_result(True)
@@ -302,21 +314,21 @@ async def startup_formula1_results(formula1_schedule, now):
         else: await formula1_result()
     elif len(formula1_schedule) > 1:  # Non Race Days
         start_times = list(formula1_schedule)
-        if start_times[0] > now and start_times[1] > now:  # Both in future
+        if start_times[0] >= now:  # Both sessions in future
             for start_time in start_times:
                 if "Practice" in formula1_schedule.get(start_time):  # If practice session, send result 1 h after start
                     Task(formula1_result, DateTrigger(start_time + datetime.timedelta(hours=1))).start()
                 else: Task(start_live_f1, DateTrigger(start_time)).start()  # Else, start live tracker at given time
-        elif start_times[0] < now < start_times[1]:  # First session gone and second to be
-            await formula1_result()
+
+        elif start_times[1] > now or (start_times[1] + datetime.timedelta(hours=1)) > now:  # First gone, second to be
+            await formula1_old_result(formula1_schedule.get(start_times[0]), start_times[0])  # First session result
             start_time = start_times[1]
-            if "Practice" in formula1_schedule.get(start_time):
+            if "Practice" in formula1_schedule.get(start_time):  # Schedule second session
                 Task(formula1_result, DateTrigger(start_time + datetime.timedelta(hours=1))).start()
             else: Task(start_live_f1, DateTrigger(start_time)).start()
+
         else:  # Both Gone
-            start_time = start_times[0]
-            result_first_session = formula1.result(formula1_schedule.get(start_time))
-            await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result_first_session)  # First sessions result
+            await formula1_old_result(formula1_schedule.get(start_times[0]), start_times[0])  # First session
             await formula1_result()  # Second sessions result
 
 

@@ -21,8 +21,7 @@ def result(year, gp, session):
     log.write("FastF1: " + str(sess))
     sess.load(weather=False)
     results = sess.results
-    ranking = "```"
-    ranking += f"Results {year} {sess.event['EventName']} {sess.name}\n".center(30)
+    ranking = f"Results {year} {sess.event['EventName']} {sess.name}\n".center(30)
     ranking += "\n"
     ranking += "#".ljust(6) + "Name".center(20)
     if sess.name == "Qualifying":
@@ -74,7 +73,7 @@ def result(year, gp, session):
             ranking += i.Compound.rjust(8)
             ranking += "\n"
 
-    ranking += "```"
+    ranking = "```python\n" + ranking + "```"
     return util.uwuify_by_chance(ranking)
 
 
@@ -100,7 +99,7 @@ def next_race():
         next_event['Session5Date'].astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None)
     ]
 
-    sessions = "```"
+    sessions = "```\n"
     for i in range(0, len(session_list)):
         session = str(session_list[i]).split()  # Split to get the date and time separately
         sessions += ((next_event[f"Session{i + 1}"] + ":").ljust(16)

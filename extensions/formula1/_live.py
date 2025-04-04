@@ -167,7 +167,7 @@ def _make_result(response):
     :param response: The response of the api
     :return: The result
     """
-    result = "```"
+    result = "```python"
     live = "Live" if response['isLive'] else "Ergebnis"
     result += f"{live} - {response['competition']['name']} - {response['roundTitle']}" + "\n"
     result += "\n"
@@ -177,7 +177,7 @@ def _make_result(response):
         for position in response['results']:
             if 'position' not in position: continue
             result += str(position['position']).ljust(6)
-            result += f"{position['person']['firstName']} {position['person']['lastName']}".center(20)
+            result += f"{position['person']['firstName']} {position['person']['lastName']}".center(21)
 
             if 'status' in position and position['status'] != "FINISHED": result += position['status'].center(14)
             else:
@@ -194,7 +194,7 @@ def _make_result(response):
         for position in response['results']:
             if 'position' not in position: continue
             result += str(position['position']).ljust(6)
-            result += f"{position['person']['firstName']} {position['person']['lastName']}".center(20)
+            result += f"{position['person']['firstName']} {position['person']['lastName']}".center(21)
             result += str(position['fastestLap']).center(20) if 'fastestLap' in position else " "
             result += "\n"
     else:
@@ -202,7 +202,7 @@ def _make_result(response):
         for position in response['results']:
             if 'position' not in position: continue
             result += str(position['position']).ljust(6)
-            result += f"{position['person']['firstName']} {position['person']['lastName']}".center(20)
+            result += f"{position['person']['firstName']} {position['person']['lastName']}".center(21)
             result += str(position['fastestLap']).center(20) if 'fastestLap' in position else " "
             result += str(position['pitStopCount']).rjust(3) if 'pitStopCount' in position else " "
             result += "\n"
