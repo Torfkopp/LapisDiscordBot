@@ -135,7 +135,7 @@ def get_live():
         # Iterate over every match in the league
         for match in league['matches']:
             if not match_interested_in(match): continue
-
+            new = False
             # create Match if not in dict
             if (home := match["homeTeam"]["name"]) not in matches:
                 game = Game(
@@ -147,21 +147,19 @@ def get_live():
                 )
                 league_matches[league_name].append(home)
                 matches[home] = game
-            else:
-                game = matches.get(home)
+                new = True
+            else: game = matches.get(home)
 
             score_change = game.set_goals(match.get("homeScore", 0), match.get("awayScore", 0))
 
-            if "matchTime" in match["matchInfo"] and match["isLive"]:
-                game.minute = match["matchInfo"]["matchTime"]
+            if "matchTime" in match["matchInfo"]: game.minute = match["matchInfo"]["matchTime"]
             if match["period"] == "FULL_TIME": game.done = True
 
             if "homePenaltyScore" in match and "awayPenaltyScore" in match:
                 game.penalty_score = (match["homePenaltyScore"], match["awayPenaltyScore"])
 
-            if game.minute >= 0:
-                if score_change:
-                    game.goals1, game.goals2 = get_match_goals(match["id"])
+            if (game.minute >= 0 and score_change) or (game.done and new):
+                game.goals1, game.goals2 = get_match_goals(match["id"])
 
             if (match["isLive"] or (datetime.timedelta(minutes=0) < (datetime.datetime.now(pytz.utc) - game.start_time)
                                     < datetime.timedelta(minutes=45))): one_game_still_live = True
@@ -194,8 +192,7 @@ def get_match_goals(match_id):
         if goal['failed']: goal_type = " (F)"
         g_tuple = (goal["minute"], scorer, goal_type)
 
-        if goal["teamId"] == id_home:
-            goals1.append(g_tuple)
+        if goal["teamId"] == id_home: goals1.append(g_tuple)
         else: goals2.append(g_tuple)
 
     return goals1, goals2
@@ -206,7 +203,7 @@ def build_embed(league_name, round_title):
     embed = interactions.Embed(title=f"{league_name} - {round_title}", color=COLOUR)
 
     def goals(g: tuple, v: str):
-        v += "," if len(v) != 0 else "" + f" {g[0]}' {g[1]}" + f" ({g[2]})" if g[2] else ""
+        return ("," if len(v) != 0 else "") + f" {g[0]}' {g[1]}" + (g[2] if g[2] else "")
 
     for m in league_matches[league_name]:
         game = matches[m]
@@ -214,23 +211,25 @@ def build_embed(league_name, round_title):
         penalty_score = f" {game.penalty_score[0]}:{game.penalty_score[1]} nE" if game.penalty_score else ""
         name = f"{game.team1:<20} {game.score[0]:^3}:{game.score[1]:^4}{penalty_score} {game.team2:>20}"
         name = "`" + name + "`"  # "```cs\n" + name + "\n```"
-        if game.minute < 0:
+        if game.minute < 0 and not game.done:
             value = "Startet um " + game.start_time.astimezone(pytz.timezone('Europe/Berlin')).replace(
                 tzinfo=None).strftime("%H:%M") + " Uhr"
             value = "```cs\n" + value + "\n```"
-        else:
-            value = f"{str(game.minute).zfill(2)}'"
-            goals_home, goals_away = "", ""
-            for g in game.goals1: goals(g, goals_home)
-            for g in game.goals2: goals(g, goals_away)
+        else: value = "END " if game.done else f"{str(game.minute).zfill(2)}' "
 
-            if not goals_home == "": goals_home = game.team1_short + ":" + goals_home
-            if not goals_away == "": goals_away = game.team2_short + ":" + goals_away
+        goals_home, goals_away = "", ""
 
-            if goals_home == "" or goals_away == "": value += goals_home + goals_away
-            else: value += goals_home + "\n" + " " * 4 + goals_away
+        for g in game.goals1: goals_home += goals(g, goals_home)
+        for g in game.goals2: goals_away += goals(g, goals_away)
 
-            value = "```cs\n" + value + "\n```"
+        if not goals_home == "": goals_home = game.team1_short + ":" + goals_home
+        if not goals_away == "": goals_away = game.team2_short + ":" + goals_away
+
+        if goals_home == "" or goals_away == "": value += goals_home + goals_away
+        else: value += goals_home + "\n" + " " * 4 + goals_away
+
+        value = "```cs\n" + value + "\n```"
+
         embed.add_field(name, value)
 
     return embed
