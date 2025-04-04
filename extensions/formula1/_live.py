@@ -167,43 +167,43 @@ def _make_result(response):
     :param response: The response of the api
     :return: The result
     """
-    result = "```python"
+    result = "```python\n"
     live = "Live" if response['isLive'] else "Ergebnis"
     result += f"{live} - {response['competition']['name']} - {response['roundTitle']}" + "\n"
     result += "\n"
-    result += "#".ljust(6) + "Name".center(20)
+    result += "#".ljust(4) + "Name".center(21)
     if response['roundType'] == "RACE" or response['roundType'] == "SPRINT":
-        result += "Gesamt".center(14) + "Schnellste".center(14) + "P".rjust(3) + "\n"
+        result += "Gesamt".center(8) + "Schnellste".center(10) + "P".rjust(3) + "\n"
         for position in response['results']:
             if 'position' not in position: continue
-            result += str(position['position']).ljust(6)
+            result += str(position['position']).ljust(4)
             result += f"{position['person']['firstName']} {position['person']['lastName']}".center(21)
 
-            if 'status' in position and position['status'] != "FINISHED": result += position['status'].center(14)
+            if 'status' in position and position['status'] != "FINISHED": result += position['status'].center(8)
             else:
                 if 'time' in position:
-                    result += str(position['time']).center(14)
+                    result += str(position['time']).center(10)
 
-            if 'fastestLap' in position: result += str(position['fastestLap']).center(14)
-            else: result += " ".center(14)
+            if 'fastestLap' in position: result += str(position['fastestLap']).center(10)
+            else: result += " ".center(10)
 
             result += str(position['pitStopCount']).rjust(3) if 'pitStopCount' in position else " "
             result += "\n"
     elif response['roundType'] == "QUALIFYING" or response['roundType'] == "SPRINT_SHOOTOUT":
-        result += "Schnellste".center(20) + "\n"
+        result += "Schnellste".center(14) + "\n"
         for position in response['results']:
             if 'position' not in position: continue
-            result += str(position['position']).ljust(6)
+            result += str(position['position']).ljust(4)
             result += f"{position['person']['firstName']} {position['person']['lastName']}".center(21)
-            result += str(position['fastestLap']).center(20) if 'fastestLap' in position else " "
+            result += str(position['fastestLap']).center(12) if 'fastestLap' in position else " "
             result += "\n"
     else:
-        result += "Schnellste".center(20) + "Stops".rjust(3) + "\n"
+        result += "Schnellste".center(14) + "Stops".rjust(3) + "\n"
         for position in response['results']:
             if 'position' not in position: continue
-            result += str(position['position']).ljust(6)
+            result += str(position['position']).ljust(4)
             result += f"{position['person']['firstName']} {position['person']['lastName']}".center(21)
-            result += str(position['fastestLap']).center(20) if 'fastestLap' in position else " "
+            result += str(position['fastestLap']).center(14) if 'fastestLap' in position else " "
             result += str(position['pitStopCount']).rjust(3) if 'pitStopCount' in position else " "
             result += "\n"
 
