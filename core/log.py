@@ -20,10 +20,7 @@ async def start_procedure(bot):
 
 
 async def delete_old_messages(channel):
-    i = 0  # Safety measure in case the wrong channel gets loaded
-    async for m in channel.history():
-        if i >= 10: break
-        i += 1
+    async for m in channel.history(limit=20):
         await m.delete()
 
 
