@@ -115,6 +115,14 @@ def matches(team, past, future):
     return util.uwuify_by_chance(embed)
 
 
+def shorten_name(name):
+    """ Hardcoding the shorter names of some clubs """
+    if "Mönchengladbach" in name: return "Borussia M'Gladbach"
+    if "Heidenheim" in name: return "1. FC Heidenheim"
+    if len(name) > 19: return name[:19]  # Not pretty, but effective
+    return name
+
+
 def table(liga, saison):
     """ Method for the table command """
     url = f"https://api.openligadb.de/getbltable/{liga}/{saison}"
@@ -126,25 +134,25 @@ def table(liga, saison):
         log.write("API DOWN")
         return util.get_error_embed("api_down")
 
-    tabelle = "```"
-    tabelle += "# | Team".ljust(30) + "Sp Si Un Ni Tore  TD".center(20) + "Pkt".rjust(10) + "\n"
-    i = 1
-    for team in data:
-        name = germanise(team['teamName'])
-        points = str(team['points']).zfill(2) + " "
-        scored_goals = str(team['goals']).zfill(2)
-        conc_goals = str(team['opponentGoals']).zfill(2)
-        goal_diff = (team['goalDiff'])
-        if goal_diff > -10: goal_diff = str(goal_diff).zfill(2) + " "
-        played = str(team['matches']).zfill(2)
-        won = str(team['won']).zfill(2)
-        lost = str(team['lost']).zfill(2)
-        draw = str(team['draw']).zfill(2)
-        tabelle += (f"{str(i).zfill(2)}| {name}".ljust(30)
-                    + f"{played} {won} {draw} {lost} {scored_goals}:{conc_goals} {goal_diff}".center(20)
-                    + f"{points}".rjust(10) + "\n")
-        i += 1
-    tabelle += "```"
+    tabelle = "# | " + "Team".ljust(20) + "|Pk|Sp|S |U |N |Tore | TD" + "\n"
+
+    def row_builder(nr, na, po, ga, w, d, lo, go, gd):
+        return "|".join(
+            [str(nr).zfill(2), " " + na.ljust(20),
+             str(po).zfill(2), str(ga).zfill(2),
+             str(w).zfill(2), str(d).zfill(2), str(lo).zfill(2),
+             go, str(gd).zfill(2).rjust(3)]
+        ) + "\n"
+
+    tabelle += row_builder("--", "-" * 19, "--", "--", "--", "--", "--", "-" * 5, "---")
+
+    for i, team in enumerate(data):
+        name = shorten_name(germanise(team["teamName"]))
+        tabelle += row_builder(
+            i + 1, name, team["points"], team['matches'], team['won'], team['draw'], team['lost'],
+            f"{team['goals']}:{team['opponentGoals']}", team['goalDiff']
+        )
+    tabelle = "```glsl\n" + tabelle + "```"
 
     embed = interactions.Embed(title="Tabelle", description=tabelle, color=COLOUR)
 

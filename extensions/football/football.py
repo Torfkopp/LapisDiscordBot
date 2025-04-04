@@ -32,10 +32,9 @@ def create_schedule():
     return live.create_schedule()
 
 
-def get_live(content=""):
-    """ Returns a list of embeds - one for every league - with an embed for every game of that league
-        content -- old message's content, "" if no old message exists, otherwise the message's embeds """
-    return live.get_live(content)
+def get_live():
+    """ Returns a list of embeds - one for every league - with an embed for every game of that league """
+    return live.get_live()
 
 
 '''def get_match_goals(match_id):
@@ -178,9 +177,9 @@ class Football(Extension):
                              saison: int = CURRENT_SEASON):
         await command_function(ctx, commands.table, liga, saison)
 
-    @goalgetter_function.subcommand(
-        sub_cmd_name="euro_where",
-        sub_cmd_description="Sagt, wo die nächsten Spiele übertragen werden"
-    )
-    async def euro_where(self, ctx: SlashContext):  # TODO: Change or remove after Euros
-        await command_function(ctx, commands.euro_where)
+    # @goalgetter_function.subcommand(
+    #    sub_cmd_name="euro_where",
+    #    sub_cmd_description="Sagt, wo die nächsten Spiele übertragen werden"
+    # )
+    # async def euro_where(self, ctx: SlashContext):
+    #    await command_function(ctx, commands.euro_where)

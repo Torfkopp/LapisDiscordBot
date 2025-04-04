@@ -1,4 +1,5 @@
 import datetime
+from collections import defaultdict
 
 import interactions
 import pytz
@@ -17,6 +18,52 @@ FILTERED_COMPETITIONS = ["Champions League", "Europa League", "Europa Conference
 COMPETITION_LIST = UNFILTERED_COMPETITIONS + FILTERED_COMPETITIONS  # List of all Leagues with at least some interest in
 
 COLOUR = util.Colour.FOOTBALL.value
+
+league_matches = defaultdict(list)
+matches = {}
+
+payload = ""
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0",
+    "Accept": "*/*",
+    "Accept-Language": "de,en-US;q=0.7,en;q=0.3",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Origin": "https://www.sport1.de",
+    "Connection": "keep-alive",
+    "Referer": "https://www.sport1.de/",
+    "Sec-Fetch-Dest": "empty",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "cross-site",
+    "DNT": "1",
+    "Sec-GPC": "1",
+    "If-None-Match": "W/0b32f50f11c4909718a882e15de834109",
+    "TE": "trailers"
+}
+
+
+class Game:
+    start_time: datetime.date
+    team1: str
+    team2: str
+    team1_short: str
+    team2_short: str
+    minute: int = -1
+    done: bool = False
+    score: tuple[int, int] = (0, 0)
+    penalty_score: tuple = ()
+    goals1: list[tuple[int, str, str]] = []
+    goals2: list[tuple[int, str, str]] = []
+
+    def __init__(self, start_time, team1, team2, team1_short, team2_short):
+        self.start_time = datetime.datetime.fromisoformat(start_time.replace("Z", "+00:00"))
+        self.team1, self.team2 = germanise(team1), germanise(team2)
+        self.team1_short, self.team2_short = team1_short, team2_short
+
+    def set_goals(self, h: int, a: int):
+        if self.score[0] == h and self.score[1] == a:
+            return False
+        self.score = (h, a)
+        return True
 
 
 def match_interested_in(match):
@@ -46,23 +93,6 @@ def create_schedule():
     date_today = datetime.datetime.today().date()
     url = f"https://api.sport1.info/v2/de/live/soccer/liveMatchesBySport/date/{date_today}/appConfig/false"
 
-    payload = ""
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0",
-        "Accept": "*/*",
-        "Accept-Language": "de,en-US;q=0.7,en;q=0.3",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Origin": "https://www.sport1.de",
-        "Connection": "keep-alive",
-        "Referer": "https://www.sport1.de/",
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "cross-site",
-        "DNT": "1",
-        "Sec-GPC": "1",
-        "TE": "trailers"
-    }
-
     response = requests.request("GET", url, data=payload, headers=headers)
     log.write("Api-Call Football: " + url)
     try: data = response.json()
@@ -83,33 +113,14 @@ def create_schedule():
     return list(start_times)
 
 
-def get_live(content=""):
-    """ Returns a list of embeds - one for every league - with an embed for every game of that league
-    content -- old message's content, "" if no old message exists, otherwise the message's embeds
-    """
+def get_live():
+    """ Returns a list of embeds - one for every league - with an embed for every game of that league """
     embeds = []
     one_game_still_live = False
 
     # Get data from site
     date_today = datetime.datetime.today().date()
     url = f"https://api.sport1.info/v2/de/live/soccer/liveMatchesBySport/date/{date_today}/appConfig/false"
-
-    payload = ""
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0",
-        "Accept": "*/*",
-        "Accept-Language": "de,en-US;q=0.7,en;q=0.3",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Origin": "https://www.sport1.de",
-        "Connection": "keep-alive",
-        "Referer": "https://www.sport1.de/",
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "cross-site",
-        "DNT": "1",
-        "Sec-GPC": "1",
-        "TE": "trailers"
-    }
 
     response = requests.request("GET", url, data=payload, headers=headers)
     log.write("Api-Call Football: " + url)
@@ -121,54 +132,42 @@ def get_live(content=""):
         # Skip league if not one of the wanted ones
         league_name = league['matches'][0]['competition']['name']
         if league_name not in COMPETITION_LIST: continue
-        embed = interactions.Embed(title=f"{league_name} - {league['matches'][0]['roundTitle']}", color=COLOUR)
         # Iterate over every match in the league
         for match in league['matches']:
             if not match_interested_in(match): continue
-            team1 = germanise(match['homeTeam']['name'])
-            team2 = germanise(match['awayTeam']['name'])
-            # Goals
-            score1 = 0
-            score2 = 0
-            if 'homeScore' in match: score1 = match['homeScore']
-            if 'awayScore' in match: score2 = match['awayScore']
-            # Game starting time
-            start_time = datetime.datetime.fromisoformat(match['scheduledStartTime'].replace("Z", "+00:00"))
-            time = start_time.astimezone(pytz.timezone('Europe/Berlin')).replace(tzinfo=None).strftime("%H:%M")
-            minute = "Startet um " + time + " Uhr"
-            # If match has begun, get the minutes
-            if 'matchTime' in match['matchInfo'] and match['isLive']:
-                minute = str(match['matchInfo']['matchTime']) + "' "
-            # If match has ended, put in the END
-            if match['period'] == "FULL_TIME": minute = "END "
-            # If match has gone to the penalties, add the score after the penalties after the normal score
-            penalty_score = ""
-            if 'homePenaltyScore' in match and 'awayPenaltyScore' in match:
-                penalty_score = f" {match['homePenaltyScore']}:{match['awayPenaltyScore']} nE"
-            # Put in Values
-            new_name = f"```{team1:<20} {score1:^3}:{score2:^4}{penalty_score} {team2:>20}```"
-            new_value = f"```{str(minute).zfill(2)}```"
-            # If the score changes in the new message, get the goalscorers and put them as the new value
-            if not content == "" and not minute.startswith("Startet"):
-                old_embed = content[0]
-                for em in content[1:]:  # Get correct embed
-                    if em.title == embed.title: old_embed = em
-                old = old_embed.fields[0]
-                for field in old_embed.fields[1:]:  # Get correct field
-                    if field.name[0:20] == new_name[0:20]: old = field
-                # Get the match's goalscorers if a goal happened (old and new names differ)
-                # or the score doesn't align with the amount of goalscorers
-                count = old.value.count("'")  # Counts amount of ' to get the amount of goals
-                if "'" in minute: count -= 1  # Reduce count by one if the game time has one '
-                if new_name != old.name or (score1 + score2) != count:
-                    new_value = new_value.split(' ')[0] + get_match_goals(match['id'])
-                else:
-                    new_value = new_value.split(' ')[0] + " " + ' '.join(old.value.split(' ')[1:])
-            embed.add_field(name=new_name, value=new_value)
-            # To ensure a delayed start (max 45 min) won't turn off the live games
-            if (match['isLive'] or (datetime.timedelta(minutes=0) < (datetime.datetime.now(pytz.utc) - start_time)
+
+            # create Match if not in dict
+            if (home := match["homeTeam"]["name"]) not in matches:
+                game = Game(
+                    start_time=match["scheduledStartTime"],
+                    team1=home,
+                    team2=match["awayTeam"]["name"],
+                    team1_short=match["homeTeam"]["code"],
+                    team2_short=match["awayTeam"]["code"]
+                )
+                league_matches[league_name].append(home)
+                matches[home] = game
+            else:
+                game = matches.get(home)
+
+            score_change = game.set_goals(match.get("homeScore", 0), match.get("awayScore", 0))
+
+            if "matchTime" in match["matchInfo"] and match["isLive"]:
+                game.minute = match["matchInfo"]["matchTime"]
+            if match["period"] == "FULL_TIME": game.done = True
+
+            if "homePenaltyScore" in match and "awayPenaltyScore" in match:
+                game.penalty_score = (match["homePenaltyScore"], match["awayPenaltyScore"])
+
+            if game.minute >= 0:
+                if score_change:
+                    game.goals1, game.goals2 = get_match_goals(match["id"])
+
+            if (match["isLive"] or (datetime.timedelta(minutes=0) < (datetime.datetime.now(pytz.utc) - game.start_time)
                                     < datetime.timedelta(minutes=45))): one_game_still_live = True
-        if len(embed.fields) > 0: embeds.append(embed)  # Add to list if not empty
+
+        embed = build_embed(league_name, league["matches"][0]["roundTitle"])
+        if len(embed.fields) > 0: embeds.append(embed)
 
     return embeds, one_game_still_live
 
@@ -178,66 +177,60 @@ def get_match_goals(match_id):
     # Get data from site
     url = f"https://api.sport1.info/v2/de/soccer/ticker/{match_id}"
 
-    payload = ""
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0",
-        "Accept": "*/*",
-        "Accept-Language": "de,en-US;q=0.7,en;q=0.3",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Origin": "https://www.sport1.de",
-        "Connection": "keep-alive",
-        "Referer": "https://www.sport1.de/",
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "cross-site",
-        "DNT": "1",
-        "Sec-GPC": "1",
-        "If-None-Match": "W/0b32f50f11c4909718a882e15de834109",
-        "TE": "trailers"
-    }
-
     response = requests.request("GET", url, data=payload, headers=headers)
     log.write("Api-Call Football: " + url)
     match_info = response.json()
 
-    return_string = " "
+    goals1, goals2 = [], []
 
-    id_home = match_info['match']['homeTeam']['id']
-    # id_away = match_info['match']['awayTeam']['id']
-    goals_home = ""
-    goals_away = ""
-    # Iterate over every goal in the match
-    for goal in match_info['matchGoals']:
-        # if goal['failed']: continue
-        team = goal['teamId']
-        time = goal['minute']
-        scorer = goal['player']['lastName']
+    id_home = match_info["match"]["homeTeam"]["id"]
+
+    for goal in match_info["matchGoals"]:
+        scorer = goal["player"].get("nickName", "") or goal["player"]["lastName"]
         goal_type = ""
-        if goal['penalty']:
-            goal_type = " (P)"
-        elif goal['ownGoal']:
-            goal_type = " (OG)"
-        elif goal['soloRun']:
-            goal_type = " (SR)"
+        if goal['penalty']: goal_type = " (P)"
+        elif goal['ownGoal']: goal_type = " (OG)"
+        elif goal['soloRun']: goal_type = " (SR)"
         if goal['failed']: goal_type = " (F)"
-        if 'nickName' in goal['player']: scorer = goal['player']['nickName']
-        score = f" {time}' {scorer}" + goal_type
-        # Add Goal to the correct team
-        if team == id_home:
-            if not goals_home == "": goals_home += ','
-            goals_home += score
+        g_tuple = (goal["minute"], scorer, goal_type)
+
+        if goal["teamId"] == id_home:
+            goals1.append(g_tuple)
+        else: goals2.append(g_tuple)
+
+    return goals1, goals2
+
+
+def build_embed(league_name, round_title):
+    """ Returns an embed with all matches for the league """
+    embed = interactions.Embed(title=f"{league_name} - {round_title}", color=COLOUR)
+
+    def goals(g: tuple, v: str):
+        v += "," if len(v) != 0 else "" + f" {g[0]}' {g[1]}" + f" ({g[2]})" if g[2] else ""
+
+    for m in league_matches[league_name]:
+        game = matches[m]
+        ...
+        penalty_score = f" {game.penalty_score[0]}:{game.penalty_score[1]} nE" if game.penalty_score else ""
+        name = f"{game.team1:<20} {game.score[0]:^3}:{game.score[1]:^4}{penalty_score} {game.team2:>20}"
+        name = "`" + name + "`"  # "```cs\n" + name + "\n```"
+        if game.minute < 0:
+            value = "Startet um " + game.start_time.astimezone(pytz.timezone('Europe/Berlin')).replace(
+                tzinfo=None).strftime("%H:%M") + " Uhr"
+            value = "```cs\n" + value + "\n```"
         else:
-            if not goals_away == "": goals_away += ','
-            goals_away += score
-    # Add the team's shortname if they scored at least one goal
-    if not goals_home == "": goals_home = match_info['match']['homeTeam']['code'] + ":" + goals_home
-    if not goals_away == "": goals_away = match_info['match']['awayTeam']['code'] + ":" + goals_away
-    # Add the two team's goals to the return string
-    if goals_home == "":
-        return_string += goals_away
-    elif goals_away == "":
-        return_string += goals_home
-    else:
-        return_string += goals_home + "\n" + " " * 4 + goals_away
-    return_string += "```"
-    return return_string
+            value = f"{str(game.minute).zfill(2)}'"
+            goals_home, goals_away = "", ""
+            for g in game.goals1: goals(g, goals_home)
+            for g in game.goals2: goals(g, goals_away)
+
+            if not goals_home == "": goals_home = game.team1_short + ":" + goals_home
+            if not goals_away == "": goals_away = game.team2_short + ":" + goals_away
+
+            if goals_home == "" or goals_away == "": value += goals_home + goals_away
+            else: value += goals_home + "\n" + " " * 4 + goals_away
+
+            value = "```cs\n" + value + "\n```"
+        embed.add_field(name, value)
+
+    return embed

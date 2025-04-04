@@ -187,7 +187,7 @@ async def live_scoring():
     if LIVE_MESSAGES["score"] == "":
         LIVE_MESSAGES["score"] = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=football.get_live()[0])
     else:
-        embeds, still_going = football.get_live(LIVE_MESSAGES["score"].embeds)
+        embeds, still_going = football.get_live()
         try: await LIVE_MESSAGES["score"].edit(embeds=embeds)
         except HTTPException: LIVE_MESSAGES["score"] = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=embeds)
         if not still_going:
