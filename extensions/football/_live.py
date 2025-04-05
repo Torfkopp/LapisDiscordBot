@@ -214,7 +214,6 @@ def build_embed(league_name, round_title):
         if game.minute < 0 and not game.done:
             value = "Startet um " + game.start_time.astimezone(pytz.timezone('Europe/Berlin')).replace(
                 tzinfo=None).strftime("%H:%M") + " Uhr"
-            value = "```cs\n" + value + "\n```"
         else: value = "END " if game.done else f"{str(game.minute).zfill(2)}' "
 
         goals_home, goals_away = "", ""
