@@ -60,7 +60,7 @@ class Game:
         self.team1_short, self.team2_short = team1_short, team2_short
 
     def set_goals(self, h: int, a: int):
-        if self.score[0] == h and self.score[1] == a:
+        if self.score[0] == len(self.goals1) == h and self.score[1] == len(self.goals2) == a:
             return False
         self.score = (h, a)
         return True
@@ -150,16 +150,16 @@ def get_live():
                 new = True
             else: game = matches.get(home)
 
-            score_change = game.set_goals(match.get("homeScore", 0), match.get("awayScore", 0))
-
             if "matchTime" in match["matchInfo"]: game.minute = match["matchInfo"]["matchTime"]
             if match["period"] == "FULL_TIME": game.done = True
 
-            if "homePenaltyScore" in match and "awayPenaltyScore" in match:
-                game.penalty_score = (match["homePenaltyScore"], match["awayPenaltyScore"])
+            score_change = game.set_goals(match.get("homeScore", 0), match.get("awayScore", 0))
 
             if (game.minute >= 0 and score_change) or (game.done and new):
                 game.goals1, game.goals2 = get_match_goals(match["id"])
+
+            if "homePenaltyScore" in match and "awayPenaltyScore" in match:
+                game.penalty_score = (match["homePenaltyScore"], match["awayPenaltyScore"])
 
             if (match["isLive"] or (datetime.timedelta(minutes=0) < (datetime.datetime.now(pytz.utc) - game.start_time)
                                     < datetime.timedelta(minutes=45))): one_game_still_live = True
@@ -207,7 +207,7 @@ def build_embed(league_name, round_title):
 
     for m in league_matches[league_name]:
         game = matches[m]
-        ...
+
         penalty_score = f" {game.penalty_score[0]}:{game.penalty_score[1]} nE" if game.penalty_score else ""
         name = f"{game.team1:<20} {game.score[0]:^3}:{game.score[1]:^4}{penalty_score} {game.team2:>20}"
         name = "`" + name + "`"  # "```cs\n" + name + "\n```"
