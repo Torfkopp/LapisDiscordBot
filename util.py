@@ -20,6 +20,7 @@ COMEDY_CHANNEL_ID = config['comedy_channel_id']
 LOGBUCH_ID = config['logbuch']
 AUTHOR_ID = config['bot_author_id']
 SECOND_VERSUS_ID = config['second_versus_id']
+WEATHER_KEY = config['weather_key']
 
 
 # COLOURS
@@ -44,6 +45,7 @@ class Colour(Enum):
     TRIVIA = discord.MaterialColors.LIGHT_BLUE
     UWU = discord.MaterialColors.PINK
     VERSUS = discord.MaterialColors.DEEP_ORANGE
+    WEATHER = discord.MaterialColors.TEAL
 
     ERROR = discord.BrandColors.RED
 
@@ -128,7 +130,7 @@ def get_error_embed(term: str, add_text: str | list[str] = ""):
 
 def message_sent(message: str):
     """ Returns whether the message was already sent, and if it wasn't, sets the tracker to true
-    :param 'rawe_ceek', 'race_schedule', 'friday_krabs', or 'monday_krabs' """
+    :param 'rawe_ceek', 'race_schedule', 'friday_krabs', 'monday_krabs', or 'temperature' """
     with open("strunt/message_tracker.json", "r") as message_tracker: trackers = json.load(message_tracker)
     if trackers[message]: return True
     else:

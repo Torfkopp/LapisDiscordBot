@@ -18,7 +18,7 @@ import secret
 import util
 from core import log
 from core.extensions_loader import load_extensions
-from extensions import lolesport, lol_patchnotes, reddit, karma
+from extensions import lolesport, lol_patchnotes, reddit, karma, weather
 from extensions.football import football
 from extensions.formula1 import formula1
 
@@ -111,14 +111,14 @@ class ActivityClass:
             self.status = discord.Status.DND
             type_ = discord.activity.ActivityType.WATCHING
             name = ""
-            if watches_football and watches_formula1 and watches_esport: name = "Fußball, Formel1 und LoL"
+            if watches_football and watches_formula1 and watches_esport: name = "Fußball, F1 und LoL"
 
-            elif watches_football and watches_formula1 and not watches_esport: name = f"Fußball und Formel1 {f1_session}"
+            elif watches_football and watches_formula1 and not watches_esport: name = f"Fußball und F1 {f1_session}"
             elif watches_football and not watches_formula1 and watches_esport: name = "Fußball und LoL"
-            elif not watches_football and watches_formula1 and watches_esport: name = f"Formel1 {f1_session} und LoL"
+            elif not watches_football and watches_formula1 and watches_esport: name = f"F1 {f1_session} und LoL"
 
             elif watches_football and not watches_formula1 and not watches_esport: name = "Fußball"
-            elif not watches_football and watches_formula1 and not watches_esport: name = f"Formel1 {f1_session}"
+            elif not watches_football and watches_formula1 and not watches_esport: name = f"Formel 1 {f1_session}"
             elif not watches_football and not watches_formula1 and watches_esport: name = "LoL"
         else:
             self.status = discord.Status.IDLE
@@ -377,6 +377,13 @@ async def startup_daily_meme():
         await bot.get_channel(util.COMEDY_CHANNEL_ID).send(message)
 
 
+async def startup_temperature(now):
+    # AUTOMATIC TEMPERATURE RELATED MEME
+    if not util.message_sent("temperature"):
+        embed, file = weather.is_sun_killing(now)
+        if embed: await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=embed, file=file)
+
+
 @listen()
 async def on_startup():
     """ Is called when the bot starts up (used for schedule things) """
@@ -398,6 +405,7 @@ async def on_startup():
     await startup_patchnotes(now)
     await startup_day_dependent()
     await startup_daily_meme()
+    await startup_temperature(now)
 
     # AUTOMATIC ACTIVITY CHANGE PART
     activity = ActivityClass(formula1_schedule)
