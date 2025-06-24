@@ -132,7 +132,7 @@ def get_joke(theme, lang):
 
 def get_norris():
     """ Returns a random Chuck Norris joke with Chuck's name replaced by owner's friend's names """
-    name_list = secret.name_list
+    name_list = secret.NAME_LIST
     url = "https://api.chucknorris.io/jokes/random"
     payload = ""
     try:

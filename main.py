@@ -379,7 +379,7 @@ async def startup_daily_meme():
 
 async def startup_temperature(now):
     # AUTOMATIC TEMPERATURE RELATED MEME
-    if not util.message_sent("temperature"):
+    if now.time() < datetime.time(hour=9):  # Doesn't prevent double sends when restarting before 9, but whatever
         embed, file = weather.is_sun_killing(now)
         if embed: await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=embed, file=file)
 
