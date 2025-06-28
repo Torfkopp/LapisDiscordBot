@@ -62,7 +62,7 @@ Betrachten Sie Ihr Gehalt als Anwesenheitsprämie.
 Billard ist bekannter als Billzdf.
 Bist du einsam und allein, sprüh dich mit Kontaktspray ein.
 Biste in der EDV, kennt deine Daten jede Sau.
-Biß demnächst, sagte der Vampir.
+Biss demnächst, sagte der Vampir.
 Blumen, die nicht wachsen, nennt man Wachsblumen.
 Brennt dem Bauern mal der Kittel, liegts am scharfen Düngemittel.
 Cave Caplanem.
@@ -99,7 +99,7 @@ Der Arbeitstag beginnt um sieben; doch nicht, wenn du im Bett geblieben.
 Der Bauer macht ein Bäuerlein, es muss nicht mit der Bäuerin sein.
 Der Bauer pflügt, der Bauer eggt, derweil im Stall das Vieh verreckt.
 Der Baum hat Äste, das ist das beste, denn wär' er kahl, dann wär's ein Pfahl.
-Der Computer ist die Antwort... Was war eigentlich die Frage?
+Der Computer ist die Antwort ... Was war eigentlich die Frage?
 Der Dschingis Khan, wenn er nur will.
 Der Geist denkt, das Geld lenkt.
 Der Glatzkopf, der die Glatze föhnt, hat mit dem Schicksal sich versöhnt.
@@ -413,6 +413,7 @@ Kommt der Gockel untern Trecker, gibt es morgens keinen Wecker.
 Kreuzbrave sind meist piksauber.
 Krieg ist, wenn es trrotzdem kracht.
 Kräht der Bauer auf dem Mist, hat der Gockel sich verpisst.
+Kräht der Hahn auf dem Mist, ändert sich das Wetter oder bleibt, wie es ist.
 Kräht der Maulwurf auf dem Dach, liegt der Hahn vor Lachen flach.
 Kurze Röcke, lange Stielaugen.
 LABELLO, und kein Kuss quietscht mehr.
@@ -433,6 +434,7 @@ Liebe ist Elektrizität; in der Ehe kommt die Stromrechnung.
 Liebe ist mir zu philosophisch; ich bleibe lieber beim Bier.
 Liebe ist, wenn man trotzdem lacht.
 Liebe ist, zusammen ins Deutsche Museum zu gehen.
+Liebe vergeht, Hektar besteht.
 Lieber 'n Altbier als 'ne Neurose.
 Lieber 'n Glas Dortmunder als 'ne Wanne Eickel.
 Lieber 'ne frohe Kunde als 'ne traurige Verkäuferin.
@@ -713,6 +715,7 @@ Wenn dich Haß und Neid umringen, denk an Götz von Berlichingen.
 Wenn die Dunstglocke läutet, hat das Sterbeglöckchen Hochkonjunktur.
 Wenn die Erde schreien könnte, wären wir alle taub.
 Wenn die Milch nach Krypton schmeckt, hat's im AKW geleckt.
+Wenn die Wurst so dick wie das Brot ist, ist es wurscht, wie dick das Brot ist.
 Wenn du aus Liebe heiratest, hast du schöne Nächte und schlimme Tage.
 Wenn du nicht willst, du dumme Kuh, dann mach auch keinem andern muh.
 Wenn eine Schraube locker ist, hat das Leben etwas mehr Spiel.

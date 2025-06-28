@@ -158,7 +158,7 @@ def get_five(location):
     fig, ax = plt.subplots()
     plt.plot(list(weather_dic.keys()), list(weather_dic.values()))
     ax.set_xlabel("Time")
-    ax.set_ylabel("Temperature in C°")
+    ax.set_ylabel("Temperature in °C")
     plt.suptitle(f"Wetter in {location.title()}")
     plt.xticks(rotation=90)
     plt.tight_layout()
