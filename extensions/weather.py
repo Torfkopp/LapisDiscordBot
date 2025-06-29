@@ -3,6 +3,7 @@ import io
 import random
 
 import interactions
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import requests
 from PIL import Image
@@ -108,7 +109,12 @@ class Weather(Extension):
     async def weather_function(self, ctx: SlashContext): await ctx.send("Weather")
 
     @weather_function.subcommand(sub_cmd_name="forecast", sub_cmd_description="Wetter für die nächsten 5 Tage")
-    @location_slash_option()
+    @slash_option(
+        name="location",
+        description=f"Ort(e) (Komma getrennt) [{','.join(LOCATIONS.keys())}]",
+        required=False,
+        opt_type=OptionType.STRING,
+    )
     async def forecast_function(self, ctx: SlashContext, location="leer"):
         await ctx.defer()
         embed, file = get_five(location)
@@ -116,7 +122,7 @@ class Weather(Extension):
 
     @weather_function.subcommand(sub_cmd_name="now", sub_cmd_description="Wetter jetzt gerade")
     @location_slash_option()
-    async def now_function(self, ctx: SlashContext, location="leer"):
+    async def now_function(self, ctx: SlashContext, location="all"):
         await ctx.defer()
         embed = get_now(location)
         await ctx.send(embed=embed)
@@ -127,38 +133,59 @@ class Weather(Extension):
         embed, file = get_germany()
         await ctx.send(embed=embed, file=file)
 
-    @slash_command(name="test", description="testung", scopes=[1134856890669613210])
-    async def test_function(self, ctx: SlashContext):
-        await ctx.defer()
-        embed, file = is_sun_killing(datetime.datetime.now())
-        await ctx.send(embed=embed, file=file)
-
 
 def get_five(location):
-    lat, lon = LOCATIONS.get(location)
-    log.write("Api-Call Weather Forecast")
-    response = requests.get(
-        "https://api.openweathermap.org/data/2.5/forecast?",
-        params={
-            "lat": lat,
-            "lon": lon,
-            "APPID": API_KEY,
-            "units": "metric"
-        }
-    )
-    data = response.json()
     weather_dic = {}
 
-    for w in data["list"]:
-        date = w["dt_txt"]
-        date = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S").strftime("%d. %H:00")
-        weather_dic[date] = w["main"]["temp"]
+    locations = LOCATIONS.keys() if location == "all" else [l.strip() for l in location.lower().split(",")]
+
+    for loca in locations:
+        if loca not in LOCATIONS: continue
+        coords = LOCATIONS.get(loca)
+
+        log.write(f"Api-Call Weather Forecast {loca.title()}")
+        response = requests.get(
+            "https://api.openweathermap.org/data/2.5/forecast?",
+            params={
+                "lat": coords[0],
+                "lon": coords[1],
+                "APPID": API_KEY,
+                "units": "metric"
+            }
+        )
+
+        data = response.json()
+        temperatures = {}
+
+        for w in data["list"]:
+            date = w["dt_txt"]
+            date = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+            temperatures[date] = w["main"]["temp"]
+
+        weather_dic[loca] = temperatures
 
     plt.style.use('dark_background')
     fig, ax = plt.subplots()
-    plt.plot(list(weather_dic.keys()), list(weather_dic.values()))
+
+    for loc, temps in weather_dic.items():
+        ax.plot(list(temps.keys()), list(temps.values()), label=loc.title())
+
     ax.set_xlabel("Time")
     ax.set_ylabel("Temperature in °C")
+
+    # Set major ticks to daily
+    ax.xaxis.set_major_locator(mdates.DayLocator())
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%A'))
+    # Set minor ticks to hourly
+    ax.xaxis.set_minor_locator(mdates.HourLocator(interval=3))
+    ax.xaxis.set_minor_formatter(mdates.DateFormatter('%H:%M'))
+    # Rotate and align tick labels
+    plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='center', fontsize=10)
+    plt.setp(ax.xaxis.get_minorticklabels(), rotation=90, ha='center', fontsize=4)
+
+    ax.tick_params(axis='x', which='minor', labelsize=6)
+
+    ax.legend()
     plt.suptitle(f"Wetter in {location.title()}")
     plt.xticks(rotation=90)
     plt.tight_layout()
