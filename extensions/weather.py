@@ -1,5 +1,6 @@
 import datetime
 import io
+import math
 import random
 
 import interactions
@@ -49,22 +50,24 @@ def is_sun_killing(now):
         for w in data["list"]:
             date = w["dt_txt"]
             if datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S").date() != now.date(): continue
-            temperatures.append(w["main"]["feels_like"])
+            temperatures.append((w["main"]["feels_like"], w["main"]["temp"]))
 
         weather_dic[location] = temperatures
 
     max_temps, min_temps = {}, {}
-    for location, temps in weather_dic.items(): max_temps[location], min_temps[location] = max(temps), min(temps)
-    avg_heat = sum(max_temps.values()) / len(max_temps.values())
-    avg_cold = sum(max_temps.values()) / len(max_temps.values())
+    for location, temps in weather_dic.items():
+        max_temps[location], min_temps[location] = max(temps, key=lambda t: t[0]), min(temps, key=lambda t: t[0])
+    avg_heat = sum(i for i, _ in max_temps.values()) / len(max_temps.values())
+    avg_cold = sum(i for i, _ in max_temps.values()) / len(max_temps.values())
 
     if avg_heat > 27.0:
         title = f"\"Pretty much everywhere, it's gonna be hot\""
         gif = util.get_gif("hot")
 
         embed = interactions.Embed(title=title)
-        description = f"Heute erreichen wir gefühlte:\n```python\n"
-        for loc, temp in max_temps.items(): description += f"{loc.title()}:".ljust(25) + f"{temp} °C\n"
+        description = f"Heute erreichen wir (gefühlte):\n```python\n"
+        for loc, temp in max_temps.items():
+            description += f"{loc.title()}:".ljust(25) + f"{temp[1]:.2f} ({temp[0]:.2f}) °C\n"
         embed.description = description + "```"
 
         if gif == "killing_sun.png":
@@ -115,14 +118,22 @@ class Weather(Extension):
         required=False,
         opt_type=OptionType.STRING,
     )
-    async def forecast_function(self, ctx: SlashContext, location="leer"):
+    @slash_option(
+        name="time",
+        description="Zeitbegrenzung (in h)",
+        required=False,
+        opt_type=OptionType.INTEGER,
+        min_value=1,
+        max_value=120
+    )
+    async def forecast_function(self, ctx: SlashContext, location="leer", time=None):
         await ctx.defer()
-        embed, file = get_five(location)
+        embed, file = get_five(location, time)
         await ctx.send(embed=embed, file=file)
 
     @weather_function.subcommand(sub_cmd_name="now", sub_cmd_description="Wetter jetzt gerade")
     @location_slash_option()
-    async def now_function(self, ctx: SlashContext, location="all"):
+    async def now_function(self, ctx: SlashContext, location="leer"):
         await ctx.defer()
         embed = get_now(location)
         await ctx.send(embed=embed)
@@ -134,8 +145,9 @@ class Weather(Extension):
         await ctx.send(embed=embed, file=file)
 
 
-def get_five(location):
+def get_five(location, time):
     weather_dic = {}
+    if time: time = math.ceil(time / 3) + 1
 
     locations = LOCATIONS.keys() if location == "all" else [l.strip() for l in location.lower().split(",")]
 
@@ -168,7 +180,7 @@ def get_five(location):
     fig, ax = plt.subplots()
 
     for loc, temps in weather_dic.items():
-        ax.plot(list(temps.keys()), list(temps.values()), label=loc.title())
+        ax.plot(list(temps.keys())[:time], list(temps.values())[:time], label=loc.title())
 
     ax.set_xlabel("Time")
     ax.set_ylabel("Temperature in °C")
