@@ -17,6 +17,8 @@ COLOUR = util.Colour.FORMULA1.value
 CURRENT_SEASON = util.CURRENT_F1_SEASON
 matplotlib.rcParams['font.family'] = 'Formula1'
 
+fastf1.ergast.interface.BASE_URL = "https://api.jolpi.ca/ergast/f1"
+
 
 def get_driver_positions(year, session):
     """ Gets all positions of a driver """
