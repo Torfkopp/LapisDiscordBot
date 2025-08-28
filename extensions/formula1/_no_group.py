@@ -109,13 +109,17 @@ def next_race():
 
     embed.add_field(name="Sessions", value=sessions)
     try:
-        url = f"https://www.formula1.com/en/racing/{CURRENT_SEASON}.html"
+        url = f"https://media.formula1.com/image/upload/content/dam/fom-website/2018-redesign-assets/Circuit%20maps%2016x9/{country}_Circuit.webp"
         response = requests.get(url)
-        soup = BeautifulSoup(response.content, 'html.parser')
-        image = soup.find_all("img", {"class": "f1-c-image h-full w-full object-contain"})
-        image_url = image[0]["src"]
-        image_url = image_url.replace(" ", "%20")
-        embed.set_image(url=image_url)
+        if not response.ok:
+            url = f"https://www.formula1.com/en/racing/{CURRENT_SEASON}.html"
+            response = requests.get(url)
+            soup = BeautifulSoup(response.content, 'html.parser')
+            div = soup.find("div", attrs={
+                "class": "relative z-0 w-full min-h-[300px] @[738px]/cards:min-h-[230px] rounded-m overflow-hidden bg-accent-bright-blue-50 flex items-stretch"})
+            circuit = div.find("p").text
+            url = f"https://media.formula1.com/image/upload/content/dam/fom-website/2018-redesign-assets/Circuit%20maps%2016x9/{circuit}_Circuit.webp"
+        embed.set_image(url)
     except: ...
 
     return util.uwuify_by_chance(embed)
