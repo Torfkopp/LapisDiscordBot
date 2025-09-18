@@ -118,6 +118,9 @@ def next_race():
             div = soup.find("div", attrs={
                 "class": "relative z-0 w-full min-h-[300px] @[738px]/cards:min-h-[230px] rounded-m overflow-hidden bg-accent-bright-blue-50 flex items-stretch"})
             circuit = div.find("p").text
+            if circuit == "Azerbaijan": circuit = "Baku"
+            elif circuit == "United States": circuit = "USA"
+            else: circuit = circuit.replace(" ", "_").replace("-", "_")
             url = f"https://media.formula1.com/image/upload/content/dam/fom-website/2018-redesign-assets/Circuit%20maps%2016x9/{circuit}_Circuit.webp"
         embed.set_image(url)
     except: ...
