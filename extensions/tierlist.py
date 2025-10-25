@@ -1,3 +1,5 @@
+import json
+
 import interactions
 from interactions import (
     Extension, slash_command, SlashContext, slash_option, OptionType
@@ -15,6 +17,13 @@ async def function(ctx, entry_function, *args):
     entry_function(*args)
     try: await Tierlist.message.edit(embed=Tierlist.embed)
     except AttributeError: pass
+
+
+async def on_message_delete(msg):
+    with open("strunt/tierlist.json", "r", encoding="utf-8") as f: j = json.load(f)
+    x = j.pop(str(msg.id), None)
+    if x:
+        with open("strunt/tierlist.json", "w", encoding="utf-8") as f: json.dump(j, f, indent=4)
 
 
 class Tierlist(Extension):
@@ -44,8 +53,12 @@ class Tierlist(Extension):
     async def tierlist_function(self, ctx: SlashContext, name, tiers: str = "S", description: str = ""):
         Tierlist.embed, Tierlist.file = create_tierlist(name, tiers, description)
         Tierlist.message = await ctx.send(file=Tierlist.file, embed=Tierlist.embed)
+        save_tierlist(name, Tierlist.message.id, ctx.guild_id, ctx.channel_id)
 
-    # TODO Slash Commands umwandeln
+    @slash_command(name="tierlistlist", description="Get list of Tierlists")
+    async def tierlistlist_function(self, ctx: SlashContext):
+        embed = get_tierlistlist()
+        await ctx.send(embed=embed)
 
     @prefixed_command()
     async def c(self, ctx: PrefixedContext, arg1, arg2): await function(ctx, create_entry, arg1, arg2)
@@ -108,3 +121,19 @@ def delete_entry(tier, name):
 def move_entry(tier1, tier2, name):
     delete_entry(tier1, name)
     create_entry(tier2, name)
+
+
+def save_tierlist(name, message_id, guild, channel):
+    with open("strunt/tierlist.json", "r", encoding="utf-8") as f: j = json.load(f)
+    j[message_id] = {"name": name, "guild": guild, "channel": channel}
+    with open("strunt/tierlist.json", "w", encoding="utf-8") as f: json.dump(j, f, indent=4)
+
+
+def get_tierlistlist():
+    with open("strunt/tierlist.json", "r", encoding="utf-8") as f: tierlists = json.load(f)
+    description = ""
+    for l_key, l_values in tierlists.items():
+        link = f"https://discord.com/channels/{l_values['guild']}/{l_values['channel']}/{l_key}"
+        description += f"{l_values['name']}: {link}\n"
+    embed = interactions.Embed(title="Tierlistlist", description=description)
+    return embed
