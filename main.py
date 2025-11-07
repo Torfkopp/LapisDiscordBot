@@ -18,7 +18,7 @@ import secret
 import util
 from core import log
 from core.extensions_loader import load_extensions
-from extensions import lolesport, lol_patchnotes, reddit, karma, weather
+from extensions import lolesport, lol_patchnotes, reddit, karma, weather, tierlist
 from extensions.football import football
 from extensions.formula1 import formula1
 
@@ -62,23 +62,23 @@ class ActivityClass:
     # "GAME" (Spielt), "STREAMING" (Streamt), "LISTENING" (Hört X zu), "WATCHING" (Schaut), "COMPETING" (Tritt an in)
     activities = [
         # Bot-"Personality" stuff
-        ("sich Bücher an", discord.activity.ActivityType.WATCHING),
-        ("Marios Gelaber", discord.activity.ActivityType.LISTENING),
-        ("ein paar Anime", discord.activity.ActivityType.WATCHING),
-        ("HdR zum X-ten Mal", discord.activity.ActivityType.WATCHING),
-        ("und tritt aus in", discord.activity.ActivityType.COMPETING),
-        ("Anime OST", discord.activity.ActivityType.LISTENING),
-        ("nach nützlichen APIs", discord.activity.ActivityType.WATCHING),
+        ("liest Bücher", discord.activity.ActivityType.WATCHING),
+        ("lauscht Marios Gelaber", discord.activity.ActivityType.LISTENING),
+        ("schaut ein paar Anime", discord.activity.ActivityType.WATCHING),
+        ("schaut HdR zum X-ten Mal", discord.activity.ActivityType.WATCHING),
+        ("judged deine Posts", discord.activity.ActivityType.COMPETING),
+        ("hört Anime OST", discord.activity.ActivityType.LISTENING),
+        ("sucht nach nützlichen APIs", discord.activity.ActivityType.WATCHING),
         # Extension related stuff
-        ("sich Anime an", discord.activity.ActivityType.WATCHING),
-        ("nach kostenlosen Spielen", discord.activity.ActivityType.WATCHING),
-        ("Galgenmännchen", discord.activity.ActivityType.GAME),
-        ("nach neuen Insults", discord.activity.ActivityType.WATCHING),
-        ("die Witze durch", discord.activity.ActivityType.WATCHING),
-        ("sich die Patchnotes an", discord.activity.ActivityType.WATCHING),
-        ("weisen Menschen", discord.activity.ActivityType.LISTENING),
-        ("sich Tierlisten an", discord.activity.ActivityType.WATCHING),
-        ("einer Quizshow", discord.activity.ActivityType.COMPETING)
+        ("schaut sich Anime an", discord.activity.ActivityType.WATCHING),
+        ("sucht nach kostenlosen Spielen", discord.activity.ActivityType.WATCHING),
+        ("spielt Galgenmännchen", discord.activity.ActivityType.GAME),
+        ("sucht nach neuen Insults", discord.activity.ActivityType.WATCHING),
+        ("liest die Witze durch", discord.activity.ActivityType.WATCHING),
+        ("guckt sich die Patchnotes an", discord.activity.ActivityType.WATCHING),
+        ("hört weisen Menschen zu", discord.activity.ActivityType.LISTENING),
+        ("schaut sich Tierlisten an", discord.activity.ActivityType.WATCHING),
+        ("tritt in einer Quizshow an", discord.activity.ActivityType.COMPETING)
     ]
     status = discord.Status.IDLE  # possible: "ONLINE", "OFFLINE", "DND", "IDLE", "INVISIBLE"
 
@@ -162,6 +162,7 @@ async def on_message_create(event):
 @listen()
 async def on_message_delete(event):
     await karma.on_message_delete(event.message)
+    await tierlist.on_message_delete(event.message)
 
 
 @listen()

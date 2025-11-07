@@ -224,7 +224,7 @@ def get_now(location):
 
     weather = f"**Uhrzeit**: {datetime.datetime.fromtimestamp(data['dt'])}\n"
     weather += f"\n**Wetter**: {data['weather'][0]['main']} ({data['weather'][0]['description']})\n"
-    weather += f"**Temperature**: {data['main']['temp']}° (gefühlt {data['main']['feels_like']}°)\n"
+    weather += f"**Temperatur**: {data['main']['temp']}° (gefühlt {data['main']['feels_like']}°)\n"
     weather += f"**Luftfeuchtigkeit**: {data['main']['humidity']} %\n"
 
     weather += f"\n**Sichtbarkeit**: {data['visibility']} m\n"
