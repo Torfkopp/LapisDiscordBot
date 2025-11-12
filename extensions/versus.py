@@ -516,11 +516,13 @@ def get_win_rates(people, game):
     string += "|".join(["", "-" * 11, "-" * 6, "-" * 5, "-" * 5, "-" * 9]) + "|\n"
 
     for p in ids:
+        w, l = player_elos[p]["wins"], player_elos[p]["losses"]
+        if w == 0 == l: continue
         string += linemaker(
             player_elos[p]["name"][0],
             player_elos[p]["elo"],
-            w := player_elos[p]["wins"],
-            l := player_elos[p]["losses"],
+            w,
+            l,
             round(w / (w + l) * 100, 3)
         )
 
