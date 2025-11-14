@@ -37,14 +37,14 @@ class Embed(Extension):
 
 def get_embed_link(link, alt):
     """ Returns the link in a for discord embeddable format """
-    if "tiktok." in link: link = link.replace("tiktok.com", "vxtiktok.com")
+    if "tiktok." in link: link = link.replace("vm.tiktok.com", "a.tnktok.com")
     elif "instagram." in link:
-        if alt: link = link.replace("instagram.com", "ddinstagram.com")
-        else: link = link.replace("instagram.com", "instagramez.com")
-    elif "x." in link or "twitter." in link: link = link.replace("x.com", "vxtwitter.com")
+        link = link.replace("instagram.com", "uuinstagram.com")
+    elif "x." in link or "twitter." in link:
+        link = link.replace("x.com", "vxtwitter.com")
     elif "reddit." in link:
-        if not alt:
-            link = link.replace("reddit", "rxddit")
+        link = link.replace("reddit", "vxreddit")
+        """
         else:
             log.write("Site-Call: " + link)
             original_link = link
@@ -60,5 +60,6 @@ def get_embed_link(link, alt):
                                                        "häppchenweise von einer anderen Seite, wodurch ich es nicht "
                                                        "kriegen kann .·´¯`(>▂<)´¯`·..")
             link = f"[Reddit Post-Link](<{original_link}>) | [Video Link]({link})"
+        """
 
     return link
