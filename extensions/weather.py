@@ -60,38 +60,34 @@ def is_sun_killing(now):
     avg_heat = sum(i for i, _ in max_temps.values()) / len(max_temps.values())
     avg_cold = sum(i for i, _ in max_temps.values()) / len(max_temps.values())
 
+    gif, title = None, None
     if avg_heat > 27.0:
         title = f"\"Pretty much everywhere, it's gonna be hot\""
         gif = util.get_gif("hot")
 
-        embed = interactions.Embed(title=title)
-        description = f"Heute erreichen wir (gefühlte):\n```python\n"
-        for loc, temp in max_temps.items():
-            description += f"{loc.title()}:".ljust(25) + f"{temp[1]:.2f} ({temp[0]:.2f}) °C\n"
-        embed.description = description + "```"
-
-        if gif == "killing_sun.png":
-            file = discord.File("resources/killing_sun.png", file_name="killing_sun.png")
-            embed.image = 'attachment://killing_sun.png'
-        else:
-            embed.image = gif
-            file = None
-        return embed, file
     elif avg_cold < 2.0:
         title = random.choice([
-            "\nIt's the perfect texture for running\"",
+            "\"It's the perfect texture for running\"",
             "I’m an untrained meteorologist... reporting on the snow... it’s in the streets"
         ])
         gif = util.get_gif("cold")
 
-        embed = interactions.Embed(title=title)
-        description = f"Heute erreichen wir gefühlte:\n```python\n"
-        for loc, temp in min_temps.items(): description += f"{loc.title()}:".ljust(25) + f"{temp} °C\n"
-        embed.description = description + "```"
-        embed.image = gif
-        return embed, None
+    if not title or not gif: return None, None
 
-    return None, None
+    embed = interactions.Embed(title=title)
+    description = f"Heute erreichen wir (gefühlte):\n```python\n"
+    for loc, temp in max_temps.items():
+        description += f"{loc.title()}:".ljust(25) + f"{temp[1]:.2f} ({temp[0]:.2f}) °C\n"
+    embed.description = description + "```"
+
+    if gif == "killing_sun.png":
+        file = discord.File("resources/killing_sun.png", file_name="killing_sun.png")
+        embed.image = 'attachment://killing_sun.png'
+    else:
+        embed.image = gif
+        file = None
+
+    return embed, file
 
 
 def location_slash_option():
