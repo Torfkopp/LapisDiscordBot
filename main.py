@@ -373,8 +373,8 @@ async def startup_daily_meme():
     # AUTOMATIC JOJO MEME
     sent_already, day_count = util.day_counter()
     if not sent_already:
-        message = (f"Jeden Tag ein JoJo-Meme senden bis Jakob mit JoJo fertig ist. Tag {day_count}\n"
-                   + reddit.get_reddit_link("ShitPostCrusaders"))
+        message = (f"Jeden Tag ein Meme senden bis ich fertig ist. Tag {day_count}\n"
+                   + reddit.get_reddit_link("LeagueOfMemes"))
         await bot.get_channel(util.COMEDY_CHANNEL_ID).send(message)
 
 
