@@ -35,6 +35,7 @@ class Colour(Enum):
     HELP = discord.BrandColors.BLURPLE
     INSULTS = discord.MaterialColors.BROWN
     JOKES = discord.MaterialColors.YELLOW
+    JOJO = discord.MaterialColors.PINK
     KARMA = discord.FlatUIColors.WETASPHALT
     MODMAIL = discord.MaterialColors.GREY
     POLL = discord.MaterialColors.AMBER

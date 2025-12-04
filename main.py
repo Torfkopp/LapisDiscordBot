@@ -86,7 +86,7 @@ class ActivityClass:
 
     async def test_mode(self):
         self.status = discord.Status.DND
-        await self._change_activity("nem Test Modus", discord.activity.ActivityType.COMPETING)
+        await self._change_activity("Befindet sich im Testmodus", discord.activity.ActivityType.COMPETING)
 
     async def rotate_activity(self):
         """ Changes the activity depending on the situation """
@@ -373,7 +373,7 @@ async def startup_daily_meme():
     # AUTOMATIC JOJO MEME
     sent_already, day_count = util.day_counter()
     if not sent_already:
-        message = (f"Jeden Tag ein Meme senden bis ich fertig ist. Tag {day_count}\n"
+        message = (f"Jeden Tag ein Meme senden bis ich fertig oder tot bin.\nTag {day_count}\n"
                    + reddit.get_reddit_link("LeagueOfMemes"))
         await bot.get_channel(util.COMEDY_CHANNEL_ID).send(message)
 
