@@ -19,7 +19,6 @@ SUBBREDDITS = {
     "Anti Meme": "antimeme",
     "Birds aren't real": "BirdsArentReal",
     "Dank Memes": "dankmemes",
-    "Darkin Folk": "darkinfolk",
     "Football Circlejerk": "soccercirclejerk",
     "Formula Dank": "formuladank",
     "ich_iel": "ich_iel",

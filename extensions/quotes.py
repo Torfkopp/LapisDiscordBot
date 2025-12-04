@@ -41,8 +41,16 @@ class Quotes(Extension):
         required=False,
         opt_type=OptionType.STRING
     )
-    async def wisdom_function(self, ctx: SlashContext, term: str = ""):
-        embed, file = get_wisdom(term)
+    @slash_option(
+        name="amount",
+        description="Anzahl an Termen",
+        required=False,
+        opt_type=OptionType.INTEGER,
+        min_value=1,
+        max_value=10,
+    )
+    async def wisdom_function(self, ctx: SlashContext, term: str = "", amount=1):
+        embed, file = get_wisdom(term, amount)
         await ctx.send(embed=embed, file=file)
 
 
@@ -88,19 +96,18 @@ def get_sparkasse():
     return util.uwuify_by_chance(embed)
 
 
-def get_wisdom(search):
+def get_wisdom(search, amount):
     """ Gets a wise quote (https://wolfgang-naeser-marburg.lima-city.de/htm/sponti.htm) """
     with open("resources/wisdom.txt", encoding="utf-8") as f: wisdom = f.read().splitlines()
 
     if search:
         terms = search.split(",")
         containing = [w for w in wisdom if all(t.lower().strip() in w.lower() for t in terms)]
-        quote = random.choice(containing) if containing else random.choice(wisdom)
-    else: quote = random.choice(wisdom)
+        quote = random.sample(containing, min(amount, len(containing))) if containing else random.sample(wisdom, amount)
+    else: quote = random.sample(wisdom, amount)
 
     file = interactions.models.discord.File("lapis_pics/Lapis2.jpg", "Lapis2.jpg")
     embed = interactions.Embed(title="Lapis sagt:", color=COLOUR)
     embed.set_thumbnail(url="attachment://Lapis2.jpg")
-    embed.description = quote
-
+    embed.description = "\n".join(quote)
     return embed, file
