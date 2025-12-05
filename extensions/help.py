@@ -33,7 +33,7 @@ def get_help():
                     value="/anime action: Tue einer Person eine Animeaktion an"
                           "/anime quote: Zufälliges Anime Zitat\n"
                           "/anime reaction: Zufällige Anime Bewegtbildreaktion")
-    embed.add_field(name="BubbleWrap", value="/bubblewrap: Hab Spaß mit virtueller Luftpolsterfolie")
+    #embed.add_field(name="BubbleWrap", value="/bubblewrap: Hab Spaß mit virtueller Luftpolsterfolie")
     embed.add_field(name="Embed",
                     value="/embed link: Gibt den Link in von Discord embeddebarem Format zurück")
     embed.add_field(name="Free Games", value="/freegames: Erhalte momentan kostenlos erhaltbare PC-Spiele")
@@ -42,6 +42,11 @@ def get_help():
     embed.add_field(name="Insults",
                     value="/insult: Erhalte eine zufällige Beleidigung\n"
                           "/yomomma: Erhalte eine zufällige Beschreibung deiner Mutter")
+    embed.add_field(name="JoJo",
+                    value="/info: Info über den JoJo Arc"
+                          "/when: Wann welche Folge?"
+                          "/table: Tabellarische Zusammenfassung"
+                          "/graph: Graphische Zusammenfassung")
     embed.add_field(name="Joke",
                     value="/joke dad_joke: Erhalte einen zufälligen Dad Joke\n"
                           "/joke joke: joke\n"
@@ -51,12 +56,16 @@ def get_help():
                           "/patch summary: Erhalte die Zusammenfassungstexte der Änderungen\n"
                           "/patch details: Erhalte die Änderungen des Patches im Details")
     embed.add_field(name="Modmail", value="/modmail: Schreibe eine Mail an die Mods")
-    embed.add_field(name="Poll", value="/poll: Erstelle eine Umfrage")
+    #embed.add_field(name="Poll", value="/poll: Erstelle eine Umfrage")
     embed.add_field(name="Quotes", value="/advice: Erhalte einen zufälligen Ratschlag")
     embed.add_field(name="Reddit", value="/reddit: Erhalte einen zufälligen Pfosten aus dem Unter")
     embed.add_field(name="Tierlist", value="/tierlist: Erstelle eine Tierlist")
     embed.add_field(name="Trivia", value="/trivia: Erhalte eine Trivia-Frage")
     embed.add_field(name="UwU", value="/uwu: UwUify deinyen Texy-Wexy")
+    embed.add_field(name="Weather",
+                    value="/forecast: Wetter der nächsten 5 Tage\n"
+                          "/now: Wetter jetzt gerade\n"
+                          "/map: Deutschlandkarte")
     # Current amount: 16 (maximum: 25) | Soon: Pages
     return util.uwuify_by_chance(embed), file
 

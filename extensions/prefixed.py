@@ -62,6 +62,23 @@ class Prefixed(Extension):
         await self.bot.stop()
         subprocess.call(["bash", "./strunt/update.sh"])  # Adapt to os
 
+    @prefixed_command()
+    async def say(self, ctx: PrefixedContext, channel="", text=""):
+        if ctx.author_id not in self.bot.owner_ids: return
+
+        if channel and not text:
+            text = channel
+            channel = "labar"
+
+        match channel:
+            case "sport": channel = util.SPORTS_CHANNEL_ID
+            case "comedy": channel = util.COMEDY_CHANNEL_ID
+            case "mod": channel = util.MODERATOREN_CHANNEL_ID
+            case "stammrunde": channel = util.STAMMRUNDEN_CHANNEL_ID
+            case _: channel = util.LABAR_CHANNEL_ID
+
+        await self.bot.get_channel(channel).send(text)
+
 
 def hello():
     embed = interactions.Embed(title="Hallo!", color=COLOUR)
