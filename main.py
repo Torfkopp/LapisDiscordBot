@@ -400,8 +400,8 @@ async def on_startup():
 
     await startup_football_scoring(now)
     formula1_schedule = formula1.create_schedule()
-    await startup_formula1_results(formula1_schedule, now)
-    await startup_formula1_info(now)
+    #await startup_formula1_results(formula1_schedule, now)
+    #await startup_formula1_info(now)
     await startup_lolesports_results(now)
     await startup_patchnotes(now)
     await startup_day_dependent()
