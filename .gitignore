@@ -11,3 +11,5 @@ plan.*
 /formula1/*.png
 /lapis_pics/
 .idea/
+talking.py
+talk_conf.json

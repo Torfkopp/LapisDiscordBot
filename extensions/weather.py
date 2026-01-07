@@ -77,7 +77,8 @@ def is_sun_killing(now):
     embed = interactions.Embed(title=title)
     description = f"Heute erreichen wir (gefühlte):\n```python\n"
     for loc, temp in max_temps.items():
-        description += f"{loc.title()}:".ljust(25) + f"{temp[1]:.2f} ({temp[0]:.2f}) °C\n"
+        real, felt = f"{temp[1]:.2f}".rjust(5), f"({temp[0]:.2f})".rjust(7)
+        description += f"{loc.title()}:".ljust(15) + f"{real} {felt} °C\n"
     embed.description = description + "```"
 
     if gif == "killing_sun.png":
