@@ -399,9 +399,9 @@ async def on_startup():
     if now.weekday() == 1: util.reset_message_tracker()  # Reset on Tuesday
 
     await startup_football_scoring(now)
-    formula1_schedule = {} #formula1.create_schedule()
-    #await startup_formula1_results(formula1_schedule, now)
-    #await startup_formula1_info(now)
+    formula1_schedule = formula1.create_schedule()
+    await startup_formula1_results(formula1_schedule, now)
+    await startup_formula1_info(now)
     await startup_lolesports_results(now)
     await startup_patchnotes(now)
     await startup_day_dependent()
