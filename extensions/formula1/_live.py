@@ -10,7 +10,11 @@ import extensions.formula1._no_group as no_group
 import util
 from core import log
 
+from tabulate import tabulate
+
 COLOUR = util.Colour.FORMULA1.value
+CURRENT_SEASON_NUMBER = 1285547 # Adapt every season
+
 payload = ""  # Payload for the sport1 api
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0",
@@ -143,8 +147,7 @@ def create_schedule():
 
 def _get_result_url():
     """ Gets the url for the session to get the result from """
-    url = ("https://api.sport1.info/v2/de/motorsport/sport/sr:stage:7668/season/sr:stage:1189123"
-           "/minSportEventsWithSessions")
+    url = f"https://api.sport1.info/v2/de/motorsport/sport/sr:stage:7668/season/sr:stage:{CURRENT_SEASON_NUMBER}/minSportEventsWithSessions"
     try:
         log.write("API Call Formula1: " + url)
         response = requests.request("GET", url, data=payload, headers=headers)
@@ -167,48 +170,75 @@ def _make_result(response):
     :param response: The response of the api
     :return: The result
     """
-    result = "```python\n"
     live = "Live" if response['isLive'] else "Ergebnis"
-    result += f"{live} - {response['competition']['name']} - {response['roundTitle']}" + "\n"
-    result += "\n"
-    result += "#".ljust(4) + "Name".center(21)
-    if response['roundType'] == "RACE" or response['roundType'] == "SPRINT":
-        result += "Gesamt".center(8) + "Schnellste".center(10) + "P".rjust(3) + "\n"
-        for position in response['results']:
-            if 'position' not in position: continue
-            result += str(position['position']).ljust(4)
-            result += f"{position['person']['firstName']} {position['person']['lastName']}".center(21)
+    rows = []
 
-            if 'status' in position and position['status'] != "FINISHED": result += position['status'].center(8)
+    if response['roundType'] in ("RACE", "SPRINT"):
+        headers = ["#", "Name", "Gesamt", "Schnellste", "P"]
+
+        for position in response['results']:
+            if 'position' not in position:
+                continue
+
+            name = f"{position['person']['firstName']} {position['person']['lastName']}"
+
+            if position.get('status') and position['status'] != "FINISHED":
+                total = position['status']
             else:
-                if 'time' in position:
-                    result += str(position['time']).center(10)
+                total = position.get('time', "")
 
-            if 'fastestLap' in position: result += str(position['fastestLap']).center(10)
-            else: result += " ".center(10)
+            fastest = position.get('fastestLap', "")
+            pits = position.get('pitStopCount', "")
 
-            result += str(position['pitStopCount']).rjust(3) if 'pitStopCount' in position else " "
-            result += "\n"
-    elif response['roundType'] == "QUALIFYING" or response['roundType'] == "SPRINT_SHOOTOUT":
-        result += "Schnellste".center(14) + "\n"
+            rows.append([
+                position['position'],
+                name,
+                total,
+                fastest,
+                pits
+            ])
+
+    elif response['roundType'] in ("QUALIFYING", "SPRINT_SHOOTOUT"):
+        headers = ["#", "Name", "Schnellste"]
+
         for position in response['results']:
-            if 'position' not in position: continue
-            result += str(position['position']).ljust(4)
-            result += f"{position['person']['firstName']} {position['person']['lastName']}".center(21)
-            result += str(position['fastestLap']).center(12) if 'fastestLap' in position else " "
-            result += "\n"
+            if 'position' not in position:
+                continue
+
+            name = f"{position['person']['firstName']} {position['person']['lastName']}"
+            fastest = position.get('fastestLap', "")
+
+            rows.append([
+                position['position'],
+                name,
+                fastest
+            ])
+
     else:
-        result += "Schnellste".center(14) + "Stops".rjust(3) + "\n"
-        for position in response['results']:
-            if 'position' not in position: continue
-            result += str(position['position']).ljust(4)
-            result += f"{position['person']['firstName']} {position['person']['lastName']}".center(21)
-            result += str(position['fastestLap']).center(14) if 'fastestLap' in position else " "
-            result += str(position['pitStopCount']).rjust(3) if 'pitStopCount' in position else " "
-            result += "\n"
+        headers = ["#", "Name", "Schnellste", "Stops"]
 
-    result += "```"
-    result = "||" + result + "||"  # Make Spoiler
+        for position in response['results']:
+            if 'position' not in position:
+                continue
+
+            name = f"{position['person']['firstName']} {position['person']['lastName']}"
+            fastest = position.get('fastestLap', "")
+            pits = position.get('pitStopCount', "")
+
+            rows.append([
+                position['position'],
+                name,
+                fastest,
+                pits
+            ])
+
+    table = tabulate(
+        rows, 
+        headers=headers, 
+        tablefmt="mixed_outline"
+    )
+
+    result = "||```python\n" + f"{live} - {response['competition']['name']} - {response['roundTitle']}" + "\n" + table + "\n```||"  # Make Spoiler
     return result
 
 

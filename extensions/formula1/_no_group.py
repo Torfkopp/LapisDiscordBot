@@ -5,6 +5,7 @@ import pytz
 import requests
 from bs4 import BeautifulSoup
 from fastf1.core import Laps
+from tabulate import tabulate
 
 import util
 from core import log
@@ -20,61 +21,89 @@ def result(year, gp, session):
     sess = fastf1.get_session(year, gp, session)
     log.write("FastF1: " + str(sess))
     sess.load(weather=False)
-    results = sess.results
     ranking = f"Results {year} {sess.event['EventName']} {sess.name}\n".center(30)
-    ranking += "\n"
-    ranking += "#".ljust(6) + "Name".center(20)
+
+
     if sess.name == "Qualifying":
-        ranking += "Zeit".center(12) + "QX".rjust(6) + "\n"
-        for i, _ in enumerate(results.iterrows()):
-            place = results.iloc[i]
-            try: position = int(place['Position'])
-            except ValueError: position = int(i) + 1
-            ranking += str(position).ljust(6)
-            ranking += place['FullName'].center(20)
-            q = "Q3"
-            if position > 10: q = "Q2"
-            if position > 15: q = "Q1"
-            time = place[q]
-            ranking += str(time)[11:19].center(12)
-            ranking += q.rjust(6)
-            ranking += "\n"
+        results = sess.results[[
+            "Position",
+            "BroadcastName",
+            "Q1",
+            "Q2",
+            "Q3",
+        ]]
+
+        def format_time(td):
+            return f"{td.seconds//60}:{(td.seconds%60 + td.microseconds/1e6):06.3f}" if not pd.isnull(td) else ""
+
+        results["Q1"] = results["Q1"].apply(format_time)
+        results["Q2"] = results["Q2"].apply(format_time)
+        results["Q3"] = results["Q3"].apply(format_time)
+
+        table = tabulate(
+            results.values,
+            headers=["#", "Name", "Q1", "Q2", "Q3"],
+            tablefmt="mixed_outline"
+        )
     elif sess.name == "Race" or sess.name == "Sprint":
-        ranking += "Zeit".center(12) + "Punkte".rjust(8) + "\n"
-        for i, _ in enumerate(results.iterrows()):
-            place = results.iloc[i]
-            try: position = int(place['Position'])
-            except ValueError: position = int(i) + 1
-            ranking += str(position).ljust(6)
-            ranking += place['FullName'].center(20)
-            time = place['Time']
-            if time is pd.NaT: time = place['Status']
-            else: time = str(time)[7:15]
-            ranking += time.center(12)
-            ranking += str(place['Points']).rjust(8)
-            ranking += "\n"
+        results = sess.results[[
+            "Position",
+            "BroadcastName",
+            "Time",
+            "Status",
+            "Points"
+        ]]
+
+        def format_time(td):
+            if pd.isna(td): return ""
+            c = td.components
+            if td >= pd.Timedelta(hours=1): return f"{c.hours}:{c.minutes:02d}:{c.seconds:02d}.{c.milliseconds:03d}"
+            return f"+{c.minutes:02d}:{c.seconds:02d}.{c.milliseconds:03d}"
+
+        results["Time"] = results["Time"].apply(format_time)
+
+        table = tabulate(
+            results.values,
+            headers=["#", "Name", "Time", "Status", "P"],
+            tablefmt="mixed_outline",
+            colalign=["right", "left", "right", "center", "right"],
+            headersglobalalign="center"
+        )
     else:
-        ranking += "Zeit".center(12) + "Mischung".rjust(8) + "\n"
+        def format_time(td):
+            return f"{td.seconds//60}:{(td.seconds%60 + td.microseconds/1e6):06.3f}" if not pd.isnull(td) else ""
 
-        driver_map = {results.iloc[i]['Abbreviation']: results.iloc[i]['FullName'] for i, _ in
-                      enumerate(results.iterrows())}
-        list_fastest_laps = list()
-        for drv in pd.unique(sess.laps['Driver']):
-            drvs_fastest_lap = sess.laps.pick_driver(drv).pick_fastest()
-            # It can happen that a driver has no fastest lap; this prevents the resulting error
-            if drvs_fastest_lap.isnull().sum() == len(drvs_fastest_lap.values): continue
-            list_fastest_laps.append(drvs_fastest_lap)
-        fastest_laps = Laps(list_fastest_laps).sort_values(by='LapTime').reset_index(drop=True)
+        results = sess.results[[
+            "Position",
+            "Abbreviation",
+            "BroadcastName",
+        ]]
+        
+        table = []
 
-        for i in fastest_laps.itertuples():
-            ranking += str(i[0] + 1).ljust(6)
-            ranking += driver_map.get(i.Driver).center(20)
-            ranking += str(i.LapTime)[11:19].center(12)
-            ranking += i.Compound.rjust(8)
-            ranking += "\n"
+        for i, v in enumerate(results.itertuples(), 1):
+            d = [i]
+            d.append(v[3])
+            fastest_lap = sess.laps.pick_drivers(v[2]).pick_fastest()
+            if not fastest_lap.isnull().sum() == len(fastest_lap.values):
+                d.append(format_time(fastest_lap.LapTime))
+                d.append(fastest_lap.Compound)
+            else:
+                d.append("")
+                d.append("")
+            table.append(d)
+        
+        table = tabulate(
+            table,
+            headers=["#", "Name", "Time", "Tyre"],
+            tablefmt="mixed_outline",
+            colalign=["right", "center", "left", "right", "center"],
+            headersglobalalign="center"
+        )
 
-    ranking = "```python\n" + ranking + "```"
-    return util.uwuify_by_chance(ranking)
+    ranking = "```python\n" + ranking + table + "\n```"
+
+    return ranking
 
 
 def next_race():
