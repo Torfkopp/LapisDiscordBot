@@ -20,10 +20,10 @@ async def function(ctx, entry_function, *args):
 
 
 async def on_message_delete(msg):
-    with open("strunt/tierlist.json", "r", encoding="utf-8") as f: j = json.load(f)
+    with open("variable/tierlist.json", "r", encoding="utf-8") as f: j = json.load(f)
     x = j.pop(str(msg.id), None)
     if x:
-        with open("strunt/tierlist.json", "w", encoding="utf-8") as f: json.dump(j, f, indent=4)
+        with open("variable/tierlist.json", "w", encoding="utf-8") as f: json.dump(j, f, indent=4)
 
 
 class Tierlist(Extension):
@@ -93,7 +93,7 @@ def create_tierlist(theme, tiers, description):
                                description=f"Ordnung: {description}",
                                color=util.Colour.TIERLIST.value)
     embed.set_footer("@Lapis + (c/create {Tier} {Name} | d/delete {Tier} {Name} | m/move {Tier1} {Tier2} {Name})")
-    file = interactions.models.discord.File("lapis_pics/LapisTier.jpg", "LapisTier.jpg")
+    file = interactions.models.discord.File("resources/lapis_pics/LapisTier.jpg", "LapisTier.jpg")
     embed.set_thumbnail(url="attachment://LapisTier.jpg")
 
     for tier in tiers:
@@ -124,13 +124,13 @@ def move_entry(tier1, tier2, name):
 
 
 def save_tierlist(name, message_id, guild, channel):
-    with open("strunt/tierlist.json", "r", encoding="utf-8") as f: j = json.load(f)
+    with open("variable/tierlist.json", "r", encoding="utf-8") as f: j = json.load(f)
     j[message_id] = {"name": name, "guild": guild, "channel": channel}
-    with open("strunt/tierlist.json", "w", encoding="utf-8") as f: json.dump(j, f, indent=4)
+    with open("variable/tierlist.json", "w", encoding="utf-8") as f: json.dump(j, f, indent=4)
 
 
 def get_tierlistlist():
-    with open("strunt/tierlist.json", "r", encoding="utf-8") as f: tierlists = json.load(f)
+    with open("variable/tierlist.json", "r", encoding="utf-8") as f: tierlists = json.load(f)
     description = ""
     for l_key, l_values in tierlists.items():
         link = f"https://discord.com/channels/{l_values['guild']}/{l_values['channel']}/{l_key}"

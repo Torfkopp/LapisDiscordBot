@@ -15,7 +15,7 @@ from interactions.models import discord
 import util
 
 COLOUR = util.Colour.JOJO.value
-CSV_PATH = 'strunt/jojo-history.csv'
+CSV_PATH = 'variable/jojo-history.csv'
 
 PARTS = [
     "Phantom Blood",
@@ -201,7 +201,7 @@ def get_table():
 def get_graph(wanted_parts, compare):
     jojo_dict = []
     # Parse CSV
-    with open("strunt/jojo-history.csv", "r", encoding="utf-8") as f:
+    with open("variable/jojo-history.csv", "r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
             jojo_dict.append(
@@ -253,7 +253,7 @@ def get_graph(wanted_parts, compare):
     else:
         get_timeline(dates, parts, show_parts, part_color_map)
 
-    file = discord.File("strunt/jojo.png", file_name="jojo.png")
+    file = discord.File("temp/jojo.png", file_name="jojo.png")
     return None, file
 
 
@@ -286,7 +286,7 @@ def get_comparison(dates, parts, show_parts, part_color_map):
     plt.tight_layout()
     plt.grid(color='dimgrey')
     # plt.show()
-    plt.savefig('strunt/jojo.png', bbox_inches="tight", dpi=300)
+    plt.savefig('temp/jojo.png', bbox_inches="tight", dpi=300)
 
 
 def get_timeline(dates, parts, show_parts, part_color_map):
@@ -332,4 +332,4 @@ def get_timeline(dates, parts, show_parts, part_color_map):
     plt.tight_layout()
     plt.grid(color='dimgrey')
     # plt.show()
-    plt.savefig('strunt/jojo.png', bbox_inches="tight", dpi=300)
+    plt.savefig('temp/jojo.png', bbox_inches="tight", dpi=300)

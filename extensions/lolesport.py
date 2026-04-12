@@ -101,23 +101,23 @@ def get_live():
 COMMAND PART
 ##################################################
 '''
-command_calls = 0
-limit_reached = False
+# command_calls = 0
+# limit_reached = False
 
 
-def limit_command_calls():
-    """ Used to reduce the command_calls counter
-    Called regularly in main """
-    global command_calls, limit_reached
-    if command_calls > 0: command_calls -= 1
-    if command_calls == 0: limit_reached = False
+# def limit_command_calls():
+#     """ Used to reduce the command_calls counter
+#     Called regularly in main """
+#     global command_calls, limit_reached
+#     if command_calls > 0: command_calls -= 1
+#     if command_calls == 0: limit_reached = False
 
 
-def increment_command_calls():
-    """ Used to increment the command_calls counter """
-    global command_calls, limit_reached
-    command_calls += 1
-    if command_calls > COMMAND_LIMIT: limit_reached = True
+# def increment_command_calls():
+#     """ Used to increment the command_calls counter """
+#     global command_calls, limit_reached
+#     command_calls += 1
+#     if command_calls > COMMAND_LIMIT: limit_reached = True
 
 
 async def command_function(ctx, func, *args):
@@ -128,7 +128,7 @@ async def command_function(ctx, func, *args):
     elif limit_reached:
         await ctx.send(embed=util.get_error_embed("limit_reached"))
         return
-    increment_command_calls()
+    #increment_command_calls()
     result = func(*args)
     if isinstance(result, interactions.Embed): await ctx.send(embed=result)
     else: await ctx.send(result)

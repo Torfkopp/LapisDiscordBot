@@ -179,7 +179,7 @@ class Versus(Extension):
 
 def mention_to_people(people, game):
     if people == "": return people
-    with open("strunt/elo.json") as f: elo = json.load(f)[game]
+    with open("variable/elo.json") as f: elo = json.load(f)[game]
     numbers = people.split("@")
     peops = ""
     for n in numbers:
@@ -208,7 +208,7 @@ def pre_match(partition):
     """ The procedure before the embed is sent """
     change = False
     elo_dict = {}
-    with open("strunt/elo.json", "r") as f: elo_json = json.load(f)
+    with open("variable/elo.json", "r") as f: elo_json = json.load(f)
     if Versus.game not in elo_json: change = True; elo_json[Versus.game] = {}
     player_elos = elo_json[Versus.game]
 
@@ -229,7 +229,7 @@ def pre_match(partition):
         elo_dict[p] = player_elos[str(p)]["elo"]
 
     if change:
-        with open("strunt/elo.json", "w") as f: json.dump(elo_json, f, indent=4)
+        with open("variable/elo.json", "w") as f: json.dump(elo_json, f, indent=4)
 
     one, two = random_teams() if partition == "Random" else elo_teams(player_elos)
     if Versus.game == "lol": Versus.champs = random_champions(one)
@@ -293,7 +293,7 @@ def random_champions(one):
 
 def build_pre_game_embed(elo_dict, one, two):
     """ Build the embed """
-    file = interactions.models.discord.File("lapis_pics/boxing.png", "boxing.png")
+    file = interactions.models.discord.File("resources/lapis_pics/boxing.png", "boxing.png")
     embed = interactions.Embed(title=random.choice(title_options[Versus.game]), color=COLOUR)
     embed.set_thumbnail(url="attachment://boxing.png")
 
@@ -344,7 +344,7 @@ def get_elo_dict(winner):
     """ Updates the elo, wins etc. of every player """
     elo_dict = {}
 
-    with open("strunt/elo.json", "r") as f: elo_json = json.load(f)
+    with open("variable/elo.json", "r") as f: elo_json = json.load(f)
     player_elos = elo_json[Versus.game]
     elo_gains = calculate_elo(player_elos, winner)
     for p in Versus.participants:
@@ -357,7 +357,7 @@ def get_elo_dict(winner):
         player["wins"] += win
         player["losses"] += abs(win - 1)
 
-    with open("strunt/elo.json", "w") as f: json.dump(elo_json, f, indent=4)
+    with open("variable/elo.json", "w") as f: json.dump(elo_json, f, indent=4)
 
     return elo_dict, player_elos
 
@@ -401,7 +401,7 @@ def calculate_elo(player_elos, winner):
 
 def update_database(player_elos, winner):
     """ Puts the game into the database and updates the champions' stats"""
-    con = sqlite3.connect("strunt/elo.db")
+    con = sqlite3.connect("variable/elo.db")
     cur = con.cursor()
 
     def get_names(li): return ", ".join([player_elos[x]["name"][0] for x in li])
@@ -437,7 +437,7 @@ def update_database(player_elos, winner):
 
 def get_elo_graph(people, game, timeframe):
     """ Method for the elo_graph function """
-    with open("strunt/elo.json", "r") as f: player_elos = json.load(f)
+    with open("variable/elo.json", "r") as f: player_elos = json.load(f)
     player_elos = player_elos[game]
     people = [p.strip() for p in people.split(",")] if people != "" else ""
 
@@ -489,15 +489,15 @@ def get_elo_graph(people, game, timeframe):
     plt.xticks(rotation=90)
     plt.tight_layout()
 
-    plt.savefig('strunt/elo.png')
-    file = discord.File('strunt/elo.png', file_name="elo.png")
+    plt.savefig('temp/elo.png')
+    file = discord.File('temp/elo.png', file_name="elo.png")
 
     return None, file
 
 
 def get_win_rates(people, game):
     """ Method for the win_rate-table command"""
-    with open("strunt/elo.json", "r") as f: player_elos = json.load(f)
+    with open("variable/elo.json", "r") as f: player_elos = json.load(f)
     player_elos = player_elos[game]
     people = [p.strip() for p in people.split(",")] if people != "" else ""
 

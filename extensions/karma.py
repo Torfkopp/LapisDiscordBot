@@ -22,6 +22,7 @@ BONUS, PENALTY = 6, -6
 UPVOTE_KARMA, MEHVOTE_KARMA, DOWNVOTE_KARMA = 1, 0, -1
 VOTING_KARMA = 1
 
+DATABASE = "variable/karma.db"
 
 def setup(bot):
     Karma(bot)
@@ -66,7 +67,7 @@ async def on_message(msg):
 
 async def on_message_delete(msg):
     if str(msg.channel.id) != util.COMEDY_CHANNEL_ID: return
-    con = sqlite3.connect("strunt/karma.db")
+    con = sqlite3.connect(DATABASE)
     cur = con.cursor()
     cur.execute("DELETE FROM posts WHERE id == ?", [str(msg.id)])
     con.commit()
@@ -83,7 +84,7 @@ async def on_reaction(reac):
 
     msg_id = str(reac.message.id)
     upvoters, mehvoters, downvoters = set(), set(), set()
-    con = sqlite3.connect("strunt/karma.db")
+    con = sqlite3.connect(DATABASE)
     cur = con.cursor()
 
     post = cur.execute("SELECT * FROM posts WHERE id = ?", [msg_id]).fetchone()
@@ -111,7 +112,7 @@ async def on_reaction_remove(reac):
 
     msg_id = str(reac.message.id)
 
-    con = sqlite3.connect("strunt/karma.db")
+    con = sqlite3.connect(DATABASE)
     cur = con.cursor()
 
     post = cur.execute("SELECT * FROM posts WHERE id = ?", [msg_id]).fetchone()
@@ -145,7 +146,7 @@ def get_author_ranking():
             self.karma = self.posts * POST_KARMA + self.votings * VOTING_KARMA + self.upvotes * UPVOTE_KARMA + self.mehvotes * MEHVOTE_KARMA + self.downvotes * DOWNVOTE_KARMA
             return self.karma
 
-    con = sqlite3.connect("strunt/karma.db")
+    con = sqlite3.connect(DATABASE)
     cur = con.cursor()
 
     user_set, users = set(), {}
@@ -196,7 +197,7 @@ def get_author_ranking():
 
 
 def get_post_ranking(reverse):
-    con = sqlite3.connect("strunt/karma.db")
+    con = sqlite3.connect(DATABASE)
     cur = con.cursor()
     posts = cur.execute("SELECT author, id, upvoters, mehvoters, downvoters FROM posts").fetchall()
     con.close()
@@ -224,7 +225,7 @@ def get_post_ranking(reverse):
 
 
 def get_karma_graph():
-    con = sqlite3.connect("strunt/karma.db")
+    con = sqlite3.connect(DATABASE)
     cur = con.cursor()
 
     user_set, users = set(), {}
@@ -265,7 +266,7 @@ def get_karma_graph():
     plt.xticks(rotation=45)
     plt.tight_layout()
 
-    plt.savefig('strunt/karma.png')
-    file = discord.File('strunt/karma.png', file_name="karma.png")
+    plt.savefig('temp/karma.png')
+    file = discord.File('temp/karma.png', file_name="karma.png")
 
     return file

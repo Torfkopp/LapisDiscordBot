@@ -199,8 +199,8 @@ def get_five(location, time):
     plt.xticks(rotation=90)
     plt.tight_layout()
 
-    plt.savefig("strunt/weather.png")
-    file = discord.File('strunt/weather.png', file_name="weather.png")
+    plt.savefig("temp/weather.png")
+    file = discord.File('temp/weather.png', file_name="weather.png")
 
     return None, file
 
@@ -250,8 +250,8 @@ def get_germany():
     overlay = overlay.convert("RGBA")
 
     new_img = Image.blend(background, overlay, alpha=0.5)
-    new_img.save("strunt/temperature.png", "PNG")
+    new_img.save("temp/temperature.png", "PNG")
 
-    file = discord.File("strunt/temperature.png", file_name="temperature.png")
+    file = discord.File("temp/temperature.png", file_name="temperature.png")
 
     return None, file

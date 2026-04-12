@@ -106,7 +106,7 @@ def get_wisdom(search, amount):
         quote = random.sample(containing, min(amount, len(containing))) if containing else random.sample(wisdom, amount)
     else: quote = random.sample(wisdom, amount)
 
-    file = interactions.models.discord.File("lapis_pics/Lapis2.jpg", "Lapis2.jpg")
+    file = interactions.models.discord.File("resources/lapis_pics/Lapis2.jpg", "Lapis2.jpg")
     embed = interactions.Embed(title="Lapis sagt:", color=COLOUR)
     embed.set_thumbnail(url="attachment://Lapis2.jpg")
     embed.description = "\n".join(quote)
