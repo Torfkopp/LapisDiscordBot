@@ -11,6 +11,7 @@ plan.*
 /formula1/*.png
 resources/lapis_pics/*
 temp/*
+!temp/temperature.png
 variable/*
 !variable/structures.md
 .idea/
