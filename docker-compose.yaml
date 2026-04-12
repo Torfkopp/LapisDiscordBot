@@ -6,3 +6,13 @@ services:
     volumes:
       - ./:/app
     tty: false
+    depends_on:
+      - git-sync
+  git-sync:
+    image: alpine/git
+    container_name: lapis-git-sync
+    volumes:
+      - ./:/app
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["git config --global --add safe.directory /app && if [ -d /app/.git ]; then cd /app && git fetch origin && git reset --hard origin/master && git clean -fd || true; else echo 'no .git present, skipping'; fi"]
+    restart: 'no'
