@@ -57,10 +57,11 @@ class Anime(Extension):
         embed.title = None
         await ctx.send(ping, embed=embed)
 
-    @anime_function.subcommand(sub_cmd_name="quote", sub_cmd_description="Zufälliges Anime Zitat")
-    async def quote_function(self, ctx: SlashContext):
-        await ctx.defer()
-        await ctx.send(embed=get_quote())
+    # API Down
+    # @anime_function.subcommand(sub_cmd_name="quote", sub_cmd_description="Zufälliges Anime Zitat")
+    # async def quote_function(self, ctx: SlashContext):
+    #     await ctx.defer()
+    #     await ctx.send(embed=get_quote())
 
     @anime_function.subcommand(sub_cmd_name="reaction", sub_cmd_description="Zufällige Anime Bewegtbildreaktion")
     @slash_option(
