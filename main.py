@@ -40,6 +40,17 @@ class LiveMessageDict(dict):
                          msgs.items()})
         log.write("Live messages initialised")
 
+    def __getitem__(self, key):
+        """Return a value for the key or an empty string if missing.
+
+        This prevents KeyError when code accesses live messages before
+        `init()` has populated the dict (e.g. during startup).
+        """
+        try:
+            return super().__getitem__(key)
+        except KeyError:
+            return ""
+
     def __setitem__(self, key, value):
         super().__setitem__(key, value)
         ids = {k: v.id if isinstance(v, interactions.Message) else v for k, v in self.items()}
