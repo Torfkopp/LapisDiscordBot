@@ -78,7 +78,9 @@ class ActivityClass:
         ("guckt sich die Patchnotes an", discord.activity.ActivityType.WATCHING),
         ("hört weisen Menschen zu", discord.activity.ActivityType.LISTENING),
         ("schaut sich Tierlisten an", discord.activity.ActivityType.WATCHING),
-        ("tritt in einer Quizshow an", discord.activity.ActivityType.COMPETING)
+        ("tritt in einer Quizshow an", discord.activity.ActivityType.COMPETING),
+        ("studiert das Wetter", discord.activity.ActivityType.WATCHING),
+        ("hat die höchste Elo", discord.activity.ActivityType.COMPETING),
     ]
     status = discord.Status.IDLE  # possible: "ONLINE", "OFFLINE", "DND", "IDLE", "INVISIBLE"
 
