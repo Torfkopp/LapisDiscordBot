@@ -5,9 +5,9 @@ import os
 import random
 
 import fastf1
-import fastf1.core
+import fastf1.exceptions
 import interactions
-from interactions import Client, Intents, listen, Task, IntervalTrigger, DateTrigger
+from interactions import Client, Intents, listen, Task, IntervalTrigger, DateTrigger, TimeTrigger
 from interactions.api.events import Error
 from interactions.client.errors import HTTPException
 from interactions.ext import prefixed_commands
@@ -32,10 +32,10 @@ prefixed_commands.setup(bot)
 class LiveMessageDict(dict):
     async def init(self):
         if str(datetime.datetime.now().date()) != datetime.datetime.fromtimestamp(
-                os.path.getmtime("strunt/sport_messages.json")).strftime('%Y-%m-%d'):
+                os.path.getmtime("variable/sport_messages.json")).strftime('%Y-%m-%d'):
             self.update({"score": "", "league": "", "f1": ""})
         else:
-            with open("strunt/sport_messages.json") as m: msgs = json.load(m)
+            with open("variable/sport_messages.json") as m: msgs = json.load(m)
             self.update({k: await bot.get_channel(util.SPORTS_CHANNEL_ID).fetch_message(v) if v else "" for k, v in
                          msgs.items()})
         log.write("Live messages initialised")
@@ -45,7 +45,7 @@ class LiveMessageDict(dict):
         super().__setitem__(key, value)
         print(self)
         ids = {k: v.id if isinstance(v, interactions.Message) else v for k, v in self.items()}
-        with open("strunt/sport_messages.json", "w") as lmd: json.dump(ids, lmd)
+        with open("variable/sport_messages.json", "w") as lmd: json.dump(ids, lmd)
 
 
 LIVE_MESSAGES = LiveMessageDict()
@@ -175,12 +175,17 @@ async def on_message_reaction_remove(event):
     await karma.on_reaction_remove(event)
 
 
-@Task.create(IntervalTrigger(minutes=1))
-def limit_command_calls():
-    """ Task to regularly call the extension's command calls reduction """
-    football.limit_command_calls()
-    formula1.limit_command_calls()
-    lolesport.limit_command_calls()
+# @Task.create(IntervalTrigger(minutes=1))
+# def limit_command_calls():
+#     """ Task to regularly call the extension's command calls reduction """
+#     football.limit_command_calls()
+#     formula1.limit_command_calls()
+#     lolesport.limit_command_calls()
+
+
+@Task.create(TimeTrigger(hour=8, minute=0))
+async def startup_mock():
+    await on_startup()
 
 
 async def live_scoring():
@@ -245,7 +250,7 @@ async def formula1_old_result(session, time):
     try:
         result = formula1.result(session)
         await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result)
-    except fastf1.core.DataNotLoadedError:
+    except fastf1.exceptions.DataNotLoadedError:
         Task(formula1_old_result, DateTrigger(time + datetime.timedelta(hours=1))).start(session, time)
 
 
@@ -392,6 +397,10 @@ async def on_startup():
         activity = ActivityClass([])
         await activity.test_mode()
         return
+
+    LIVE_MESSAGES = LiveMessageDict()
+    live_scoring_task, live_league_task, live_f1_task = None, None, None
+
     now = datetime.datetime.now()
     limit_command_calls.start()
     await log.start_procedure(bot)

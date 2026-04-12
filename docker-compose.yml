@@ -1,0 +1,8 @@
+services:
+  lapis:
+    build: .
+    container_name: lapis
+    restart: unless-stopped
+    volumes:
+      - ./:/app
+    tty: false

@@ -1,6 +1,7 @@
 import datetime
 import json
 import random
+import os
 from enum import Enum
 
 import interactions
@@ -10,7 +11,8 @@ import uwuifier
 
 # CHANNELS
 with open("config.json") as f: config = json.load(f)
-TOKEN = config['token']
+# Allow overriding the token via environment variable for Docker/containers
+TOKEN = os.environ.get('TOKEN', config['token'])
 SERVER_ID = config['server_id']
 SPORTS_CHANNEL_ID = config['sport_channel_id']
 LABAR_CHANNEL_ID = config['labar_channel_id']
@@ -132,31 +134,31 @@ def get_error_embed(term: str, add_text: str | list[str] = ""):
 def message_sent(message: str):
     """ Returns whether the message was already sent, and if it wasn't, sets the tracker to true
     :param 'rawe_ceek', 'race_schedule', 'friday_krabs', 'monday_krabs', or 'temperature' """
-    with open("strunt/message_tracker.json", "r") as message_tracker: trackers = json.load(message_tracker)
+    with open("variable/message_tracker.json", "r") as message_tracker: trackers = json.load(message_tracker)
     if trackers[message]: return True
     else:
         trackers[message] = True
-        with open("strunt/message_tracker.json", "w") as message_tracker: json.dump(trackers, message_tracker)
+        with open("variable/message_tracker.json", "w") as message_tracker: json.dump(trackers, message_tracker)
         return False
 
 
 def reset_message_tracker():
     """ Resets the message trackers"""
-    with open("strunt/message_tracker.json", "r") as message_tracker: trackers = json.load(message_tracker)
+    with open("variable/message_tracker.json", "r") as message_tracker: trackers = json.load(message_tracker)
     for tracker in trackers: trackers[tracker] = False
-    with open("strunt/message_tracker.json", "w") as message_tracker: json.dump(trackers, message_tracker)
+    with open("variable/message_tracker.json", "w") as message_tracker: json.dump(trackers, message_tracker)
     return
 
 
 def day_counter():
     """ Returns whether it was already updated and the day counter (0 when it was already updated)
     and increases the day count by one, as well as setting today as the last_updated """
-    with open("strunt/day_counter.json", "r") as dc: counter_file = json.load(dc)
+    with open("variable/day_counter.json", "r") as dc: counter_file = json.load(dc)
     today = datetime.datetime.now().date()
     if today == datetime.date.fromisoformat(counter_file['last_updated']): return True, 0
     counter_file['last_updated'] = str(today)
     counter_file['day_counter'] += 1
-    with open("strunt/day_counter.json", "w") as dc: json.dump(counter_file, dc)
+    with open("variable/day_counter.json", "w") as dc: json.dump(counter_file, dc)
     return False, counter_file['day_counter']
 
 

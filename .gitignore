@@ -9,7 +9,10 @@ secret.py
 plan.*
 /strunt/
 /formula1/*.png
-/lapis_pics/
+resources/lapis_pics/*
+temp/*
+variable/*
+!variable/structures.md
 .idea/
 talking.py
 talk_conf.json
