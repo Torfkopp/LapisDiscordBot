@@ -37,6 +37,7 @@ class LiveMessageDict(dict):
         else:
             with open("variable/sport_messages.json") as m: msgs = json.load(m)
             for k,v in msgs.items():
+                if k not in ["score", "league", "f1"]: continue
                 message = await bot.get_channel(util.SPORTS_CHANNEL_ID).fetch_message(v) if v else ""
                 self[k] = message if message else ""
         log.write("Live messages initialised")
