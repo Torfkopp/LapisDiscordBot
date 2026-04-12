@@ -151,7 +151,7 @@ async def on_ready():
     log.write(f"This bot is owned by {bot.owner}")
     await secret.main(bot)
     # Loads the Formula1 font
-    for font in font_manager.findSystemFonts(["formula1/font"]): font_manager.fontManager.addfont(font)
+    for font in font_manager.findSystemFonts(["resources/formula1/font"]): font_manager.fontManager.addfont(font)
 
 
 @listen()
