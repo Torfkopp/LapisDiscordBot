@@ -175,14 +175,6 @@ async def on_message_reaction_remove(event):
     await karma.on_reaction_remove(event)
 
 
-# @Task.create(IntervalTrigger(minutes=1))
-# def limit_command_calls():
-#     """ Task to regularly call the extension's command calls reduction """
-#     football.limit_command_calls()
-#     formula1.limit_command_calls()
-#     lolesport.limit_command_calls()
-
-
 @Task.create(TimeTrigger(hour=8, minute=0))
 async def startup_mock():
     await on_startup()
@@ -402,7 +394,6 @@ async def on_startup():
     live_scoring_task, live_league_task, live_f1_task = None, None, None
 
     now = datetime.datetime.now()
-    limit_command_calls.start()
     await log.start_procedure(bot)
     await LIVE_MESSAGES.init()
     if now.weekday() == 1: util.reset_message_tracker()  # Reset on Tuesday
