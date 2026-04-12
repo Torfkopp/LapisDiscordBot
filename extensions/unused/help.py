@@ -25,7 +25,7 @@ class Help(Extension):
 
 
 def get_help():
-    file = interactions.models.discord.File("lapis_pics/Lapis2.jpg", "Lapis2.jpg")
+    file = interactions.models.discord.File("resources/lapis_pics/Lapis2.jpg", "Lapis2.jpg")
     # noinspection PyTypeChecker
     embed = interactions.Embed(title="Hilfe", color=COLOUR, thumbnail="attachment://Lapis2.jpg")
     embed.description = "Lapis hilft dir gerne! :)\nHier die Auflistung aller Befehle:"
@@ -71,7 +71,7 @@ def get_help():
 
 
 def get_help_sport():
-    file = interactions.models.discord.File("lapis_pics/LapisSport.jpg", "LapisSport.jpg")
+    file = interactions.models.discord.File("resources/lapis_pics/LapisSport.jpg", "LapisSport.jpg")
     # noinspection PyTypeChecker
     embed = interactions.Embed(title="Sporthilfe", color=COLOUR, thumbnail="attachment://LapisSport.jpg")
     embed.description = "Lapis hilft dir gerne! :)\nHier die Auflistung aller Sportbefehle:"

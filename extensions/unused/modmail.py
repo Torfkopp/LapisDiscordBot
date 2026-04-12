@@ -48,7 +48,7 @@ class Modmail(Extension):
         opt_type=OptionType.STRING
     )
     async def modmail_function(self, ctx: SlashContext, name, category, short_form, long_form: str = ""):
-        file = interactions.models.discord.File("lapis_pics/Lapis2.jpg", "Lapis2.jpg")
+        file = interactions.models.discord.File("resources/lapis_pics/Lapis2.jpg", "Lapis2.jpg")
         # noinspection PyTypeChecker
         embed = interactions.Embed(title="Modmail", color=util.Colour.MODMAIL.value,
                                    thumbnail="attachment://Lapis2.jpg")
