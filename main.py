@@ -41,9 +41,7 @@ class LiveMessageDict(dict):
         log.write("Live messages initialised")
 
     def __setitem__(self, key, value):
-        print(self)
         super().__setitem__(key, value)
-        print(self)
         ids = {k: v.id if isinstance(v, interactions.Message) else v for k, v in self.items()}
         with open("variable/sport_messages.json", "w") as lmd: json.dump(ids, lmd)
 
@@ -392,7 +390,6 @@ async def on_startup():
         await activity.test_mode()
         return
 
-    LIVE_MESSAGES = LiveMessageDict()
     live_scoring_task, live_league_task, live_f1_task = None, None, None
 
     now = datetime.datetime.now()
