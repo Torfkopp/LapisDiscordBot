@@ -81,7 +81,7 @@ def get_reddit_link(subreddit):
         log.write("API Call Reddit: " + url)
         response = requests.request("GET", url, data=payload, headers=headers)
         response = response.json()
-    except requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("API may be down")
         return None
 

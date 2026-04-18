@@ -97,7 +97,7 @@ def get_dad_joke(term):
             response = requests.request("GET", url_term, data=payload, headers=headers)
             response = response.json()
             jokes = response["results"]
-        except KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+        except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
             log.write("API DOWN")
             return util.get_error_embed("api_down")
 
@@ -114,7 +114,7 @@ def get_dad_joke(term):
             response = requests.request("GET", url, data=payload, headers=headers)
             joke = response.json()
             joke = joke["joke"]
-        except KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+        except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
             log.write("API DOWN")
             return util.get_error_embed("api_down")
 
@@ -133,7 +133,7 @@ def get_joke(theme, lang):
         response = requests.request("GET", url, data=payload)
         response = response.json()
         joke = f"Category: {response['category']}\n"
-    except KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("API DOWN")
         return util.get_error_embed("api_down")
     if response["type"] == "single":
@@ -158,7 +158,7 @@ def get_norris():
         response = requests.request("GET", url, data=payload)
         response = response.json()
         joke = response["value"]
-    except KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("API DOWN")
         return util.get_error_embed("api_down")
     random_name = random.choice(name_list)

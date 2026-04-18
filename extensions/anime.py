@@ -22,58 +22,14 @@ def setup(bot):
 
 COLOUR = util.Colour.ANIME.value
 
-THEME_OPTIONS = [
-    "angrystare",
-    "bleh",
-    "blush",
-    "celebrate",
-    "clap",
-    "confused",
-    "cool",
-    "cry",
-    "dance",
-    "drool",
-    "evillaugh",
-    "facepalm",
-    "happy",
-    "headbang",
-    "laugh",
-    "love",
-    "mad",
-    "nervous",
-    "no",
-    "nom",
-    "nosebleed",
-    "nyah",
-    "peek",
-    "pout",
-    "punch",
-    "roll",
-    "run",
-    "sad",
-    "scared",
-    "shrug",
-    "shy",
-    "sigh",
-    "sip",
-    "sleep",
-    "slowclap",
-    "smile",
-    "smug",
-    "sneeze",
-    "sorry",
-    "stare",
-    "surprised",
-    "sweat",
-    "thumbsup",
-    "tired",
-    "wave",
-    "wink",
-    "woah",
-    "yawn",
-    "yay",
+THEME_OPTIONS = [ 
+    "angrystare", "bleh", "blush", "celebrate", "clap", "confused", "cool", "cry", "dance",
+    "drool", "evillaugh", "facepalm", "happy", "headbang", "laugh", "love", "mad", "nervous",
+    "no", "nom", "nosebleed", "nyah", "peek", "pout", "punch", "roll", "run", "sad", "scared",
+    "shrug", "shy", "sigh", "sip", "sleep", "slowclap", "smile", "smug", "sneeze", "sorry", 
+    "stare", "surprised", "sweat", "thumbsup", "tired", "wave", "wink", "woah", "yawn", "yay", 
     "yes",
-]
+]  # fmt: off
 
 ACTION_OPTIONS = {
     "airkiss": "luftküsst",
@@ -164,7 +120,7 @@ def get_quote():
         response = requests.request("GET", url, data=payload)
         response = response.json()
         response = response["apiResult"][0]
-    except KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("API DOWN")
         return util.get_error_embed("api_down")
 
@@ -189,7 +145,7 @@ def get_quote():
         embed = interactions.Embed(
             title="Anime Quote", description=result, color=COLOUR, thumbnail=picture_url
         )
-    except KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("SITE DOWN")
         embed = interactions.Embed(title="Anime Quote", description=result, color=COLOUR)
 
@@ -206,7 +162,7 @@ def get_reaction(theme):
         log.write("Api-Call Anime: " + url)
         response = requests.request("GET", url, data="")
         url = response.json()["url"]
-    except KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("API DOWN")
         return util.get_error_embed("api_down")
 

@@ -198,7 +198,7 @@ def get_schedule(league):
         response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
         response = response.json()
         events = response["data"]["schedule"]["events"]
-    except KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("API DOWN")
         return util.get_error_embed("api_down")
 
@@ -320,7 +320,7 @@ def get_standings(league):
         response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
         response = response.json()
         response = response["data"]["leagues"][0]["tournaments"][0]
-    except KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("API DOWN")
         return util.get_error_embed("api_down")
 
@@ -334,7 +334,7 @@ def get_standings(league):
         response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
         response = response.json()
         standings = response["data"]["standings"][0]
-    except KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("API DOWN")
         return util.get_error_embed("api_down")
 

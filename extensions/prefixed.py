@@ -1,4 +1,3 @@
-import subprocess
 
 import interactions
 from interactions import Extension

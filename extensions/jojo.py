@@ -1,6 +1,5 @@
 import collections
 import csv
-import datetime
 import random
 from collections import defaultdict
 from datetime import datetime

@@ -72,7 +72,7 @@ def get_advice(term):
         try:
             response = response.json()
             advices = response["slips"]
-        except KeyError or requests.exceptions.JSONDecodeError:
+        except (KeyError, requests.exceptions.JSONDecodeError):
             rat = ""
         else:
             if len(advices) == 1:
@@ -85,7 +85,7 @@ def get_advice(term):
             response = requests.request("GET", url, data=payload)
             response = response.json()
             rat = response["slip"]["advice"]
-        except KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+        except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
             log.write("API DOWN")
             return util.get_error_embed("api_down")
 

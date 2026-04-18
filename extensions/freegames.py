@@ -28,8 +28,8 @@ def get_giveaways():
         log.write("Api-Call Freegames: " + url)
         response = requests.request("GET", url, data=payload)
         response = response.json()
-        test = response[0]["id"]  # tests if keys exist
-    except KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+        _ = response[0]["id"]  # tests if keys exist
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("API DOWN")
         return util.get_error_embed("api_down")
 

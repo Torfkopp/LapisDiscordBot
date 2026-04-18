@@ -153,7 +153,7 @@ def get_trivia(category, difficulty):
         response = requests.request("GET", url, data=payload)
         response = response.json()
         trivia = response["results"][0]
-    except KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("API DOWN")
         return util.get_error_embed("api_down")
 
