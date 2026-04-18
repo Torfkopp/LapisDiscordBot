@@ -164,7 +164,7 @@ def get_live():
     for league in data:
         # Skip league if not one of the wanted ones
         league_name = league["matches"][0]["competition"]["name"]
-        if league_name not in COMPETITION_LIST:
+        if league_name not in COMPETITION_LIST and not any(keyword in league_name for keyword in KEYWORDS):
             continue
         # Iterate over every match in the league
         for match in league["matches"]:
