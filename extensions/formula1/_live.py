@@ -181,7 +181,7 @@ def _get_result_url():
         log.write("API Call Formula1: " + url)
         response = requests.request("GET", url, data=payload, headers=headers)
         response = response.json()
-    except requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("JSONDecodeError; API may be down")
         return
 
@@ -292,7 +292,7 @@ def auto_result(result_only: bool):
         log.write("API Call Formula1: " + url)
         response = requests.request("GET", url, data=payload, headers=headers)
         response = response.json()
-    except requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("JSONDecodeError; API may be down")
         return None, False
 

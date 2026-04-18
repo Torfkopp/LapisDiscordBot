@@ -20,7 +20,7 @@ def goalgetter(liga, saison):
         log.write("Api-Call Football: " + url)
         response = requests.get(url)
         data = response.json()
-    except requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("API DOWN")
         return util.get_error_embed("api_down")
 
@@ -47,7 +47,7 @@ def matchday(liga, saison, spieltag):
     if spieltag == 0:
         try:
             spieltag = get_current_spieltag(liga)
-        except requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+        except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
             log.write("API DOWN")
             return util.get_error_embed("api_down")
 
@@ -56,7 +56,7 @@ def matchday(liga, saison, spieltag):
         log.write("Api-Call Football: " + url)
         response = requests.get(url)
         jsondata = response.json()
-    except requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("API DOWN")
         return util.get_error_embed("api_down")
 
@@ -91,7 +91,7 @@ def matches(team, past, future):
         log.write("Api-Call Football: " + url)
         response = requests.get(url)
         data = response.json()
-    except requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("API DOWN")
         return util.get_error_embed("api_down")
 
@@ -145,7 +145,7 @@ def table(liga, saison):
         log.write("Api-Call Football: " + url)
         response = requests.get(url)
         data = response.json()
-    except requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
+    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("API DOWN")
         return util.get_error_embed("api_down")
 
