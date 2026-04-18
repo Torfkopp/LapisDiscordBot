@@ -102,7 +102,7 @@ def create_schedule():
     # Iterate over every league
     for league in data:
         # Filter by wanted leagues
-        if league['matches'][0]['competition']['name'] not in COMPETITION_LIST: continue
+        if (x:=league['matches'][0]['competition']['name']) not in COMPETITION_LIST and not any(keyword in x for keyword in KEYWORDS): continue
         # Add match times to set
         for match in league['matches']:
             if not match_interested_in(match): continue
