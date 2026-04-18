@@ -14,7 +14,7 @@ from extensions import karma, tierlist
 from extensions.formula1 import formula1
 
 
-TEST_MODE_ON = True
+TEST_MODE_ON = False
 
 intents = Intents.DEFAULT | Intents.MESSAGES | Intents.MESSAGE_CONTENT
 bot = Client(intents=intents, send_command_tracebacks=False)
