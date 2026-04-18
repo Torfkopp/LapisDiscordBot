@@ -1,0 +1,79 @@
+import datetime
+
+from interactions import Task, IntervalTrigger, DateTrigger, TimeTrigger, listen
+
+from core import log
+from core.activity import ActivityClass
+from extensions import lol_patchnotes, reddit
+from extensions import weather
+
+import util
+import secret
+
+
+async def formula1_info(now):
+    """ If it's Monday or Thursday and the corresponding message hasn't been sent, send a message with f1 info"""
+    embed = formula1.auto_info()
+    if embed is not None:
+        if ((now.weekday() == 0 and not util.message_sent("rawe_ceek")) or
+                (now.weekday() == 3 and not util.message_sent("race_schedule"))):
+            from main import bot
+            await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
+
+
+async def update_patchnotes():
+    """ Updates the patchnotes if there are new ones and sends them to the channel """
+    embed = lol_patchnotes.update()
+    if embed:
+        from main import bot
+        await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=embed)
+
+async def patchnotes(now):
+    """ Check for new patchnotes and send them if they exist """
+    try:
+        await update_patchnotes()
+        if now.weekday() == 1:
+            for i in range(4):
+                Task(update_patchnotes, DateTrigger(now.replace(hour=(20 + i), minute=20))).start()
+        Task(update_patchnotes, IntervalTrigger(hours=3.25)).start()
+    except Exception as e:
+        log.error(e)
+
+
+async def day_dependent(bot):
+    """ Send a message on certain days of the week """
+    if datetime.datetime.now().weekday() == 4 and not util.message_sent("friday_krabs"):
+        await bot.get_channel(util.LABAR_CHANNEL_ID).send(file="resources/congratssailer.mp4")
+    elif datetime.datetime.now().weekday() == 0 and not util.message_sent("monday_krabs"):
+        await bot.get_channel(util.LABAR_CHANNEL_ID).send(file="resources/risesailer.mp4")
+
+
+async def daily_meme(bot):
+    """ Every day, send a meme until the bot is finished or dead """
+    sent_already, day_count = util.day_counter()
+    if not sent_already:
+        message = (f"Jeden Tag ein Meme senden bis ich fertig oder tot bin.\nTag {day_count}\n"
+                   + reddit.get_reddit_link("LeagueOfMemes"))
+        await bot.get_channel(util.COMEDY_CHANNEL_ID).send(message)
+
+
+async def temperature(bot, now):
+    """ If it's before 9 am, check if the sun is killing people and send a message if so """
+    if now.time() < datetime.time(hour=9):
+        embed, file = weather.is_sun_killing(now)
+        if embed:
+            await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=embed, file=file)
+
+
+async def daily_messages(bot):
+    """ Daily procedure """
+    now = datetime.datetime.now()
+    await formula1_info(now)
+    await patchnotes(now)
+
+    await day_dependent(bot)
+    await daily_meme(bot)
+    await temperature(bot, now)
+
+    await secret.main(bot)
+

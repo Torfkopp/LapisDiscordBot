@@ -1,6 +1,5 @@
-import datetime
 import json
-import os
+import datetime
 
 import interactions
 from interactions import Task, IntervalTrigger, DateTrigger
@@ -13,139 +12,300 @@ from extensions.football import football
 from extensions.formula1 import formula1
 
 
-class LiveMessageDict(dict):
-    async def init(self):
-        if str(datetime.datetime.now().date()) != datetime.datetime.fromtimestamp(
-                os.path.getmtime("variable/sport_messages.json")).strftime('%Y-%m-%d'):
-            self.update({"score": "", "league": "", "f1": ""})
+MSG_FILE = "variable/sport_messages.json"
+
+
+class BaseLive:
+    def __init__(self, bot, manager, key, channel_id):
+        self.bot = bot
+        self.manager = manager
+        self.key = key  # one of 'score', 'league', 'f1'
+        self.channel_id = channel_id
+        self.message = None
+        self.task = None
+
+    async def load_saved(self):
+        saved = self.manager.msgs.get(self.key)
+        if saved:
+            try:
+                channel = await self.bot.get_channel(self.channel_id)
+                self.message = await channel.fetch_message(saved)
+            except Exception:
+                self.message = None
+
+    def save_message_id(self):
+        if isinstance(self.message, interactions.Message):
+            self.manager.update_msg(self.key, self.message.id)
         else:
-            with open("variable/sport_messages.json") as m: msgs = json.load(m)
-            for k, v in msgs.items():
-                if k not in ["score", "league", "f1"]: continue
-                # import bot lazily to avoid circular imports at module import time
-                from main import bot
-                message = await bot.get_channel(util.SPORTS_CHANNEL_ID).fetch_message(v) if v else ""
-                self[k] = message if message else ""
-        log.write("Live messages initialised")
+            self.manager.update_msg(self.key, "")
 
-    def __getitem__(self, key):
-        return super().get(key, "")
+    def clear_saved_if_not_running(self):
+        if not (self.task and getattr(self.task, "running", False)):
+            self.manager.update_msg(self.key, "")
 
-    def __setitem__(self, key, value):
-        if not value: value = ""
-        super().__setitem__(key, value)
-        ids = {k: v.id if isinstance(v, interactions.Message) else v for k, v in self.items()}
-        with open("variable/sport_messages.json", "w") as lmd: json.dump(ids, lmd)
 
-# Module-level shared state
-LIVE_MESSAGES = LiveMessageDict()
-live_scoring_task = None
-live_league_task = None
-live_f1_task = None
-
-async def live_scoring():
-    from main import bot
-    if LIVE_MESSAGES["score"] == "":
-        LIVE_MESSAGES["score"] = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=football.get_live()[0])
-    else:
+class FootballLive(BaseLive):
+    async def _live(self):
         embeds, still_going = football.get_live()
+        channel = self.bot.get_channel(self.channel_id)
+        if not self.message:
+            try:
+                self.message = await channel.send(embeds=embeds)
+            except Exception:
+                self.message = None
+            self.save_message_id()
+            return
+
         try:
-            await LIVE_MESSAGES["score"].edit(embeds=embeds)
+            await self.message.edit(embeds=embeds)
         except HTTPException:
-            LIVE_MESSAGES["score"] = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=embeds)
+            # message may have been deleted; send a new one
+            try:
+                self.message = await channel.send(embeds=embeds)
+            except Exception:
+                self.message = None
+        self.save_message_id()
+
         if not still_going:
-            global live_scoring_task
-            if live_scoring_task is not None:
-                live_scoring_task.stop()
+            if self.task is not None:
+                self.task.stop()
             log.write("Live scoring stops")
+            # clear id after task stops
+            self.manager.update_msg(self.key, "")
+
+    async def _start_live(self):
+        if self.task is None:
+            self.task = Task(self._live, IntervalTrigger(minutes=2))
+            self.task.start()
+            log.write("Live scoring begins")
+            return
+        if not self.task.running:
+            self.task.start()
+            log.write("Live scoring begins")
+
+    async def create_schedule(self, now):
+        football_schedule = football.create_schedule()
+        log.write("Starting times of today's games: " + str(football_schedule))
+        for start_time in football_schedule:
+            # if already live
+            if datetime.timedelta(minutes=0) < (now - start_time) < datetime.timedelta(minutes=90):
+                await self._start_live()
+            # schedule a start at game time
+            Task(self._start_live, DateTrigger(start_time)).start()
 
 
-async def start_live_scoring():
-    global live_scoring_task
-    if live_scoring_task is None:
-        live_scoring_task = Task(live_scoring, IntervalTrigger(minutes=2))
-        live_scoring_task.start()
-        log.write("Live scoring begins")
-        return
-    if not live_scoring_task.running:
-        live_scoring_task.start()
-        log.write("Live scoring begins")
-
-
-async def live_league():
-    from main import bot
-    if LIVE_MESSAGES["league"] == "":
-        LIVE_MESSAGES["league"] = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=lolesport.get_live()[0])
-    else:
+class LolesportLive(BaseLive):
+    async def _live(self):
         embeds, still_going = lolesport.get_live()
+        channel = await self.bot.get_channel(self.channel_id)
+        if not self.message:
+            try:
+                self.message = await channel.send(embeds=embeds)
+            except Exception:
+                self.message = None
+            self.save_message_id()
+            return
+
         try:
-            await LIVE_MESSAGES["league"].edit(embeds=embeds)
+            await self.message.edit(embeds=embeds)
         except HTTPException:
-            LIVE_MESSAGES["league"] = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embeds=embeds)
+            try:
+                self.message = await channel.send(embeds=embeds)
+            except Exception:
+                self.message = None
+        self.save_message_id()
+
         if not still_going:
-            global live_league_task
-            if live_league_task is not None:
-                live_league_task.stop()
+            if self.task is not None:
+                self.task.stop()
             log.write("Live league stops")
+            self.manager.update_msg(self.key, "")
+
+    async def _start_live(self):
+        if self.task is None:
+            self.task = Task(self._live, IntervalTrigger(minutes=10))
+            self.task.start()
+            log.write("Live league begins")
+            return
+        if not self.task.running:
+            self.task.start()
+            log.write("Live league begins")
+
+    async def create_schedule(self, now):
+        league_schedule = lolesport.create_schedule()
+        if len(league_schedule) > 0 and sorted(league_schedule)[-1] < now:
+            await self._live()
+        log.write("Starting times of today's lol esport matches: " + str(league_schedule))
+        for start_time in league_schedule:
+            Task(self._start_live, DateTrigger(start_time)).start()
 
 
-async def start_live_league():
-    global live_league_task
-    if live_league_task is None:
-        live_league_task = Task(live_league, IntervalTrigger(minutes=10))
-        live_league_task.start()
-        log.write("Live league begins")
-        return
-    if not live_league_task.running:
-        live_league_task.start()
-        log.write("Live league begins")
-
-
-async def formula1_old_result(session, time):
-    from main import bot
-    try:
-        result = formula1.result(session)
-        await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result)
-    except Exception as e:
-        # fastf1.exceptions.DataNotLoadedError may be raised by formula1.result
-        Task(formula1_old_result, DateTrigger(time + datetime.timedelta(hours=1))).start(session, time)
-
-
-async def formula1_result():
-    from main import bot
-    result, still_going = formula1.auto_result(True)
-    if still_going:
-        log.write("Formula1 Session not finished yet; trying again in 10 minutes")
-        Task(formula1_result, DateTrigger(datetime.datetime.now() + datetime.timedelta(minutes=10))).start()
-    else:
-        await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result)
-
-
-async def live_f1():
-    from main import bot
-    if LIVE_MESSAGES["f1"] == "":
-        LIVE_MESSAGES["f1"] = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(formula1.auto_result(False)[0])
-    else:
+class Formula1Live(BaseLive):
+    async def _live(self):
         result, still_going = formula1.auto_result(False)
+        channel = await self.bot.get_channel(self.channel_id)
+        if not self.message:
+            try:
+                self.message = await channel.send(result)
+            except Exception:
+                self.message = None
+            self.save_message_id()
+            return
+
         try:
-            await LIVE_MESSAGES["f1"].edit(content=result)
+            await self.message.edit(content=result)
         except HTTPException:
-            LIVE_MESSAGES["f1"] = await bot.get_channel(util.SPORTS_CHANNEL_ID).send(result)
+            try:
+                self.message = await channel.send(result)
+            except Exception:
+                self.message = None
+        self.save_message_id()
+
         if not still_going:
-            global live_f1_task
-            if live_f1_task is not None:
-                live_f1_task.stop()
-            LIVE_MESSAGES["f1"] = ""
+            if self.task is not None:
+                self.task.stop()
+            self.manager.update_msg(self.key, "")
             log.write("Live F1 stops")
 
+    async def _start_live(self):
+        if self.task is None:
+            self.task = Task(self._live, IntervalTrigger(minutes=5))
+            self.task.start()
+            log.write("Live F1 begins")
+            return
+        if not self.task.running:
+            self.task.start()
+            log.write("Live F1 begins")
 
-async def start_live_f1():
-    global live_f1_task
-    if live_f1_task is None:
-        live_f1_task = Task(live_f1, IntervalTrigger(minutes=5))
-        live_f1_task.start()
-        log.write("Live F1 begins")
-        return
-    if not live_f1_task.running:
-        live_f1_task.start()
-        log.write("Live F1 begins")
+    async def create_schedule(self, formula1_schedule, now):
+        log.write("Today's formula1 sessions: " + str(formula1_schedule))
+        # follow original behavior but schedule using the manager
+        if len(formula1_schedule) == 1:
+            start_time = list(formula1_schedule)[0]
+            if start_time > now:
+                Task(self._start_live, DateTrigger(start_time)).start()
+            elif datetime.timedelta(minutes=0) < (now - start_time) < datetime.timedelta(minutes=60):
+                await self._start_live()
+            else:
+                # session finished already - post old result
+                result = formula1.result(formula1_schedule.get(start_time))
+                await self.bot.get_channel(self.channel_id).send(result)
+
+        elif len(formula1_schedule) > 1:
+            start_times = list(formula1_schedule)
+            if start_times[0] >= now:
+                for start_time in start_times:
+                    if "Practice" in formula1_schedule.get(start_time, ""):
+                        Task(self._post_result_after_hour, DateTrigger(start_time)).start(start_time)
+                    else:
+                        Task(self._start_live, DateTrigger(start_time)).start()
+
+            elif start_times[1] > now or (start_times[1] + datetime.timedelta(hours=1)) > now:
+                # post old result for session 0
+                await self._post_old_result(start_times[0], formula1_schedule.get(start_times[0]))
+                start_time = start_times[1]
+                if "Practice" in formula1_schedule.get(start_time, ""):
+                    Task(self._post_result_after_hour, DateTrigger(start_time)).start(start_time)
+                else:
+                    Task(self._start_live, DateTrigger(start_time)).start()
+
+            else:
+                await self._post_old_result(start_times[0], formula1_schedule.get(start_times[0]))
+                result, still = formula1.auto_result(True)
+                await self.bot.get_channel(self.channel_id).send(result)
+
+    async def _post_old_result(self, session, session_info):
+        try:
+            result = formula1.result(session)
+            await self.bot.get_channel(self.channel_id).send(result)
+        except Exception:
+            Task(self._post_old_result, DateTrigger(datetime.datetime.now() + datetime.timedelta(hours=1))).start(session, session_info)
+
+    async def _post_result_after_hour(self, start_time):
+        Task(self._post_old_result, DateTrigger(start_time + datetime.timedelta(hours=1))).start()
+
+
+class LiveManager:
+    def __init__(self, bot):
+        self.bot = bot
+        self.msgs = {"score": "", "league": "", "f1": ""}
+        try:
+            with open(MSG_FILE, "r") as f:
+                self.msgs.update(json.load(f))
+        except Exception:
+            pass
+
+        self.football = FootballLive(bot, self, "score", util.SPORTS_CHANNEL_ID)
+        self.lolesport = LolesportLive(bot, self, "league", util.SPORTS_CHANNEL_ID)
+        self.formula1 = Formula1Live(bot, self, "f1", util.SPORTS_CHANNEL_ID)
+
+        # schedule the daily schedule creator at next 00:00
+        self._schedule_daily_creator()
+
+    def _write_msgs(self):
+        try:
+            with open(MSG_FILE, "w") as f:
+                json.dump(self.msgs, f)
+        except Exception:
+            log.write("Failed to write sport messages file")
+
+    def update_msg(self, key, value):
+        self.msgs[key] = value
+        self._write_msgs()
+
+    def _schedule_daily_creator(self):
+        now = datetime.datetime.now()
+        today_mid = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        if now >= today_mid:
+            # schedule for tomorrow
+            next_mid = today_mid + datetime.timedelta(days=1)
+        else:
+            next_mid = today_mid
+        Task(self._create_and_schedule_today, DateTrigger(next_mid)).start()
+
+    async def _create_and_schedule_today(self):
+        # create today's schedules for all three
+        now = datetime.datetime.now()
+        # always refresh saved messages into instances
+        await self.football.load_saved()
+        await self.lolesport.load_saved()
+        await self.formula1.load_saved()
+
+        # create schedules
+        await self.football.create_schedule(now)
+        await self.lolesport.create_schedule(now)
+        
+        f1_schedule = formula1.create_schedule()
+        await self.formula1.create_schedule(f1_schedule, now)
+
+        # clean up saved message ids that are not associated with running tasks
+        for instance in (self.football, self.lolesport, self.formula1):
+            if not (instance.task and getattr(instance.task, "running", False)):
+                self.update_msg(instance.key, "")
+
+        # schedule next day's creator at next 00:00
+        next_mid = (now.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1))
+        Task(self._create_and_schedule_today, DateTrigger(next_mid)).start()
+
+    async def start(self):
+        # on manager start, if it's after midnight create today's schedule immediately
+        now = datetime.datetime.now()
+        today_mid = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        if now >= today_mid:
+            await self._create_and_schedule_today()
+
+    def clean_up(self):
+        # Stop tasks and clear saved ids
+        for inst in (self.football, self.lolesport, self.formula1):
+            if inst.task is not None:
+                try:
+                    inst.task.stop()
+                except Exception:
+                    pass
+            inst.message = None
+            self.update_msg(inst.key, "")
+        log.write("Live results cleaned up")
+
+
+def create_manager(bot):
+    return LiveManager(bot)

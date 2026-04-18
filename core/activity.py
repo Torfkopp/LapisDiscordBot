@@ -43,12 +43,14 @@ class ActivityClass:
         watches_football, watches_formula1, watches_esport = False, False, False
         f1_session = ""
 
-        if live_mod.live_scoring_task is not None and live_mod.live_scoring_task.running:
-            watches_football = True
-        if live_mod.live_league_task is not None and live_mod.live_league_task.running:
-            watches_esport = True
-        if live_mod.live_f1_task is not None and live_mod.live_f1_task.running:
-            watches_formula1 = True
+        lm = getattr(live_mod, "live_manager", None)
+        if lm:
+            if lm.football.task and getattr(lm.football.task, "running", False):
+                watches_football = True
+            if lm.lolesport.task and getattr(lm.lolesport.task, "running", False):
+                watches_esport = True
+            if lm.formula1.task and getattr(lm.formula1.task, "running", False):
+                watches_formula1 = True
 
         for time in self.formula1_schedule:
             if "Practice" in self.formula1_schedule.get(time):
