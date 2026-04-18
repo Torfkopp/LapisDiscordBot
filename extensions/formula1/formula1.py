@@ -1,13 +1,17 @@
 import fastf1
 import interactions
 from fastf1.exceptions import DataNotLoadedError
-from interactions import Extension, slash_command, SlashContext, slash_option, OptionType, SlashCommandChoice
+from interactions import (
+    Extension,
+    slash_command,
+    SlashContext,
+    slash_option,
+    OptionType,
+    SlashCommandChoice,
+)
 from interactions.models import discord
 
-import extensions.formula1._laps as laps
 import extensions.formula1._no_group as no_group
-import extensions.formula1._race_info as race_info
-import extensions.formula1._standings as standings
 import util
 import extensions.formula1._live as live
 
@@ -22,56 +26,62 @@ COLOUR = util.Colour.FORMULA1.value
 
 CURRENT_SEASON = util.CURRENT_F1_SEASON
 
-COMMAND_LIMIT = 3  # Limit of consecutive calls in a short time (~60 calls per hour possible with a limit of 3)
+COMMAND_LIMIT = (
+    3  # Limit of consecutive calls in a short time (~60 calls per hour possible with a limit of 3)
+)
 
 
-def setup(bot): Formula1(bot)
+def setup(bot):
+    Formula1(bot)
 
 
-'''
+"""
 ##################################################
 LIVE PART
 ##################################################
-'''
+"""
 
 
 def get_current():
-    """ Gets the current gp and session """
+    """Gets the current gp and session"""
     return live.get_current()
 
 
 def create_schedule():
-    """ Creates a schedule for the Formula1 sessions """
+    """Creates a schedule for the Formula1 sessions"""
     return live.create_schedule()
 
 
 def auto_result(result_only: bool):
-    """ Returns the result of the latest session and sets the current paras to it """
+    """Returns the result of the latest session and sets the current paras to it"""
     return live.auto_result(result_only)
 
 
 def auto_info():
-    """ Returns some day-relevant F1 information """
+    """Returns some day-relevant F1 information"""
     return live.f1_info()
 
 
 def result(session):
-    """ Returns the result of the session """
+    """Returns the result of the session"""
     gp, _ = get_current()
     return no_group.result(CURRENT_SEASON, gp, session)
 
 
-'''
+"""
 ##################################################
 COMMAND PART
 ##################################################
-'''
+"""
+
 
 def get_current_and_check_input(year, gp, session):
-    """ Checks if inputs are ok or gets latest session """
+    """Checks if inputs are ok or gets latest session"""
     temp_gp, temp_session = get_current()
-    if gp == "": gp = temp_gp
-    if session == "": session = temp_session
+    if gp == "":
+        gp = temp_gp
+    if session == "":
+        session = temp_session
     # If only gp is given, session cause problems
     # If only session is given, try current_gp. If it fails, try the gp before that
     try:  # Try getting the session
@@ -85,7 +95,7 @@ def get_current_and_check_input(year, gp, session):
 
 
 def get_last_finished_gp():
-    """ Gets the last gp with a finished race """
+    """Gets the last gp with a finished race"""
     gp, session = get_current()
     return gp if session == 5 else (gp - 1)
 
@@ -98,7 +108,7 @@ def year_slash_option(min_year):
             required=False,
             opt_type=OptionType.INTEGER,
             min_value=min_year,
-            max_value=2023
+            max_value=2023,
         )(func)
 
     return wrapper
@@ -110,7 +120,7 @@ def grandprix_slash_option():
             name="gp",
             description="Grand Prix",
             required=False,
-            opt_type=OptionType.STRING
+            opt_type=OptionType.STRING,
         )(func)
 
     return wrapper
@@ -130,15 +140,15 @@ def session_slash_option():
                 SlashCommandChoice(name="Sprint Shootout", value="SS"),
                 SlashCommandChoice(name="FP3 ", value="FP3"),
                 SlashCommandChoice(name="FP2", value="FP2"),
-                SlashCommandChoice(name="FP1", value="FP1")
-            ]
+                SlashCommandChoice(name="FP1", value="FP1"),
+            ],
         )(func)
 
     return wrapper
 
 
 def driver_slash_option(number=1):
-    """ Number: A number if more than one driver is needed in the command """
+    """Number: A number if more than one driver is needed in the command"""
 
     def wrapper(func):
         return slash_option(
@@ -147,53 +157,56 @@ def driver_slash_option(number=1):
             required=True,
             opt_type=OptionType.STRING,
             min_length=3,
-            max_length=3
+            max_length=3,
         )(func)
 
     return wrapper
 
 
 async def command_function(ctx, func, *args):
-    """ Function for the commands """
+    """Function for the commands"""
     if str(ctx.channel_id) != SPORTS_CHANNEL_ID:
         await ctx.send(embed=util.get_error_embed("wrong_channel"))
         return
-    elif limit_reached:
-        await ctx.send(embed=util.get_error_embed("limit_reached"))
-        return
-    #increment_command_calls()
     await ctx.defer()
     try:
         result = func(*args)
-        if isinstance(result, interactions.Embed): await ctx.send(embed=result)
-        elif isinstance(result, discord.File): await ctx.send(file=result)
-        else: await ctx.send(result)
-    except DataNotLoadedError: await ctx.send(embed=util.get_error_embed("faulty_value"))
+        if isinstance(result, interactions.Embed):
+            await ctx.send(embed=result)
+        elif isinstance(result, discord.File):
+            await ctx.send(file=result)
+        else:
+            await ctx.send(result)
+    except DataNotLoadedError:
+        await ctx.send(embed=util.get_error_embed("faulty_value"))
     return
 
 
 class Formula1(Extension):
-    """ Formula1 Commands"""
+    """Formula1 Commands"""
 
-    ''' Base '''
+    """ Base """
 
     @slash_command(name="f1", description="Formel 1 Befehle")
     async def f1_function(self, ctx: SlashContext):
         await ctx.send("Formel 1, Baby")
 
-    ''' ######################
+    """ ######################
     Commands without group
-    ####################### '''
+    ####################### """
 
     @f1_function.subcommand(
         sub_cmd_name="result",
-        sub_cmd_description="Ergebnis der Session (Standard: Zuletzt gefahrene Session)"
+        sub_cmd_description="Ergebnis der Session (Standard: Zuletzt gefahrene Session)",
     )
     @year_slash_option(1950)
     @grandprix_slash_option()
     @session_slash_option()
-    async def result_function(self, ctx: SlashContext, year: int = CURRENT_SEASON, gp: str = "", session: str = ""):
-        try: gp, session = get_current_and_check_input(year, gp, session)
+    async def result_function(
+        self, ctx: SlashContext, year: int = CURRENT_SEASON, gp: str = "", session: str = ""
+    ):
+        try:
+            gp, session = get_current_and_check_input(year, gp, session)
         except DataNotLoadedError:
             await ctx.send(embed=util.get_error_embed("faulty_value"))
             return
@@ -201,21 +214,23 @@ class Formula1(Extension):
 
     @f1_function.subcommand(
         sub_cmd_name="next",
-        sub_cmd_description="Das nächstes Rennwochenende oder alle verbleibenden Rennen (Standard: nur nächstes)"
+        sub_cmd_description="Das nächstes Rennwochenende oder alle verbleibenden Rennen (Standard: nur nächstes)",
     )
     @slash_option(
         name="allnext",
         description="Alle?",
         opt_type=OptionType.BOOLEAN,
-        required=False
+        required=False,
     )
     async def next_function(self, ctx: SlashContext, allnext: bool = False):
-        if allnext: await command_function(ctx, no_group.remaining_races)
-        else: await command_function(ctx, no_group.next_race)
+        if allnext:
+            await command_function(ctx, no_group.remaining_races)
+        else:
+            await command_function(ctx, no_group.next_race)
 
-    ''' ######################
+    """ ######################
     Commands in LAPS group
-    ####################### '''
+    ####################### """
 
     # @f1_function.subcommand(
     #     group_name="laps",
@@ -292,9 +307,9 @@ class Formula1(Extension):
     #     except DataNotLoadedError: return await ctx.send(embed=util.get_error_embed("faulty_value"))
     #     await command_function(ctx, laps.track_dominance, year, gp, session, driver_1.upper(), driver_2.upper())
 
-    ''' ######################
+    """ ######################
     Commands in RACEINFO group
-    ####################### '''
+    ####################### """
 
     # @f1_function.subcommand(
     #     group_name="raceinfo",
@@ -328,9 +343,9 @@ class Formula1(Extension):
     #     if gp == 0: gp = get_last_finished_gp()
     #     await command_function(ctx, race_info.strategy, year, gp)
 
-    ''' #######################
+    """ #######################
     Commands in STANDINGS group
-    ####################### '''
+    ####################### """
 
     # @f1_function.subcommand(
     #     group_name="standings",

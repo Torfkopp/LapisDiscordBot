@@ -184,7 +184,9 @@ class Formula1Live(BaseLive):
             start_time = list(formula1_schedule)[0]
             if start_time > now:
                 Task(self._start_live, DateTrigger(start_time)).start()
-            elif datetime.timedelta(minutes=0) < (now - start_time) < datetime.timedelta(minutes=60):
+            elif (
+                datetime.timedelta(minutes=0) < (now - start_time) < datetime.timedelta(minutes=60)
+            ):
                 await self._start_live()
             else:
                 # session finished already - post old result
@@ -196,7 +198,9 @@ class Formula1Live(BaseLive):
             if start_times[0] >= now:
                 for start_time in start_times:
                     if "Practice" in formula1_schedule.get(start_time, ""):
-                        Task(self._post_result_after_hour, DateTrigger(start_time)).start(start_time)
+                        Task(self._post_result_after_hour, DateTrigger(start_time)).start(
+                            start_time
+                        )
                     else:
                         Task(self._start_live, DateTrigger(start_time)).start()
 
@@ -219,7 +223,10 @@ class Formula1Live(BaseLive):
             result = formula1.result(session)
             await self.bot.get_channel(self.channel_id).send(result)
         except Exception:
-            Task(self._post_old_result, DateTrigger(datetime.datetime.now() + datetime.timedelta(hours=1))).start(session, session_info)
+            Task(
+                self._post_old_result,
+                DateTrigger(datetime.datetime.now() + datetime.timedelta(hours=1)),
+            ).start(session, session_info)
 
     async def _post_result_after_hour(self, start_time):
         Task(self._post_old_result, DateTrigger(start_time + datetime.timedelta(hours=1))).start()
@@ -230,7 +237,7 @@ class LiveManager:
         self.bot = bot
         self.msgs = {"score": "", "league": "", "f1": ""}
         try:
-            with open(MSG_FILE, "r") as f:
+            with open(MSG_FILE) as f:
                 self.msgs.update(json.load(f))
         except Exception:
             pass
@@ -274,7 +281,7 @@ class LiveManager:
         # create schedules
         await self.football.create_schedule(now)
         await self.lolesport.create_schedule(now)
-        
+
         f1_schedule = formula1.create_schedule()
         await self.formula1.create_schedule(f1_schedule, now)
 
@@ -284,7 +291,9 @@ class LiveManager:
                 self.update_msg(instance.key, "")
 
         # schedule next day's creator at next 00:00
-        next_mid = (now.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1))
+        next_mid = now.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(
+            days=1
+        )
         Task(self._create_and_schedule_today, DateTrigger(next_mid)).start()
 
     async def start(self):

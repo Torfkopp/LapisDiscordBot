@@ -1,11 +1,9 @@
 import datetime
 import locale
 
-import interactions
-from interactions import Client, Intents, listen, Task, IntervalTrigger, DateTrigger, TimeTrigger
+from interactions import Client, Intents, listen, Task, IntervalTrigger, TimeTrigger
 from interactions.api.events import Error
 from interactions.ext import prefixed_commands
-from interactions.models import discord
 from matplotlib import font_manager
 
 import util
@@ -23,10 +21,13 @@ bot = Client(intents=intents, send_command_tracebacks=False)
 prefixed_commands.setup(bot)
 
 
-try: locale.setlocale(locale.LC_ALL, 'de_DE')  # Changes local to Deutsch for time display
+try:
+    locale.setlocale(locale.LC_ALL, "de_DE")  # Changes local to Deutsch for time display
 except locale.Error:
-    try: locale.setlocale(locale.LC_ALL, 'de_DE.utf8')  # Tries this
-    except locale.Error: pass  # Accepts defeat
+    try:
+        locale.setlocale(locale.LC_ALL, "de_DE.utf8")  # Tries this
+    except locale.Error:
+        pass  # Accepts defeat
 
 
 @listen(Error, disable_default_listeners=True)
@@ -58,24 +59,24 @@ async def on_message_reaction_remove(event):
 
 @Task.create(TimeTrigger(hour=8, minute=0, utc=False))
 async def daily_procedure():
-    print("SHIT")
-    # if datetime.datetime.now().weekday() == 1: util.reset_message_tracker()
-    # await daily.daily_messages(bot)
+    if datetime.datetime.now().weekday() == 1:
+        util.reset_message_tracker()
+    await daily.daily_messages(bot)
 
 
 @listen()
 async def on_ready():
-    """ Is called when the bot is ready """
+    """Is called when the bot is ready"""
     log.write("Ready")
     log.write(f"This bot is owned by {bot.owner}")
     # Loads the Formula1 font
-    for font in font_manager.findSystemFonts(["resources/formula1/font"]): 
+    for font in font_manager.findSystemFonts(["resources/formula1/font"]):
         font_manager.fontManager.addfont(font)
 
 
 @listen()
 async def on_startup():
-    """ Startup procedure """
+    """Startup procedure"""
     # If test mode set, run test-mode activity and return
     if TEST_MODE_ON:
         act = activity.ActivityClass(bot, [])

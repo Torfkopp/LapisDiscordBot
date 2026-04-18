@@ -1,17 +1,15 @@
-import json
-
 import interactions
-import requests
-from bs4 import BeautifulSoup
 from interactions import (
-    Extension, slash_command, SlashContext, slash_option, OptionType
+    Extension,
+    slash_command,
+    SlashContext,
+    slash_option,
+    OptionType,
 )
 
-import util
-from core import log
 
-
-def setup(bot): Embed(bot)
+def setup(bot):
+    Embed(bot)
 
 
 class Embed(Extension):
@@ -27,17 +25,18 @@ class Embed(Extension):
         description="Alternativer Embedder",
         required=False,
         opt_type=OptionType.BOOLEAN,
-
     )
     async def embed_function(self, ctx: SlashContext, link, alt=False):
         link = get_embed_link(link, alt)
-        if isinstance(link, interactions.Embed): await ctx.send(embed=link)
+        if isinstance(link, interactions.Embed):
+            await ctx.send(embed=link)
         await ctx.send(link)
 
 
 def get_embed_link(link, alt):
-    """ Returns the link in a for discord embeddable format """
-    if "tiktok." in link: link = link.replace("vm.tiktok.com", "a.tnktok.com")
+    """Returns the link in a for discord embeddable format"""
+    if "tiktok." in link:
+        link = link.replace("vm.tiktok.com", "a.tnktok.com")
     elif "instagram." in link:
         link = link.replace("instagram.com", "uuinstagram.com")
     elif "x." in link or "twitter." in link:

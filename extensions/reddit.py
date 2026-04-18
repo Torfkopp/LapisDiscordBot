@@ -3,7 +3,12 @@ import random
 import interactions
 import requests
 from interactions import (
-    Extension, slash_command, SlashContext, slash_option, OptionType, SlashCommandChoice
+    Extension,
+    slash_command,
+    SlashContext,
+    slash_option,
+    OptionType,
+    SlashCommandChoice,
 )
 
 import util
@@ -11,7 +16,8 @@ from core import log
 from extensions.embed import get_embed_link
 
 
-def setup(bot): Reddit(bot)
+def setup(bot):
+    Reddit(bot)
 
 
 SUBBREDDITS = {
@@ -41,7 +47,7 @@ class Reddit(Extension):
         description="Subreddit",
         required=True,
         opt_type=OptionType.STRING,
-        choices=[SlashCommandChoice(name=name, value=value) for name, value in SUBBREDDITS.items()]
+        choices=[SlashCommandChoice(name=name, value=value) for name, value in SUBBREDDITS.items()],
     )
     async def reddit_function(self, ctx: SlashContext, subreddit):
         await ctx.defer()
@@ -68,27 +74,27 @@ def get_reddit_link(subreddit):
         "DNT": "1",
         "Sec-GPC": "1",
         "Connection": "keep-alive",
-        "TE": "trailers"
+        "TE": "trailers",
     }
 
     try:
         log.write("API Call Reddit: " + url)
         response = requests.request("GET", url, data=payload, headers=headers)
         response = response.json()
-    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+    except requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
         log.write("API may be down")
         return None
 
-    data = response['data']['children']
+    data = response["data"]["children"]
     number = random.randrange(len(data))
-    post = data[number]['data']
+    post = data[number]["data"]
     loop_prevent = 0
-    while post['distinguished'] and loop_prevent < len(data):
+    while post["distinguished"] and loop_prevent < len(data):
         loop_prevent += 1
         number = random.randrange(len(data))
-        post = data[number]['data']
+        post = data[number]["data"]
 
-    link, is_video = f"https://www.reddit.com{post['permalink']}", post['is_video']
+    link, is_video = f"https://www.reddit.com{post['permalink']}", post["is_video"]
     if is_video:
         link = get_embed_link(link, False)
         return link if not isinstance(link, interactions.Embed) else get_reddit_link(subreddit)

@@ -36,7 +36,9 @@ class ActivityClass:
 
     async def test_mode(self):
         self.status = discord.Status.DND
-        await self._change_activity("Befindet sich im Testmodus", discord.activity.ActivityType.COMPETING)
+        await self._change_activity(
+            "Befindet sich im Testmodus", discord.activity.ActivityType.COMPETING
+        )
 
     async def rotate_activity(self):
         now = datetime.datetime.now()

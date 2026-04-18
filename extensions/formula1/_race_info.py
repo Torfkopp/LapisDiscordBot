@@ -10,15 +10,15 @@ from core import log
 """ Methods for the race info command"""
 # all three methods part of the fastf1 docs examples
 
-matplotlib.rcParams['font.family'] = 'Formula1'
+matplotlib.rcParams["font.family"] = "Formula1"
 
 
 def position_change(year, gp):
-    """ Returns the place changes during the race"""
+    """Returns the place changes during the race"""
     # enabling misc_mpl_mods will turn on minor grid lines that clutters the plot
     fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False)
     # Load the session
-    session = fastf1.get_session(year, gp, 'R')
+    session = fastf1.get_session(year, gp, "R")
     log.write("FastF1: " + str(session))
     session.load(telemetry=False, weather=False, messages=False)
 
@@ -26,26 +26,27 @@ def position_change(year, gp):
     fig, ax = plt.subplots(figsize=(8.0, 4.9))
 
     # Change colour
-    fig.set_facecolor('black')
-    ax.set_facecolor('black')
+    fig.set_facecolor("black")
+    ax.set_facecolor("black")
 
     # For each driver, get their three letters, get their colour,
     # and then plot their position over the number of laps
     for drv in session.drivers:
         drv_laps = session.laps.pick_driver(drv)
 
-        abb = drv_laps['Driver'].iloc[0]
-        try: colour = fastf1.plotting.driver_color(abb)
-        except KeyError: colour = util.random_colour_generator()
-        ax.plot(drv_laps['LapNumber'], drv_laps['Position'],
-                label=abb, color=colour)
+        abb = drv_laps["Driver"].iloc[0]
+        try:
+            colour = fastf1.plotting.driver_color(abb)
+        except KeyError:
+            colour = util.random_colour_generator()
+        ax.plot(drv_laps["LapNumber"], drv_laps["Position"], label=abb, color=colour)
 
     # Finalise the plot by setting y-limits that invert the y-axis
     # so that position one is at the top, set custom tick positions and axis labels.
     ax.set_ylim([20.5, 0.5])
     ax.set_yticks([1, 5, 10, 15, 20])
-    ax.set_xlabel('Lap')
-    ax.set_ylabel('Position')
+    ax.set_xlabel("Lap")
+    ax.set_ylabel("Position")
 
     # Add the legend outside the plot area
     ax.legend(bbox_to_anchor=(1.0, 1.02))
@@ -55,18 +56,18 @@ def position_change(year, gp):
     plt.title(f"{session.event['EventName']} {year} Position Changes")
 
     # Save the figure and let Discord load it
-    plt.savefig('formula1/pc.png', bbox_inches="tight", dpi=300)
+    plt.savefig("formula1/pc.png", bbox_inches="tight", dpi=300)
     file = discord.File("formula1/pc.png", file_name="image.png")
 
     return file
 
 
 def lap_time_distribution(year, gp):
-    """ Returns the drivers' lap time distribution during the race """
+    """Returns the drivers' lap time distribution during the race"""
     # enabling misc_mpl_mods will turn on minor grid lines that clutters the plot
     fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False)
     # Load the race session
-    race = fastf1.get_session(year, gp, 'R')
+    race = fastf1.get_session(year, gp, "R")
     log.write("FastF1: " + str(race))
     race.load(weather=False, messages=False)
 
@@ -80,8 +81,10 @@ def lap_time_distribution(year, gp):
 
     # Modify Driver_colors palette. For that, change key from full name to Abbreviation.
     # May fail when there's a new driver getting into the top 10, will cross that bridge when we get there
-    driver_colors = {abv: fastf1.plotting.DRIVER_COLORS[driver] for abv, driver in
-                     fastf1.plotting.DRIVER_TRANSLATE.items()}
+    driver_colors = {
+        abv: fastf1.plotting.DRIVER_COLORS[driver]
+        for abv, driver in fastf1.plotting.DRIVER_TRANSLATE.items()
+    }
 
     # create the figure
     fig, ax = plt.subplots(figsize=(10, 5))
@@ -90,49 +93,51 @@ def lap_time_distribution(year, gp):
     # so we have to convert timedelta to float (in seconds)
     driver_laps["LapTime(s)"] = driver_laps["LapTime"].dt.total_seconds()
 
-    sns.violinplot(data=driver_laps,
-                   x="Driver",
-                   y="LapTime(s)",
-                   inner=None,
-                   scale="area",
-                   order=finishing_order,
-                   palette=driver_colors
-                   )
+    sns.violinplot(
+        data=driver_laps,
+        x="Driver",
+        y="LapTime(s)",
+        inner=None,
+        scale="area",
+        order=finishing_order,
+        palette=driver_colors,
+    )
 
-    sns.swarmplot(data=driver_laps,
-                  x="Driver",
-                  y="LapTime(s)",
-                  order=finishing_order,
-                  hue="Compound",
-                  palette=fastf1.plotting.COMPOUND_COLORS,
-                  hue_order=["SOFT", "MEDIUM", "HARD"],
-                  linewidth=0,
-                  size=5,
-                  )
+    sns.swarmplot(
+        data=driver_laps,
+        x="Driver",
+        y="LapTime(s)",
+        order=finishing_order,
+        hue="Compound",
+        palette=fastf1.plotting.COMPOUND_COLORS,
+        hue_order=["SOFT", "MEDIUM", "HARD"],
+        linewidth=0,
+        size=5,
+    )
 
     # make plot more aestetic
     ax.set_xlabel("Driver")
     ax.set_ylabel("Lap Time (s)")
     plt.suptitle(f"{year} {race.event['EventName']} Lap Time Distributions")
     sns.despine(left=True, bottom=True)
-    fig.set_facecolor('black')
-    ax.set_facecolor('black')
+    fig.set_facecolor("black")
+    ax.set_facecolor("black")
 
     plt.tight_layout()
 
     # Save the figure and let Discord load it
-    plt.savefig('formula1/ltd.png')
+    plt.savefig("formula1/ltd.png")
     file = discord.File("formula1/ltd.png", file_name="image.png")
 
     return file
 
 
 def strategy(year, gp):
-    """ Returns the tyre strategies during the race """
+    """Returns the tyre strategies during the race"""
     # enabling misc_mpl_mods will turn on minor grid lines that clutters the plot
     fastf1.plotting.setup_mpl(mpl_timedelta_support=False, misc_mpl_mods=False)
     # Load the race session
-    session = fastf1.get_session(year, gp, 'R')
+    session = fastf1.get_session(year, gp, "R")
     log.write("FastF1: " + str(session))
     session.load(messages=False)
     laps = session.laps
@@ -168,7 +173,7 @@ def strategy(year, gp):
                 left=previous_stint_end,
                 color=fastf1.plotting.COMPOUND_COLORS[row["Compound"]],
                 edgecolor="black",
-                fill=True
+                fill=True,
             )
 
             previous_stint_end += row["StintLength"]
@@ -182,16 +187,16 @@ def strategy(year, gp):
     ax.invert_yaxis()
 
     # plot aesthetics
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    fig.set_facecolor('black')
-    ax.set_facecolor('black')
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_visible(False)
+    fig.set_facecolor("black")
+    ax.set_facecolor("black")
 
     plt.tight_layout()
 
     # Save the figure and let Discord load it
-    plt.savefig('formula1/strat.png')
+    plt.savefig("formula1/strat.png")
     file = discord.File("formula1/strat.png", file_name="image.png")
 
     return file

@@ -4,8 +4,16 @@ import random
 import interactions
 import requests
 from interactions import (
-    Extension, slash_command, SlashContext, listen, ActionRow, Button, ButtonStyle, slash_option, OptionType,
-    SlashCommandChoice
+    Extension,
+    slash_command,
+    SlashContext,
+    listen,
+    ActionRow,
+    Button,
+    ButtonStyle,
+    slash_option,
+    OptionType,
+    SlashCommandChoice,
 )
 from interactions.api.events import Component
 
@@ -50,16 +58,22 @@ CATEGORY_OPTIONS = {
 @listen()
 async def on_trivia_component(event: Component):
     ctx = event.ctx
-    if not ctx.custom_id.startswith("trivia"): return
+    if not ctx.custom_id.startswith("trivia"):
+        return
     # Uncomment (and remove content parameter) if only author should be able to answer
     # if ctx.author_id != Trivia.author_id: return
     for component in Trivia.components.components:
         component.disabled = True
-        if component == ctx.component: component.style = ButtonStyle.RED
+        if component == ctx.component:
+            component.style = ButtonStyle.RED
         # noinspection PyUnresolvedReferences
-        if component.label == Trivia.right: component.style = ButtonStyle.GREEN  # warning ignorable
-    if ctx.message.content != "": return  # To prevent an overwriting when two answer contemporaneously
-    await ctx.edit_origin(components=Trivia.components, content=f"Beantwortet von: {ctx.author.display_name}")
+        if component.label == Trivia.right:
+            component.style = ButtonStyle.GREEN  # warning ignorable
+    if ctx.message.content != "":
+        return  # To prevent an overwriting when two answer contemporaneously
+    await ctx.edit_origin(
+        components=Trivia.components, content=f"Beantwortet von: {ctx.author.display_name}"
+    )
 
 
 class Trivia(Extension):
@@ -73,8 +87,10 @@ class Trivia(Extension):
         description="Kategorie der Frage",
         required=False,
         opt_type=OptionType.STRING,
-        choices=[SlashCommandChoice(name=k, value=CATEGORY_OPTIONS.get(k)) for k in
-                 dict(sorted(CATEGORY_OPTIONS.items()))]  # sorted by alphabet
+        choices=[
+            SlashCommandChoice(name=k, value=CATEGORY_OPTIONS.get(k))
+            for k in dict(sorted(CATEGORY_OPTIONS.items()))
+        ],  # sorted by alphabet
     )
     @slash_option(
         name="difficulty",
@@ -84,8 +100,8 @@ class Trivia(Extension):
         choices=[
             SlashCommandChoice(name="Easy", value="easy"),
             SlashCommandChoice(name="Medium", value="medium"),
-            SlashCommandChoice(name="Hard", value="hard")
-        ]
+            SlashCommandChoice(name="Hard", value="hard"),
+        ],
     )
     async def trivia_function(self, ctx: SlashContext, category: str = "", difficulty: str = ""):
         Trivia.author_id = ctx.author_id
@@ -99,7 +115,7 @@ class Trivia(Extension):
             Button(
                 custom_id="trivia_B",
                 style=ButtonStyle.GREY,
-                label=choices[1]
+                label=choices[1],
             ),
         )
         if len(choices) > 2:
@@ -107,33 +123,37 @@ class Trivia(Extension):
                 Button(
                     custom_id="trivia_C",
                     style=ButtonStyle.GREY,
-                    label=choices[2]
+                    label=choices[2],
                 ),
                 Button(
                     custom_id="trivia_D",
                     style=ButtonStyle.GREY,
-                    label=choices[3]
-                )
+                    label=choices[3],
+                ),
             )
 
-        embed = interactions.Embed(title="Trivia", description=question, color=util.Colour.TRIVIA.value)
+        embed = interactions.Embed(
+            title="Trivia", description=question, color=util.Colour.TRIVIA.value
+        )
 
         await ctx.send(embed=embed, components=Trivia.components)
 
 
 def get_trivia(category, difficulty):
-    """ Gets a trivia question, answers and the correct answer """
+    """Gets a trivia question, answers and the correct answer"""
     url = "https://opentdb.com/api.php?amount=1"
-    if category != "": url += f"&category={category}"
-    if difficulty != "": url += f"&difficulty={difficulty}"
+    if category != "":
+        url += f"&category={category}"
+    if difficulty != "":
+        url += f"&difficulty={difficulty}"
     payload = ""
 
     try:
         log.write("Api-Call Trivia: " + url)
         response = requests.request("GET", url, data=payload)
         response = response.json()
-        trivia = response['results'][0]
-    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+        trivia = response["results"][0]
+    except KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError:
         log.write("API DOWN")
         return util.get_error_embed("api_down")
 
@@ -143,8 +163,8 @@ def get_trivia(category, difficulty):
     question += f"Question: {trivia['question']}"
     question = html.unescape(question)
 
-    answers = trivia['incorrect_answers']
-    correct = trivia['correct_answer']
+    answers = trivia["incorrect_answers"]
+    correct = trivia["correct_answer"]
     answers.append(correct)
     answers = [html.unescape(x) for x in answers]
     random.shuffle(answers)

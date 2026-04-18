@@ -1,0 +1,23 @@
+include = [
+    "core", "extensions", "main.py", "util.py", "uwuifier.py"
+]
+
+line-length = 100
+indent-width = 4
+
+target-version = "py314"
+
+[lint]
+select = ["ASYNC", "B", "A", "COM", "C4", "E", "W", "F", "UP", "ICN", "PIE", "T20", "Q", "TD"]
+ignore = ["E701", "E722", "E501", "COM812"]  # Turn COM812 on when linting
+
+[lint.per-file-ignores]
+"log.py" = ["T20", "ASYNC"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = 60

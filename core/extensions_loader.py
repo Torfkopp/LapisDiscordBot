@@ -9,8 +9,9 @@ def load_extensions(bot: Client):
 
     # go through all folders in the directory and load the extensions from all files
     # Note: files must end in .py
-    for root, dirs, files in os.walk("extensions"):
-        if any(s in root for s in ["unused", "__pycache__"]): continue
+    for root, _dirs, files in os.walk("extensions"):
+        if any(s in root for s in ["unused", "__pycache__"]):
+            continue
         for file in files:
             if file.endswith(".py") and not file.startswith("_"):
                 file = file.removesuffix(".py")

@@ -9,13 +9,13 @@ import util
 
 
 async def start_procedure(bot):
-    """ Sends the logfile into the channel and then cleans the file """
+    """Sends the logfile into the channel and then cleans the file"""
     channel = bot.get_channel(util.LOGBUCH_ID)
     if datetime.datetime.now().weekday() == 0:
         await delete_old_messages(channel)
         await backup(channel)
     await channel.send(file=discord.File("variable/log.txt"))  # Send the log into a channel
-    open('variable/log.txt', 'w').close()  # Clear the log data
+    open("variable/log.txt", "w").close()  # Clear the log data
     print("LOG CLEARED")
 
 
@@ -31,16 +31,18 @@ async def backup(channel):
 
 
 def write(log):
-    """ Writes the parameter to the logfile with the time in front """
+    """Writes the parameter to the logfile with the time in front"""
     print(log)
-    with open("variable/log.txt", "a") as logfile: logfile.write(f"{datetime.datetime.now()}: {log}\n")
+    with open("variable/log.txt", "a") as logfile:
+        logfile.write(f"{datetime.datetime.now()}: {log}\n")
 
 
 def error(err):
-    """ Writes the error to the file """
+    """Writes the error to the file"""
     traceback.print_exception(err)
     error_message = traceback.format_exception(err)
     with open("variable/log.txt", "a") as logfile:
         logfile.write(f"\n {datetime.datetime.now()} ERROR\n")
-        for line in error_message: logfile.write(line)
+        for line in error_message:
+            logfile.write(line)
         logfile.write("\n")
