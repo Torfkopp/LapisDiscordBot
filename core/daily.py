@@ -21,10 +21,9 @@ async def formula1_info(bot, now):
             await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
 
 
-async def update_patchnotes():
+async def update_patchnotes(bot):
     """Updates the patchnotes if there are new ones and sends them to the channel"""
     embed = lol_patchnotes.update()
-    from main import bot
     if embed:
         await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=embed)
 
@@ -32,11 +31,17 @@ async def update_patchnotes():
 async def patchnotes(bot, now):
     """Check for new patchnotes and send them if they exist"""
     try:
-        await update_patchnotes()
+        await update_patchnotes(bot)
         if now.weekday() == 1:
             for i in range(4):
-                Task(update_patchnotes, DateTrigger(now.replace(hour=(20 + i), minute=20))).start()
-        Task(update_patchnotes, IntervalTrigger(hours=3.25)).start()
+                Task(
+                    update_patchnotes, 
+                    DateTrigger(now.replace(hour=(20 + i), minute=20)),
+                    bot).start()
+        Task(
+            update_patchnotes,
+            IntervalTrigger(hours=8),
+            bot).start()
     except Exception as e:
         log.error(e)
 
