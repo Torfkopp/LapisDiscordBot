@@ -1,4 +1,5 @@
 import datetime
+from functools import partial
 
 from interactions import Task, IntervalTrigger, DateTrigger
 
@@ -32,16 +33,11 @@ async def patchnotes(bot, now):
     """Check for new patchnotes and send them if they exist"""
     try:
         await update_patchnotes(bot)
+        g = partial(update_patchnotes, bot)
         if now.weekday() == 1:
             for i in range(4):
-                Task(
-                    update_patchnotes, 
-                    DateTrigger(now.replace(hour=(20 + i), minute=20)),
-                    bot).start()
-        Task(
-            update_patchnotes,
-            IntervalTrigger(hours=8),
-            bot).start()
+                Task(g, DateTrigger(now.replace(hour=(20 + i), minute=20))).start()
+        Task(g, IntervalTrigger(hours=8)).start()
     except Exception as e:
         log.error(e)
 
