@@ -28,7 +28,7 @@ class BaseLive:
         saved = self.manager.msgs.get(self.key)
         if saved:
             try:
-                channel = await self.bot.get_channel(self.channel_id)
+                channel = self.bot.get_channel(self.channel_id)
                 self.message = await channel.fetch_message(saved)
             except Exception:
                 self.message = None
@@ -97,7 +97,7 @@ class FootballLive(BaseLive):
 class LolesportLive(BaseLive):
     async def _live(self):
         embeds, still_going = lolesport.get_live()
-        channel = await self.bot.get_channel(self.channel_id)
+        channel = self.bot.get_channel(self.channel_id)
         if not self.message:
             try:
                 self.message = await channel.send(embeds=embeds)
@@ -143,7 +143,7 @@ class LolesportLive(BaseLive):
 class Formula1Live(BaseLive):
     async def _live(self):
         result, still_going = formula1.auto_result(False)
-        channel = await self.bot.get_channel(self.channel_id)
+        channel = self.bot.get_channel(self.channel_id)
         if not self.message:
             try:
                 self.message = await channel.send(result)
