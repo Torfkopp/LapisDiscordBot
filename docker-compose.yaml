@@ -3,6 +3,8 @@ services:
     build: .
     container_name: lapis
     restart: unless-stopped
+    environment:
+      - tz=Europe/Berlin
     volumes:
       - ./:/app
     tty: false
