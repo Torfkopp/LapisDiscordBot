@@ -32,7 +32,7 @@ async def backup(channel):
 
 def write(log):
     """Writes the parameter to the logfile with the time in front"""
-    print(log)
+    print(f"{datetime.datetime.now()}: {log}")
     with open("variable/log.txt", "a") as logfile:
         logfile.write(f"{datetime.datetime.now()}: {log}\n")
 

@@ -71,6 +71,8 @@ async def temperature(bot, now):
 
 async def daily_messages(bot):
     """Daily procedure"""
+    log.write("Running daily procedure")
+    
     now = datetime.datetime.now()
     await formula1_info(bot, now)
     await patchnotes(bot, now)
