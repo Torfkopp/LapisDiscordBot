@@ -286,6 +286,7 @@ class LiveManager:
         await self.formula1.create_schedule(f1_schedule, now)
 
         # clean up saved message ids that are not associated with running tasks
+        self.clean_up()
         for instance in (self.football, self.lolesport, self.formula1):
             if not (instance.task and getattr(instance.task, "running", False)):
                 self.update_msg(instance.key, "")
