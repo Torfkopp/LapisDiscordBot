@@ -61,6 +61,7 @@ async def on_message_reaction_remove(event):
 async def daily_procedure():
     if datetime.datetime.now().weekday() == 1:
         util.reset_message_tracker()
+    await log.start_procedure(bot)
     await daily.daily_messages(bot)
 
 
