@@ -313,6 +313,7 @@ class LiveManager:
                     pass
             inst.message = None
             self.update_msg(inst.key, "")
+        football.clear_old_matches()
         log.write("Live results cleaned up")
 
 

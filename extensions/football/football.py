@@ -45,6 +45,11 @@ def get_live():
     return live.get_live()
 
 
+def clear_old_matches():
+    """Removes all matches"""
+    live.clear_old_matches()
+
+
 '''def get_match_goals(match_id):
     """ Get the match's goalscorers """
     return live.get_match_goals(match_id)'''

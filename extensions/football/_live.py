@@ -75,6 +75,12 @@ class Game:
         return True
 
 
+def clear_old_matches():
+    """Clears old matches"""
+    league_matches = defaultdict(list)
+    matches = {}
+
+
 def match_interested_in(match):
     """Returns whether there's interest in the match
     :return True if interest exists, else False"""
@@ -164,7 +170,9 @@ def get_live():
     for league in data:
         # Skip league if not one of the wanted ones
         league_name = league["matches"][0]["competition"]["name"]
-        if league_name not in COMPETITION_LIST and not any(keyword in league_name for keyword in KEYWORDS):
+        if league_name not in COMPETITION_LIST and not any(
+            keyword in league_name for keyword in KEYWORDS
+        ):
             continue
         # Iterate over every match in the league
         for match in league["matches"]:
