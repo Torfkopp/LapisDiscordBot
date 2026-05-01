@@ -180,7 +180,7 @@ class Formula1Live(BaseLive):
     async def create_schedule(self, formula1_schedule, now):
         log.write("Today's formula1 sessions: " + str(formula1_schedule))
         # follow original behavior but schedule using the manager
-        if len(formula1_schedule) == 1:
+        if len(formula1_schedule) == 1:  # Race
             start_time = list(formula1_schedule)[0]
             if start_time > now:
                 Task(self._start_live, DateTrigger(start_time)).start()
@@ -189,34 +189,29 @@ class Formula1Live(BaseLive):
             ):
                 await self._start_live()
             else:
-                # session finished already - post old result
-                result = formula1.result(formula1_schedule.get(start_time))
-                await self.bot.get_channel(self.channel_id).send(result)
+                await self._post_result()
 
-        elif len(formula1_schedule) > 1:
+        elif len(formula1_schedule) > 1:  # Non Race Days
             start_times = list(formula1_schedule)
-            if start_times[0] >= now:
+            if start_times[0] >= now:  # Both sessions in future
                 for start_time in start_times:
-                    if "Practice" in formula1_schedule.get(start_time, ""):
-                        Task(self._post_result_after_hour, DateTrigger(start_time)).start(
-                            start_time
-                        )
+                    if "Practice" in formula1_schedule.get(start_time, ""):  # If practice, send after 1h
+                        Task(self._post_result, DateTrigger(start_time + datetime.timedelta(hours=1))).start()
                     else:
-                        Task(self._start_live, DateTrigger(start_time)).start()
+                        Task(self._start_live, DateTrigger(start_time)).start()  # Else, start at given time
 
-            elif start_times[1] > now or (start_times[1] + datetime.timedelta(hours=1)) > now:
+            elif start_times[1] > now or (start_times[1] + datetime.timedelta(hours=1)) > now: # 1. gone, 2. to be
                 # post old result for session 0
-                await self._post_old_result(start_times[0], formula1_schedule.get(start_times[0]))
+                await self._post_old_result(start_times[0], formula1_schedule.get(start_times[0]))  # 1. session
                 start_time = start_times[1]
-                if "Practice" in formula1_schedule.get(start_time, ""):
-                    Task(self._post_result_after_hour, DateTrigger(start_time)).start(start_time)
+                if "Practice" in formula1_schedule.get(start_time, ""):  # Schedule second session
+                    Task(self._post_result, DateTrigger(start_time + datetime.timedelta(hours=1))).start()
                 else:
                     Task(self._start_live, DateTrigger(start_time)).start()
 
-            else:
-                await self._post_old_result(start_times[0], formula1_schedule.get(start_times[0]))
-                result, still = formula1.auto_result(True)
-                await self.bot.get_channel(self.channel_id).send(result)
+            else:  # Both gone
+                await self._post_old_result(start_times[0], formula1_schedule.get(start_times[0]))  # 1. Session
+                await self._post_result()  # Second session
 
     async def _post_old_result(self, session, session_info):
         try:
@@ -228,8 +223,13 @@ class Formula1Live(BaseLive):
                 DateTrigger(datetime.datetime.now() + datetime.timedelta(hours=1)),
             ).start(session, session_info)
 
-    async def _post_result_after_hour(self, start_time):
-        Task(self._post_old_result, DateTrigger(start_time + datetime.timedelta(hours=1))).start()
+    async def _post_result(self):
+        result, still_going = formula1.auto_result(True)
+        if still_going:
+            log.write("Formula1 Session not finished yet; trying again in 10 minutes")
+            Task(self._post_result, DateTrigger(datetime.datetime.now() + datetime.timedelta(minutes=10))).start()
+        else:
+            await self.bot.get_channel(util.SPORTS_CHANNEL_ID).send(result)
 
 
 class LiveManager:
