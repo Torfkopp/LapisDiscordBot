@@ -132,8 +132,8 @@ class LolesportLive(BaseLive):
             log.write("Live league begins")
 
     async def create_schedule(self, now):
-        league_schedule = lolesport.create_schedule()
-        if len(league_schedule) > 0 and sorted(league_schedule)[-1] < now:
+        league_schedule, last_game_time = lolesport.create_schedule()
+        if len(league_schedule) > 0 and sorted(league_schedule)[-1] < now < last_game_time:
             await self._live()
         log.write("Starting times of today's lol esport matches: " + str(league_schedule))
         for start_time in league_schedule:
