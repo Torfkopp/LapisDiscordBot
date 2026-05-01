@@ -63,9 +63,10 @@ def create_schedule():
         elif not time.date() == now.date():
             continue
         start_times.add(time)
-    
-    last_game_amount = events[-1]["match"]["strategy"]["count"]
-    return list(start_times), last_game_amount
+
+    last_game_time = list(start_times)[-1]
+    last_game_time += list(events)[-1]["match"]["strategy"]["count"] * datetime.timedelta(minutes=40)
+    return list(start_times), last_game_time
 
 
 def get_live():
