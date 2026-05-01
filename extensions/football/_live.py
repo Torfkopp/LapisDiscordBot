@@ -270,7 +270,7 @@ def build_embed(league_name, round_title):
         )
         name = f"{game.team1:<20} {game.score[0]:^3}:{game.score[1]:^4}{penalty_score} {game.team2:>20}"
         name = "`" + name + "`"  # "```cs\n" + name + "\n```"
-        if game.minute < 0 and not game.done:
+        if game.minute <= 0 and not game.done:
             value = (
                 "Startet um "
                 + game.start_time.astimezone(pytz.timezone("Europe/Berlin"))
