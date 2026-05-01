@@ -64,7 +64,7 @@ def create_schedule():
             continue
         start_times.add(time)
 
-    last_game_time = list(start_times)[-1] + list(events)[-1]["match"]["strategy"]["count"] * datetime.timedelta(minutes=40) if len(events) > 0 else None
+    last_game_time = list(start_times)[-1] + list(events)[-1]["match"]["strategy"]["count"] * datetime.timedelta(minutes=40) if len(start_times) > 0 else None
     return list(start_times), last_game_time
 
 
