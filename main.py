@@ -88,9 +88,8 @@ async def on_startup():
     live_manager = live.create_manager(bot)
     live.live_manager = live_manager
 
-    await log.start_procedure(bot)
-
-    await daily_procedure()
+    if datetime.datetime.now().hour >= 8:
+        await daily_procedure()
     daily_procedure.start()
 
     await live_manager.start()
