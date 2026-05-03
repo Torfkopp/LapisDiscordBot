@@ -178,7 +178,7 @@ def _get_result_url():
     """Gets the url for the session to get the result from"""
     url = f"https://api.sport1.info/v2/de/motorsport/sport/sr:stage:7668/season/sr:stage:{CURRENT_SEASON_NUMBER}/minSportEventsWithSessions"
     try:
-        log.write("API Call Formula1: " + url)
+        log.write("API-Call Formula1: " + url, False)
         response = requests.request("GET", url, data=payload, headers=headers)
         response = response.json()
     except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
@@ -289,7 +289,7 @@ def auto_result(result_only: bool):
     global result_url  # If result_url is set, use it, else get the url of the current session
     url = result_url if result_url else _get_result_url()
     try:
-        log.write("API Call Formula1: " + url)
+        log.write("API-Call Formula1: " + url, False)
         response = requests.request("GET", url, data=payload, headers=headers)
         response = response.json()
     except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):

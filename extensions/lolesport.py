@@ -195,7 +195,7 @@ def get_schedule(league):
     }
 
     try:
-        log.write(f"Api-Call lolesports: {url} {querystring}")
+        log.write(f"Api-Call lolesports: {url} {querystring}", False)
         response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
         response = response.json()
         events = response["data"]["schedule"]["events"]

@@ -162,7 +162,7 @@ def get_live():
     url = f"https://api.sport1.info/v2/de/live/soccer/liveMatchesBySport/date/{date_today}/appConfig/false"
 
     response = requests.request("GET", url, data=payload, headers=headers)
-    log.write("Api-Call Football: " + url)
+    log.write("Api-Call Football: " + url, False)
     data = response.json()
     data = data["content"]
 
@@ -227,7 +227,7 @@ def get_match_goals(match_id):
     url = f"https://api.sport1.info/v2/de/soccer/ticker/{match_id}"
 
     response = requests.request("GET", url, data=payload, headers=headers)
-    log.write("Api-Call Football: " + url)
+    log.write("Api-Call Football: " + url, False)
     match_info = response.json()
 
     goals1, goals2 = [], []

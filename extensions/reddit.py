@@ -78,7 +78,7 @@ def get_reddit_link(subreddit):
     }
 
     try:
-        log.write("API Call Reddit: " + url)
+        log.write("API-Call Reddit: " + url)
         response = requests.request("GET", url, data=payload, headers=headers)
         response = response.json()
     except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
