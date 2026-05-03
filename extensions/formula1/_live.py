@@ -186,7 +186,7 @@ def _get_result_url():
         return
 
     current_comp_id = response["currentCompetitionId"]
-    current_match_id, current_match_name = "", ""
+    current_match_id = ""
     for compo in response["competitions"]:
         if compo["id"] == current_comp_id:
             current_match_id = compo["currentMatchId"]
@@ -204,13 +204,13 @@ def _make_result(response):
     rows = []
 
     if response["roundType"] in ("RACE", "SPRINT"):
-        headers = ["#", "Name", "Gesamt", "Schnellste", "P"]
+        headers = ["#", "Name", "Total", "Fastest", "P"]
 
         for position in response["results"]:
             if "position" not in position:
                 continue
 
-            name = f"{position['person']['firstName']} {position['person']['lastName']}"
+            name = f"{position['person']['lastName']}"
 
             if position.get("status") and position["status"] != "FINISHED":
                 total = position["status"]
@@ -231,13 +231,13 @@ def _make_result(response):
             )
 
     elif response["roundType"] in ("QUALIFYING", "SPRINT_SHOOTOUT"):
-        headers = ["#", "Name", "Schnellste"]
+        headers = ["#", "Name", "Fastest"]
 
         for position in response["results"]:
             if "position" not in position:
                 continue
 
-            name = f"{position['person']['firstName']} {position['person']['lastName']}"
+            name = f"{position['person']['lastName']}"
             fastest = position.get("fastestLap", "")
 
             rows.append(
@@ -249,13 +249,13 @@ def _make_result(response):
             )
 
     else:
-        headers = ["#", "Name", "Schnellste", "Stops"]
+        headers = ["#", "Name", "Fastest", "Pits"]
 
         for position in response["results"]:
             if "position" not in position:
                 continue
 
-            name = f"{position['person']['firstName']} {position['person']['lastName']}"
+            name = f"{position['person']['lastName']}"
             fastest = position.get("fastestLap", "")
             pits = position.get("pitStopCount", "")
 
