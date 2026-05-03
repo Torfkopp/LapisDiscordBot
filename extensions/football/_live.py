@@ -77,6 +77,7 @@ class Game:
 
 def clear_old_matches():
     """Clears old matches"""
+    global league_matches, matches
     league_matches = defaultdict(list)
     matches = {}
 
