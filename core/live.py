@@ -30,8 +30,10 @@ class BaseLive:
             try:
                 channel = self.bot.get_channel(self.channel_id)
                 self.message = await channel.fetch_message(saved)
+                log.write(f"Loaded saved message: {self.key} {self.message.id}")
             except Exception:
                 self.message = None
+                log.write(f"Failed to load saved message for {self.key}")
 
     def save_message_id(self):
         if isinstance(self.message, interactions.Message):
@@ -146,6 +148,7 @@ class Formula1Live(BaseLive):
             super()
         else:
             self.message = None
+            log.write(f"Not loading saved message for {self.key} since task not running")
 
     async def _live(self):
         result, still_going = formula1.auto_result(False)
@@ -185,7 +188,7 @@ class Formula1Live(BaseLive):
 
     async def create_schedule(self, formula1_schedule, now):
         log.write("Today's formula1 sessions: " + str(formula1_schedule))
-        
+
         if len(formula1_schedule) == 1:  # Race
             start_time = list(formula1_schedule)[0]
             if start_time > now:
@@ -259,6 +262,7 @@ class LiveManager:
         try:
             with open(MSG_FILE, "w") as f:
                 json.dump(self.msgs, f)
+            log.write("Saved sport messages file", False)
         except Exception:
             log.write("Failed to write sport messages file")
 
@@ -278,18 +282,19 @@ class LiveManager:
 
     async def _create_and_schedule_today(self):
         # create today's schedules for all three
+        log.write("Creating today's schedules")
         now = datetime.datetime.now()
 
         await self.football.create_schedule(now)
         await self.football.load_saved()
 
         await self.lolesport.create_schedule(now)
-        await self.lolesport.load_saved()    
+        await self.lolesport.load_saved()
 
         f1_schedule = formula1.create_schedule()
         await self.formula1.create_schedule(f1_schedule, now)
         await self.formula1.load_saved()
-        
+
         # clean up saved message ids that are not associated with running tasks
         self.clean_up()
         for instance in (self.football, self.lolesport, self.formula1):
@@ -308,6 +313,7 @@ class LiveManager:
         today_mid = now.replace(hour=0, minute=0, second=0, microsecond=0)
         if now >= today_mid:
             await self._create_and_schedule_today()
+        log.write("Live manager started")
 
     def clean_up(self):
         # Stop tasks and clear saved ids
