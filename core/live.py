@@ -144,7 +144,7 @@ class LolesportLive(BaseLive):
 
 class Formula1Live(BaseLive):
     async def load_saved(self):
-        if self.task.running:
+        if self.task and self.task.running:
             super()
         else:
             self.message = None
