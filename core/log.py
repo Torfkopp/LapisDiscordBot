@@ -40,15 +40,16 @@ def write(log, to_print=True):
         logfile.write(f"{datetime.datetime.now()}: {log}\n")
 
 
-def error(err):
+def error(err, prevented=False):
     """Writes the error to the file"""
     traceback.print_exception(err)
     error_message = traceback.format_exception(err)
     with open("variable/log.txt", "a") as logfile:
-        logfile.write(f"\n {datetime.datetime.now()} ERROR\n")
+        logfile.write("-" * 20)
+        logfile.write(f"\n {datetime.datetime.now()} ERROR{(' PREVENTED') if prevented else ''}\n")
         for line in error_message:
             logfile.write(line)
-        logfile.write("\n")
+        logfile.write("\n" + "-" * 20 + "\n")
 
 
 def safe_call(func):
@@ -63,7 +64,7 @@ def safe_call(func):
             try:
                 return await func(*args, **kwargs)
             except Exception as e:
-                error(e)
+                error(e, True)
                 return None
 
         return async_wrapper
@@ -73,7 +74,7 @@ def safe_call(func):
             try:
                 return func(*args, **kwargs)
             except Exception as e:
-                error(e)
+                error(e, True)
                 return None
 
         return sync_wrapper
