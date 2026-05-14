@@ -12,6 +12,7 @@ import util
 import secret
 
 
+@log.safe_call
 async def formula1_info(bot, now):
     """If it's Monday or Thursday and the corresponding message hasn't been sent, send a message with f1 info"""
     embed = formula1.auto_info()
@@ -22,6 +23,7 @@ async def formula1_info(bot, now):
             await bot.get_channel(util.SPORTS_CHANNEL_ID).send(embed=embed)
 
 
+@log.safe_call
 async def update_patchnotes(bot):
     """Updates the patchnotes if there are new ones and sends them to the channel"""
     embed = lol_patchnotes.update()
@@ -29,6 +31,7 @@ async def update_patchnotes(bot):
         await bot.get_channel(util.LABAR_CHANNEL_ID).send(embed=embed)
 
 
+@log.safe_call
 async def patchnotes(bot, now):
     """Check for new patchnotes and send them if they exist"""
     try:
@@ -42,6 +45,7 @@ async def patchnotes(bot, now):
         log.error(e)
 
 
+@log.safe_call
 async def day_dependent(bot):
     """Send a message on certain days of the week"""
     if datetime.datetime.now().weekday() == 4 and not util.message_sent("friday_krabs"):
@@ -50,6 +54,7 @@ async def day_dependent(bot):
         await bot.get_channel(util.LABAR_CHANNEL_ID).send(file="resources/risesailer.mp4")
 
 
+@log.safe_call
 async def daily_meme(bot):
     """Every day, send a meme until the bot is finished or dead"""
     sent_already, day_count = util.day_counter()
@@ -61,6 +66,7 @@ async def daily_meme(bot):
         await bot.get_channel(util.COMEDY_CHANNEL_ID).send(message)
 
 
+@log.safe_call
 async def temperature(bot, now):
     """If it's before 9 am, check if the sun is killing people and send a message if so"""
     if now.time() < datetime.time(hour=9):

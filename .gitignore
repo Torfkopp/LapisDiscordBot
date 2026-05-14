@@ -1,6 +1,10 @@
 __pycache__
 *.py[cod]
 *.pyc
+venv/
+venv*
+
+.vscode
 
 *config.json
 config.json

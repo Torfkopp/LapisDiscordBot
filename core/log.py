@@ -1,5 +1,7 @@
 import datetime
 import traceback
+import asyncio
+from functools import wraps
 
 from interactions.models import discord
 
@@ -47,3 +49,31 @@ def error(err):
         for line in error_message:
             logfile.write(line)
         logfile.write("\n")
+
+
+def safe_call(func):
+    """Decorator that catches exceptions, logs them and prevents propagation.
+
+    Works for both async and sync functions. Uses `core.log.error` to record
+    the exception details.
+    """
+    if asyncio.iscoroutinefunction(func):
+        @wraps(func)
+        async def async_wrapper(*args, **kwargs):
+            try:
+                return await func(*args, **kwargs)
+            except Exception as e:
+                error(e)
+                return None
+
+        return async_wrapper
+    else:
+        @wraps(func)
+        def sync_wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                error(e)
+                return None
+
+        return sync_wrapper

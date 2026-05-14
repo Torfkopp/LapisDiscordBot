@@ -1,4 +1,4 @@
-FROM python:3.14-slim
+FROM python:3.11-slim
 WORKDIR /app
 
 # Avoid writing .pyc files and enable stdout/stderr flushing
