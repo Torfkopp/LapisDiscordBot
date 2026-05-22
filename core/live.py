@@ -255,9 +255,6 @@ class LiveManager:
         self.lolesport = LolesportLive(bot, self, "league", util.SPORTS_CHANNEL_ID)
         self.formula1 = Formula1Live(bot, self, "f1", util.SPORTS_CHANNEL_ID)
 
-        # schedule the daily schedule creator at next 00:00
-        self._schedule_daily_creator()
-
     def _write_msgs(self):
         try:
             with open(MSG_FILE, "w") as f:
@@ -269,16 +266,6 @@ class LiveManager:
     def update_msg(self, key, value):
         self.msgs[key] = value
         self._write_msgs()
-
-    def _schedule_daily_creator(self):
-        now = datetime.datetime.now()
-        today_mid = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        if now >= today_mid:
-            # schedule for tomorrow
-            next_mid = today_mid + datetime.timedelta(days=1)
-        else:
-            next_mid = today_mid
-        Task(self._create_and_schedule_today, DateTrigger(next_mid)).start()
 
     async def _create_and_schedule_today(self):
         # create today's schedules for all three
@@ -301,18 +288,14 @@ class LiveManager:
             if not (instance.task and getattr(instance.task, "running", False)):
                 self.update_msg(instance.key, "")
 
-        # schedule next day's creator at next 00:00
-        next_mid = now.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(
+        # schedule next day's creator at next 01:00
+        next_mid = now.replace(hour=1, minute=0, second=0, microsecond=0) + datetime.timedelta(
             days=1
         )
         Task(self._create_and_schedule_today, DateTrigger(next_mid)).start()
 
     async def start(self):
-        # on manager start, if it's after midnight create today's schedule immediately
-        now = datetime.datetime.now()
-        today_mid = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        if now >= today_mid:
-            await self._create_and_schedule_today()
+        await self._create_and_schedule_today()
         log.write("Live manager started")
 
     def clean_up(self):
