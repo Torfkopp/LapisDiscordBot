@@ -32,7 +32,7 @@ def update():
     """Updates the url and soup to the newest patch notes"""
     url = f"https://www.leagueoflegends.com/{PATCH_LANGUAGE}/news/tags/patch-notes/"
     response = requests.get(url)
-    log.write("Request page LoLPatch: " + url)
+    log.write("Request page LoLPatch: " + url, False)
     soup = BeautifulSoup(response.content, "html.parser")
     latest_patch_link = soup.find("a", href=True)
     latest_patch_link = latest_patch_link["href"]
