@@ -145,7 +145,7 @@ class LolesportLive(BaseLive):
 class Formula1Live(BaseLive):
     async def load_saved(self):
         if self.task and self.task.running:
-            super()
+            super().load_saved()
         else:
             self.message = None
             log.write(f"Not loading saved message for {self.key} since task not running")
@@ -173,6 +173,7 @@ class Formula1Live(BaseLive):
         if not still_going:
             if self.task is not None:
                 self.task.stop()
+            self.message = None
             self.manager.update_msg(self.key, "")
             log.write("Live F1 stops")
 
