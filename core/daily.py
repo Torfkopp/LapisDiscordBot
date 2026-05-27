@@ -37,10 +37,10 @@ async def patchnotes(bot, now):
     try:
         await update_patchnotes(bot)
         g = partial(update_patchnotes, bot)
-        if now.weekday() == 1:
-            for i in range(4):
-                Task(g, DateTrigger(now.replace(hour=(20 + i), minute=20))).start()
-        Task(g, IntervalTrigger(hours=8)).start()
+        Task(g, DateTrigger(now.replace(hour=20, minute=20)).start()
+        if now.weekday() == 1:  # Patches normally on Tuesday
+            for i in range(3):
+                Task(g, DateTrigger(now.replace(hour=(21 + i), minute=20))).start()
     except Exception as e:
         log.error(e)
 
