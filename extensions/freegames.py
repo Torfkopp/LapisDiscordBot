@@ -22,16 +22,10 @@ class FreeGames(Extension):
 
 def get_giveaways():
     url = "https://www.gamerpower.com/api/giveaways?platform=pc&type=game&sort-by=value"
-    payload = ""
 
-    try:
-        log.write("Api-Call Freegames: " + url)
-        response = requests.request("GET", url, data=payload)
-        response = response.json()
-        _ = response[0]["id"]  # tests if keys exist
-    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
-        log.write("API DOWN")
-        return util.get_error_embed("api_down")
+    response = log.safe_request(url, log_message="Freegames")
+    try: _ = response[0]["id"]  # tests if keys exist
+    except (KeyError, TypeError, IndexError): return util.get_error_embed("api_down")
 
     embed = interactions.Embed(title="Free Games", color=util.Colour.FREE_GAMES.value)
 

@@ -62,32 +62,21 @@ class Quotes(Extension):
 def get_advice(term):
     """Returns a random advice or one fitting the theme"""
     url = "https://api.adviceslip.com/advice"
-    payload = ""
     rat = ""
 
     if term != "":
         url_theme = url + f"/search/{term}"
-        response = requests.request("GET", url_theme, data=payload)
-        log.write("Api-Call quotes: " + url_theme)
-        try:
-            response = response.json()
-            advices = response["slips"]
-        except (KeyError, requests.exceptions.JSONDecodeError):
-            rat = ""
+        response = log.safe_request(url_theme, log_message="quotes")
+        try: advices = response["slips"]
+        except (KeyError, TypeError): rat = ""
         else:
-            if len(advices) == 1:
-                rat = advices[0]["advice"]
-            else:
-                rat = advices[random.randint(0, len(advices) - 1)]["advice"]
+            if len(advices) == 1: rat = advices[0]["advice"]
+            else: rat = advices[random.randint(0, len(advices) - 1)]["advice"]
+            
     if rat == "":
-        try:
-            log.write("Api-Call quotes: " + url)
-            response = requests.request("GET", url, data=payload)
-            response = response.json()
-            rat = response["slip"]["advice"]
-        except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
-            log.write("API DOWN")
-            return util.get_error_embed("api_down")
+        response = log.safe_request(url, log_message="quotes")
+        try: rat = response["slip"]["advice"]
+        except (KeyError, TypeError): return util.get_error_embed("api_down")
 
     embed = interactions.Embed(title=rat, color=COLOUR)
 

@@ -113,16 +113,10 @@ class Anime(Extension):
 def get_quote():
     """Gets a random anime quote"""
     url = "https://kyoko.rei.my.id/api/quotes.php"
-    payload = ""
 
-    try:
-        log.write("Api-Call Anime: " + url)
-        response = requests.request("GET", url, data=payload)
-        response = response.json()
-        response = response["apiResult"][0]
-    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
-        log.write("API DOWN")
-        return util.get_error_embed("api_down")
+    response = log.safe_request(url, log_message="Anime")
+    if not response: return util.get_error_embed("api_down")
+    response = response["apiResult"][0]
 
     character = response["character"]
     result = "Anime: " + response["anime"] + "\n"
@@ -158,15 +152,10 @@ def get_reaction(theme):
     """Gets a random anime reaction depending on the theme"""
     url = f"https://api.otakugifs.xyz/gif?reaction={theme}"
 
-    try:
-        log.write("Api-Call Anime: " + url)
-        response = requests.request("GET", url, data="")
-        url = response.json()["url"]
-    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
-        log.write("API DOWN")
-        return util.get_error_embed("api_down")
+    response = log.safe_request(url, log_message="Anime")
+    if response is None: return util.get_error_embed("api_down")
 
     embed = interactions.Embed(title=f"{theme.title()} Reaction", color=COLOUR)
-    embed.set_image(url=url)
+    embed.set_image(url=response["url"])
 
-    return embed
+    return util.uwuify_by_chance(embed)

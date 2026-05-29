@@ -78,3 +78,22 @@ def safe_call(func):
                 return None
 
         return sync_wrapper
+
+
+def safe_request(url, log_message=None, to_print=True, json_response=True, headers="", payload="", querystring=""):
+    """Performs a requests.request, logs the action, and safely catches exceptions.
+
+    Returns the parsed JSON dictionary/list (if json_response is True) or the response object itself.
+    Returns None on any exception.
+    """
+    import requests
+
+    if log_message:
+        write(f"API Call {log_message}: {url} {querystring}", to_print)
+    try:
+        response = requests.get(url, headers=headers, params=querystring, data=payload)
+        if json_response: return response.json()
+        return response
+    except Exception as e:
+        write(f"ERROR: {e}")
+        return None

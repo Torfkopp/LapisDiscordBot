@@ -61,13 +61,8 @@ class Reddit(Extension):
 def get_reddit_link(subreddit):
     url = f"https://meme-api.com/gimme/{subreddit}"
 
-    try:
-        log.write("API-Call Meme-Api (Reddit): " + url)
-        response = requests.request("GET", url)
-        response = response.json()
-    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
-        log.write("API may be down")
-        return None
+    response = log.safe_request(url, log_message="Reddit")
+    if response is None: return None
 
     title = response["title"]
     link = response["postLink"]

@@ -52,19 +52,12 @@ def get_insult(lang):
     """Return an insult in the specified language"""
     url = "https://evilinsult.com/generate_insult.php"
     querystring = {"lang": lang, "type": "json"}
-    payload = ""
 
-    try:
-        log.write("Api-Call Insults: " + url)
-        response = requests.request("GET", url, data=payload, params=querystring)
-        response = response.json()
-        insult = response["insult"]
-    except Exception:  # Very broad, but should be fine ¯\_(ツ)_/¯
-        log.write("API DOWN")
-        return get_insult_from_resources()
+    response = log.safe_request(url, log_message="Insults", params=querystring)
+    try: insult = response["insult"]
+    except (KeyError, TypeError): return get_insult_from_resources()
 
-    if lang != "en" and response["comment"] != "":
-        insult += f" (Translation: {response['comment']}"
+    if lang != "en" and response["comment"] != "": insult += f" (Translation: {response['comment']}"
 
     embed = interactions.Embed(title=insult, color=COLOUR)
     return util.uwuify_by_chance(embed)
