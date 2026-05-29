@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 import interactions
 import requests
@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 import util
 from core import log
 from util import germanise
+from tabulate import tabulate
 
 """ All methods for the football commands"""
 
@@ -65,7 +66,7 @@ def matchday(liga, saison, spieltag):
     )
     i = 1
     for match in jsondata:
-        time = datetime.datetime.fromisoformat(
+        time = datetime.fromisoformat(
             match["matchDateTime"].replace("Z", "+00:00")
         ).strftime("%A, %d. %B %Y %H:%M")
         team1 = germanise(match["team1"]["teamName"])
@@ -104,7 +105,7 @@ def matches(team, past, future):
 
     i = 1
     for match in data:
-        time = datetime.datetime.fromisoformat(
+        time = datetime.fromisoformat(
             match["matchDateTime"].replace("Z", "+00:00")
         ).strftime("%a, %d. %b %Y %H:%M")
         if latest_match_date == time:
@@ -191,37 +192,103 @@ def table(liga, saison):
     return util.uwuify_by_chance(embed)
 
 
-def euro_where():
-    url = (
-        "https://www.sportschau.de/fussball/uefa-euro-2024/euro-2024-spielplan-"
-        "und-sendezeiten,uefa-euro24-spielplan-100.html"
-    )
-    log.write("API-Call Euro: " + url)
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, "html.parser")
+def wm_where(num_games):
+    """Returns the next games of the WM"""
 
-    games = soup.findAll("tr")
+    def parse_game_datetime(date_str, time_str):
+        """Parses date and time strings into a datetime object."""
+        date_str = date_str.strip().lower()
+        time_str = time_str.strip()
+        
+        if ":" in time_str: hour, minute = map(int, time_str.split(":"))
+        else: hour, minute = 0, 0
+            
+        if date_str.endswith("."):
+            parts = date_str.rstrip(".").split(".")
+            if len(parts) == 2:
+                day = int(parts[0])
+                month = int(parts[1])
+        else: day, month = 0, 0
+        
+        return datetime(2026, month, day, hour, minute)
 
-    next_games = ""
-    counter = 0
-    for game in games:
-        subs = game.findAll("td")
-        if len(subs) == 0:
+    url = "https://www.sportschau.de/fussball/fifa-wm-2026/der-spielplan-der-fussball-wm-2026,fifawm-spielplan-100.html"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+    
+    log.write(f"API Call WM: {url}\n")
+    
+    try:
+        response = requests.get(url, headers=headers)
+        response.encoding = "utf-8"  # Ensure proper decoding of German characters
+        response.raise_for_status()
+    except Exception as e:
+        log.write(f"Error fetching the page: {e}")
+        return
+
+    soup = BeautifulSoup(response.text, "html.parser")
+    tables = soup.find_all("table")
+        
+    games = []
+    
+    for idx, table in enumerate(tables):
+        rows = table.find_all("tr")
+        if not rows:
             continue
-        num4 = subs[4].text.strip()
-        if ":" in num4 or len(num4) == 0:
-            continue
-        counter += 1
+            
+        # Check if the first row is a header row
+        headers_in_row = [th.get_text(strip=True).lower() for th in rows[0].find_all(["th", "td"])]
+        has_header = "datum" in headers_in_row or "begegnung" in headers_in_row
+        
+        start_row_idx = 1 if has_header else 0
+        
+        for row in rows[start_row_idx:]:
+            cells = [td.get_text(strip=True) for td in row.find_all(["td", "th"])]
+            if len(cells) >= 3:
+                date_str = cells[0]
+                time_str = cells[1]
+                match_str = cells[2]
+                sender_str = cells[3] if len(cells) > 3 else ""
 
-        next_games += (
-            f"`{subs[0].text.strip()} {subs[1].text.strip()} {subs[3].text.strip()}".ljust(30)
-        )
-        next_games += f"{subs[2].text.strip()}".ljust(30)
-        next_games += f"{num4}"
-        next_games += "`\n"
+                if not sender_str or sender_str.strip() == "": sender_str = "-"
+                
+                parsed_dt = parse_game_datetime(date_str, time_str)
+                
+                games.append({
+                    "date_str": date_str,
+                    "time_str": time_str,
+                    "match": match_str,
+                    "sender": sender_str,
+                    "datetime": parsed_dt
+                })
 
+    games.sort(key=lambda g: g["datetime"] if g["datetime"] else datetime.max)
+    
+    now = datetime.now()
+    
+    future_games = [g for g in games if g["datetime"] and g["datetime"] >= now]
+    display_games = future_games[:num_games]
+    title = f"Die nächsten {num_games} Spiele der FIFA WM 2026 (ab {now.strftime('%d.%m.%Y %H:%M')}):"
+
+    # Prepare data for tabulate
+    table_data = []
+    for g in display_games:
+        table_data.append([
+            g['date_str'],
+            g['time_str'],
+            g['match'],
+            g['sender']
+        ])
+        
+    headers = ["Datum", "Zeit", "Begegnung", "Sender"]
+    
+    table = tabulate(table_data, headers=headers, tablefmt="fancy_grid")
+    table = "```\n" + table + "\n```"
+    
     embed = interactions.Embed(
-        title="Nächste Europameisterschaftsspiele", description=next_games, color=COLOUR
+        title=title, description=table, color=COLOUR
     )
 
     return util.uwuify_by_chance(embed)
+    
