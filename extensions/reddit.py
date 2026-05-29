@@ -59,7 +59,6 @@ class Reddit(Extension):
 
 
 def get_reddit_link(subreddit):
-    def get_reddit_link(subreddit):
     url = f"https://meme-api.com/gimme/{subreddit}"
 
     try:
