@@ -192,7 +192,7 @@ def table(liga, saison):
     return util.uwuify_by_chance(embed)
 
 
-def wm_where(num_games):
+def wm_where(num_games=10):
     """Returns the next games of the WM"""
 
     def parse_game_datetime(date_str, time_str):
@@ -208,9 +208,7 @@ def wm_where(num_games):
             if len(parts) == 2:
                 day = int(parts[0])
                 month = int(parts[1])
-        else: day, month = 0, 0
-        
-        return datetime(2026, month, day, hour, minute)
+                return datetime(2026, month, day, hour, minute)
 
     url = "https://www.sportschau.de/fussball/fifa-wm-2026/der-spielplan-der-fussball-wm-2026,fifawm-spielplan-100.html"
     headers = {
