@@ -59,43 +59,19 @@ class Reddit(Extension):
 
 
 def get_reddit_link(subreddit):
-    url = f"https://www.reddit.com/r/{subreddit}.json"
-    payload = ""
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Accept-Language": "de,en-US;q=0.7,en;q=0.3",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Upgrade-Insecure-Requests": "1",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "none",
-        "Sec-Fetch-User": "?1",
-        "DNT": "1",
-        "Sec-GPC": "1",
-        "Connection": "keep-alive",
-        "TE": "trailers",
-    }
+    def get_reddit_link(subreddit):
+    url = f"https://meme-api.com/gimme/{subreddit}"
 
     try:
-        log.write("API-Call Reddit: " + url)
-        response = requests.request("GET", url, data=payload, headers=headers)
+        log.write("API-Call Meme-Api (Reddit): " + url)
+        response = requests.request("GET", url)
         response = response.json()
     except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
         log.write("API may be down")
         return None
 
-    data = response["data"]["children"]
-    number = random.randrange(len(data))
-    post = data[number]["data"]
-    loop_prevent = 0
-    while post["distinguished"] and loop_prevent < len(data):
-        loop_prevent += 1
-        number = random.randrange(len(data))
-        post = data[number]["data"]
+    title = response["title"]
+    link = response["postLink"]
+    picture_link = response["preview"][-1]
 
-    link, is_video = f"https://www.reddit.com{post['permalink']}", post["is_video"]
-    if is_video:
-        link = get_embed_link(link, False)
-        return link if not isinstance(link, interactions.Embed) else get_reddit_link(subreddit)
-    return f"[`{post['title']}`](<{link}>) | [Bild Link]({post['url']})"
+    return f"[`{title}`](<{link}>) | [Bild Link]({picture_link})"
