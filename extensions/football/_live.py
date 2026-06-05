@@ -94,14 +94,14 @@ def match_interested_in(match):
     elif match["competition"]["name"] in FILTERED_COMPETITIONS or any(
         keyword in match["competition"]["name"] for keyword in KEYWORDS
     ):
-        if "shortName" not in match["homeTeam") or "shortName" not in match["awayTeam"]:
+        if "shortName" not in match["homeTeam"] or "shortName" not in match["awayTeam"]:
             return False
         if (
             match["homeTeam"]["shortName"] == "Deutschland"
             or match["awayTeam"]["shortName"] == "Deutschland"
         ):
             return True
-        if "country" not in match["homeTeam") or "country" not in match["awayTeam"]:
+        if "country" not in match["homeTeam"] or "country" not in match["awayTeam"]:
             return False
         if match["homeTeam"]["country"] == "Germany" or match["awayTeam"]["country"] == "Germany":
             return True
