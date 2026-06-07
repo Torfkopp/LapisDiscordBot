@@ -12,7 +12,7 @@ from util import germanise
 """ All methods for the football live scoring """
 
 # List of Leagues fully interested in
-UNFILTERED_COMPETITIONS = ["Bundesliga", "2. Bundesliga", "DFB-Pokal", "Supercup"]
+UNFILTERED_COMPETITIONS = ["Bundesliga", "2. Bundesliga", "DFB-Pokal", "Supercup", "WM 2026"]
 # List of Leagues partially interested in
 FILTERED_COMPETITIONS = [
     "Champions League",
