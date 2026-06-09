@@ -281,7 +281,7 @@ def wm_where(num_games=10):
         
     headers = ["Datum", "Zeit", "Begegnung", "Sender"]
     
-    table = tabulate(table_data, headers=headers, tablefmt="fancy_grid")
+    table = tabulate(table_data, headers=headers, tablefmt="fancy_grid", maxcolwidth=[8,7,25,9])
     table = "```\n" + table + "\n```"
     
     embed = interactions.Embed(
