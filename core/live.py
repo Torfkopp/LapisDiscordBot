@@ -289,8 +289,8 @@ class LiveManager:
             if not (instance.task and getattr(instance.task, "running", False)):
                 self.update_msg(instance.key, "")
 
-        # schedule next day's creator at next 01:00
-        next_mid = now.replace(hour=1, minute=0, second=0, microsecond=0) + datetime.timedelta(
+        # schedule next day's creator at next 00:01
+        next_mid = now.replace(hour=0, minute=1, second=0, microsecond=0) + datetime.timedelta(
             days=1
         )
         Task(self._create_and_schedule_today, DateTrigger(next_mid)).start()
