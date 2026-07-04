@@ -275,7 +275,7 @@ def wm_where(num_games=10):
         table_data.append([
             g['date_str'],
             g['time_str'],
-            g['match'],
+            g['match'].split("(")[0].strip(),
             g['sender']
         ])
         
