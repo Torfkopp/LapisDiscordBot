@@ -53,7 +53,7 @@ def get_insult(lang):
     url = "https://evilinsult.com/generate_insult.php"
     querystring = {"lang": lang, "type": "json"}
 
-    response = log.safe_request(url, log_message="Insults", params=querystring)
+    response = log.safe_request(url, log_message="Insults", querystring=querystring)
     try: insult = response["insult"]
     except (KeyError, TypeError): return get_insult_from_resources()
 
