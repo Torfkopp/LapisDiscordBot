@@ -65,7 +65,7 @@ def get_insult(lang):
 
 def get_insult_from_resources():
     # Thanks to: https://gist.github.com/HBIDamian/7791dcbbf3f92e0ce252a9ca3bcb7800
-    with open("resources/insult.json", encoding="utf-8") as f:
+    with open("resources/insults.json", encoding="utf-8") as f:
         insult = json.load(f)
     embed = interactions.Embed(title=random.choice(insult), color=COLOUR)
     return util.uwuify_by_chance(embed)
