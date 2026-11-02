@@ -102,7 +102,7 @@ class Prefixed(Extension):
         if ctx.author_id not in self.bot.owner_ids:
             return
 
-        uptime_str = str(datetime.timedelta(seconds=int(time.time() - START_TIME))
+        uptime_str = str(datetime.timedelta(seconds=int(time.time() - START_TIME)))
         latency_ms = round(self.bot.latency * 1000, 2)
         current_time = datetime.datetime.now()
 
