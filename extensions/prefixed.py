@@ -5,14 +5,14 @@ from interactions.ext.prefixed_commands import prefixed_command, PrefixedContext
 from interactions.models import discord
 
 import util
-
+import time
 
 def setup(bot):
     Prefixed(bot)
 
 
 COLOUR = util.Colour.PREFIXED.value
-
+START_TIME = time.time()
 
 class Prefixed(Extension):
     @prefixed_command()
@@ -95,6 +95,23 @@ class Prefixed(Extension):
                 channel = util.LABAR_CHANNEL_ID
 
         await self.bot.get_channel(channel).send(text)
+
+
+    @prefixed_command()
+    async def health(self, ctx: PrefixedContext):
+        if ctx.author_id not in self.bot.owner_ids:
+            return
+
+        uptime_str = str(datetime.timedelta(seconds=int(time.time() - START_TIME))
+        latency_ms = round(self.bot.latency * 1000, 2)
+        current_time = datetime.datetime.now()
+
+        embed = interactions.Embed(title="Health Check!", description="Mir gehts gut!", color=COLOUR)
+        embed.add_field(name="Uhrzeit", value=f"`{current_time}`")
+        embed.add_field(name="Uptime", value=f"`{uptime_str}`")
+        embed.add_field(name="Latenz", value=f"`{latency_ms} ms`")
+
+        await ctx.reply(embed=embed)
 
 
 def hello():
