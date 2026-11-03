@@ -80,11 +80,12 @@ async def daily_messages(bot):
     log.write("Running daily procedure")
     
     now = datetime.datetime.now()
-    await formula1_info(bot, now)
-    await patchnotes(bot, now)
 
     await day_dependent(bot)
     await daily_meme(bot)
     await temperature(bot, now)
+    
+    await formula1_info(bot, now)
+    await patchnotes(bot, now)
 
     await secret.main(bot)
