@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 import locale
 
@@ -12,7 +11,6 @@ from core import log, daily, activity, live
 from core.extensions_loader import load_extensions
 
 from extensions import karma, tierlist
-from extensions.formula1 import formula1
 
 
 TEST_MODE_ON = False
@@ -95,7 +93,7 @@ async def on_startup():
 
     await live_manager.start()
 
-    act = activity.ActivityClass(bot, await asyncio.to_thread(formula1.create_schedule))
+    act = activity.ActivityClass(bot, live_manager.formula1.schedule)
     await act.rotate_activity()
     Task(act.rotate_activity, IntervalTrigger(minutes=2)).start()
 

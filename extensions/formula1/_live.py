@@ -4,6 +4,7 @@ from functools import lru_cache
 
 import fastf1
 import interactions
+import pandas as pd
 import pytz
 import requests
 
@@ -133,44 +134,23 @@ def f1_info():
     return embed
 
 
-def create_schedule():
-    """Returns today's formula1 sessions"""
-    date_today = datetime.datetime.today()
-    event_schedule = fastf1.get_events_remaining()
-    if len(event_schedule) == 0:  # If no remaining races, set next_event to last race
-        next_event = fastf1.get_event(
-            util.CURRENT_F1_SEASON, len(fastf1.get_event_schedule(util.CURRENT_F1_SEASON)) - 1
-        )
-    else:
-        next_event = event_schedule.iloc[0]
-        if next_event["RoundNumber"] == 0:
-            next_event = event_schedule.iloc[1]
-
-    next_event = _handle_event_change_during_weekend(date_today, next_event)
-
-    session_map = {
-        next_event["Session1Date"]
-        .astimezone(pytz.timezone("Europe/Berlin"))
-        .replace(tzinfo=None): next_event["Session1"],
-        next_event["Session2Date"]
-        .astimezone(pytz.timezone("Europe/Berlin"))
-        .replace(tzinfo=None): next_event["Session2"],
-        next_event["Session3Date"]
-        .astimezone(pytz.timezone("Europe/Berlin"))
-        .replace(tzinfo=None): next_event["Session3"],
-        next_event["Session4Date"]
-        .astimezone(pytz.timezone("Europe/Berlin"))
-        .replace(tzinfo=None): next_event["Session4"],
-        next_event["Session5Date"]
-        .astimezone(pytz.timezone("Europe/Berlin"))
-        .replace(tzinfo=None): next_event["Session5"],
-    }
-
-    return {
-        date: session_map.get(date)
-        for date in session_map.keys()
-        if date.date() == date_today.date()
-    }
+def create_schedule(now=None):
+    """Include yesterday so sessions crossing midnight can be recovered."""
+    now = now or datetime.datetime.now()
+    yesterday = now.date() - datetime.timedelta(days=1)
+    sessions = {}
+    for year in sorted({yesterday.year, now.year}):
+        for _, event in fastf1.get_event_schedule(year).iterrows():
+            if event["RoundNumber"] == 0:
+                continue
+            for number in range(1, 6):
+                start, name = event[f"Session{number}Date"], event[f"Session{number}"]
+                if not name or pd.isna(start):
+                    continue
+                start = start.astimezone(pytz.timezone("Europe/Berlin")).replace(tzinfo=None)
+                if yesterday <= start.date() <= now.date():
+                    sessions[start] = name
+    return sessions
 
 
 def _request_result(url):

@@ -48,39 +48,46 @@ LIVE PART
 """
 
 
-def create_schedule():
+def create_schedule(day=None):
     start_times = set()
+    end_times = []
     events = get_schedule(LIVE_LEAGUES)  # Embed gets returned if faulty
     if isinstance(events, interactions.Embed):
-        return list(start_times)
+        return [], None
 
     now = datetime.datetime.now()
+    day = day or now.date()
     for event in events:
+        if event["type"] != "match":
+            continue
         time = datetime.datetime.fromisoformat(event["startTime"].replace("Z", "+00:00"))
         time = time.astimezone(pytz.timezone("Europe/Berlin")).replace(tzinfo=None)
-        if event["state"] == "inProgress":
-            time = now + datetime.timedelta(minutes=1)
-        elif not time.date() == now.date():
+        if time.date() != day:
             continue
+        if event["state"] == "inProgress" or (event["state"] == "unstarted" and time <= now):
+            time = now
         start_times.add(time)
+        end_times.append(time + event["match"]["strategy"]["count"] * datetime.timedelta(minutes=40))
 
-    last_game_time = list(start_times)[-1] + list(events)[-1]["match"]["strategy"]["count"] * datetime.timedelta(minutes=40) if len(start_times) > 0 else None
-    return list(start_times), last_game_time
+    return sorted(start_times), max(end_times, default=None)
 
 
-def get_live():
+def get_live(day=None):
     embeds = {}
     one_game_still_live = False
 
     events = get_schedule(LIVE_LEAGUES)
-    today = datetime.datetime.now().date()
+    if isinstance(events, interactions.Embed):
+        raise RuntimeError("LoL schedule unavailable")
+    now = datetime.datetime.now()
+    day = day or now.date()
 
     for event in events:
         if event["type"] != "match":
             continue
         time = datetime.datetime.fromisoformat(event["startTime"].replace("Z", "+00:00"))
         time = time.astimezone(pytz.timezone("Europe/Berlin")).replace(tzinfo=None)
-        if not time.date() == today:
+        if time.date() != day:
             continue
 
         league = event["league"]["name"]
@@ -90,10 +97,10 @@ def get_live():
 
         team1 = event["match"]["teams"][0]
         team2 = event["match"]["teams"][1]
-        record1 = f"{team1['record']['wins']}-{team1['record']['losses']}"
-        record2 = f"{team2['record']['wins']}-{team2['record']['losses']}"
-        wins1 = team1["result"]["gameWins"]
-        wins2 = team2["result"]["gameWins"]
+        record1 = f"{team1['record']['wins']}-{team1['record']['losses']}" if team1.get("record") else "-"
+        record2 = f"{team2['record']['wins']}-{team2['record']['losses']}" if team2.get("record") else "-"
+        wins1 = (team1.get("result") or {}).get("gameWins", 0)
+        wins2 = (team2.get("result") or {}).get("gameWins", 0)
 
         if event["state"] == "completed":
             time = "END"
@@ -101,6 +108,8 @@ def get_live():
             time = "LIVE"
             one_game_still_live = True
         else:
+            if event["state"] == "unstarted" and time <= now:
+                one_game_still_live = True
             time = f"Startet um: {datetime.datetime.strftime(time, '%d.%m %H:%M')}"
 
         bo_format = f"{(event['match']['strategy']['type']).capitalize()} {event['match']['strategy']['count']}"
@@ -196,10 +205,11 @@ def get_schedule(league):
 
     try:
         log.write(f"Api-Call lolesports: {url} {querystring}", False)
-        response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
+        response = requests.request("GET", url, data=payload, headers=headers, params=querystring, timeout=(5, 15))
+        response.raise_for_status()
         response = response.json()
         events = response["data"]["schedule"]["events"]
-    except (KeyError, requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
+    except (KeyError, requests.exceptions.RequestException):
         log.write("API DOWN")
         return util.get_error_embed("api_down")
 

@@ -120,15 +120,15 @@ def match_interested_in(match):
     return False
 
 
-def create_schedule():
+def create_schedule(day=None):
     """Returns Schedule based on the starting time of that day's games"""
     start_times = set()
 
     # Get data from site
-    date_today = datetime.datetime.today().date()
+    date_today = day or datetime.datetime.today().date()
     url = f"https://api.sport1.info/v2/de/live/soccer/liveMatchesBySport/date/{date_today}/appConfig/false"
 
-    response = requests.request("GET", url, data=payload, headers=headers)
+    response = requests.request("GET", url, data=payload, headers=headers, timeout=(5, 15))
     log.write("Api-Call Football: " + url)
     try:
         data = response.json()
@@ -150,22 +150,25 @@ def create_schedule():
                 match["scheduledStartTime"].replace("Z", "+00:00")
             )
             time = time.astimezone(pytz.timezone("Europe/Berlin")).replace(tzinfo=None)
+            if match["isLive"]:
+                time = datetime.datetime.now()
             start_times.add(time)
 
     start_times = sorted(start_times)
     return list(start_times)
 
 
-def get_live():
+def get_live(day=None):
     """Returns a list of embeds - one for every league - with an embed for every game of that league"""
     embeds = []
     one_game_still_live = False
 
     # Get data from site
-    date_today = datetime.datetime.today().date()
+    date_today = day or datetime.datetime.today().date()
     url = f"https://api.sport1.info/v2/de/live/soccer/liveMatchesBySport/date/{date_today}/appConfig/false"
 
-    response = requests.request("GET", url, data=payload, headers=headers)
+    response = requests.request("GET", url, data=payload, headers=headers, timeout=(5, 15))
+    response.raise_for_status()
     log.write("Api-Call Football: " + url, False)
     data = response.json()
     data = data["content"]
@@ -184,19 +187,20 @@ def get_live():
                 continue
             new = False
             # create Match if not in dict
-            if (home := match["homeTeam"]["name"]) not in matches:
+            match_id = match["id"]
+            if match_id not in matches:
                 game = Game(
                     start_time=match["scheduledStartTime"],
-                    team1=home,
+                    team1=match["homeTeam"]["name"],
                     team2=match["awayTeam"]["name"],
                     team1_short=match["homeTeam"]["code"],
                     team2_short=match["awayTeam"]["code"],
                 )
-                league_matches[league_name].append(home)
-                matches[home] = game
+                league_matches[league_name].append(match_id)
+                matches[match_id] = game
                 new = True
             else:
-                game = matches.get(home)
+                game = matches[match_id]
 
             if "matchTime" in match["matchInfo"]:
                 game.minute = match["matchInfo"]["matchTime"]
@@ -218,7 +222,7 @@ def get_live():
             ):
                 one_game_still_live = True
 
-        embed = build_embed(league_name, league["matches"][0]["roundTitle"])
+        embed = build_embed(league_name, league["matches"][0]["roundTitle"], date_today)
         if len(embed.fields) > 0:
             embeds.append(embed)
 
@@ -230,7 +234,7 @@ def get_match_goals(match_id):
     # Get data from site
     url = f"https://api.sport1.info/v2/de/soccer/ticker/{match_id}"
 
-    response = requests.request("GET", url, data=payload, headers=headers)
+    response = requests.request("GET", url, data=payload, headers=headers, timeout=(5, 15))
     log.write("Api-Call Football: " + url, False)
     match_info = response.json()
 
@@ -259,7 +263,7 @@ def get_match_goals(match_id):
     return goals1, goals2
 
 
-def build_embed(league_name, round_title):
+def build_embed(league_name, round_title, day=None):
     """Returns an embed with all matches for the league"""
     embed = interactions.Embed(title=f"{league_name} - {round_title}", color=COLOUR)
 
@@ -268,6 +272,8 @@ def build_embed(league_name, round_title):
 
     for m in league_matches[league_name]:
         game = matches[m]
+        if day and game.start_time.astimezone(pytz.timezone("Europe/Berlin")).date() != day:
+            continue
 
         penalty_score = (
             f" {game.penalty_score[0]}:{game.penalty_score[1]} nE" if game.penalty_score else ""

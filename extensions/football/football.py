@@ -35,14 +35,14 @@ LIVE SCORE PART
 """
 
 
-def create_schedule():
+def create_schedule(day=None):
     """Returns Schedule based on the starting time of that day's games"""
-    return live.create_schedule()
+    return live.create_schedule(day)
 
 
-def get_live():
+def get_live(day=None):
     """Returns a list of embeds - one for every league - with an embed for every game of that league"""
-    return live.get_live()
+    return live.get_live(day)
 
 
 def clear_old_matches():
