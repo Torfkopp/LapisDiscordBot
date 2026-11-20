@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import locale
 
@@ -94,7 +95,7 @@ async def on_startup():
 
     await live_manager.start()
 
-    act = activity.ActivityClass(bot, formula1.create_schedule())
+    act = activity.ActivityClass(bot, await asyncio.to_thread(formula1.create_schedule))
     await act.rotate_activity()
     Task(act.rotate_activity, IntervalTrigger(minutes=2)).start()
 

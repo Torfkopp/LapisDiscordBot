@@ -1,9 +1,12 @@
-import json
+import asyncio
 import datetime
+import json
+import os
+from functools import partial
 
 import interactions
 from interactions import Task, IntervalTrigger, DateTrigger
-from interactions.client.errors import HTTPException
+from interactions.client.errors import HTTPException, NotFound
 
 import util
 from core import log
@@ -143,103 +146,79 @@ class LolesportLive(BaseLive):
 
 
 class Formula1Live(BaseLive):
-    async def load_saved(self):
-        if self.task and self.task.running:
-            super().load_saved()
-        else:
-            self.message = None
-            log.write(f"Not loading saved message for {self.key} since task not running")
-
-    async def _live(self):
-        result, still_going = formula1.auto_result(False)
-        channel = self.bot.get_channel(self.channel_id)
-        if not self.message:
-            try:
-                self.message = await channel.send(result)
-            except Exception:
-                self.message = None
-            self.save_message_id()
-            return
-
-        try:
-            await self.message.edit(content=result)
-        except HTTPException:
-            try:
-                self.message = await channel.send(result)
-            except Exception:
-                self.message = None
-        self.save_message_id()
-
-        if not still_going:
-            if self.task is not None:
-                self.task.stop()
-            self.message = None
-            self.manager.update_msg(self.key, "")
-            log.write("Live F1 stops")
-
-    async def _start_live(self):
-        if self.task is None:
-            self.task = Task(self._live, IntervalTrigger(minutes=5))
-            self.task.start()
-            log.write("Live F1 begins")
-            return
-        if not self.task.running:
-            self.task.start()
-            log.write("Live F1 begins")
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.sessions = self.manager.msgs.setdefault("f1_sessions", {})
+        self.scheduled = set()
+        self.lock = asyncio.Lock()
+        self.live_session = None
 
     async def create_schedule(self, formula1_schedule, now):
         log.write("Today's formula1 sessions: " + str(formula1_schedule))
-
-        if len(formula1_schedule) == 1:  # Race
-            start_time = list(formula1_schedule)[0]
-            if start_time > now:
-                Task(self._start_live, DateTrigger(start_time)).start()
-            elif (
-                datetime.timedelta(minutes=0) < (now - start_time) < datetime.timedelta(minutes=60)
-            ):
-                await self._start_live()
+        for start_time, session in sorted(formula1_schedule.items()):
+            key = start_time.isoformat()
+            if key in self.scheduled or self.sessions.get(key, {}).get("finished"):
+                continue
+            self.scheduled.add(key)
+            practice = "Practice" in session
+            post_time = start_time + datetime.timedelta(hours=1) if practice else start_time
+            callback = self._post_result if practice else self._start_live
+            if post_time > now:
+                Task(callback, DateTrigger(post_time)).start(start_time, session)
+            elif not practice and now < start_time + datetime.timedelta(hours=2):
+                await self._start_live(start_time, session)
             else:
-                await self._post_result()
+                await self._post_result(start_time, session)
 
-        elif len(formula1_schedule) > 1:  # Non Race Days
-            start_times = list(formula1_schedule)
-            if start_times[0] >= now:  # Both sessions in future
-                for start_time in start_times:
-                    if "Practice" in formula1_schedule.get(start_time, ""):  # If practice, send after 1h
-                        Task(self._post_result, DateTrigger(start_time + datetime.timedelta(hours=1))).start()
+    async def _start_live(self, start_time, session):
+        if self.task:
+            self.task.stop()
+        self.live_session = start_time
+        self.task = Task(partial(self._post_result, start_time, session, True), IntervalTrigger(minutes=5))
+        self.task.start()
+        await self._post_result(start_time, session, True)
+
+    async def _post_result(self, start_time, session, live=False):
+        async with self.lock:
+            key = start_time.isoformat()
+            saved = self.sessions.get(key, {})
+            if saved.get("finished"):
+                if live and self.task and self.live_session == start_time:
+                    self.task.stop()
+                return
+            still_going = True
+            try:
+                result, still_going = await asyncio.to_thread(
+                    formula1.auto_result, not live, start_time, session
+                )
+                if result:
+                    channel = self.bot.get_channel(self.channel_id)
+                    message = None
+                    if saved.get("message_id"):
+                        try:
+                            message = await channel.fetch_message(saved["message_id"])
+                        except NotFound:
+                            pass
+                    if message:
+                        await message.edit(content=result)
                     else:
-                        Task(self._start_live, DateTrigger(start_time)).start()  # Else, start at given time
-
-            elif start_times[1] > now or (start_times[1] + datetime.timedelta(hours=1)) > now: # 1. gone, 2. to be
-                # post old result for session 0
-                await self._post_old_result(start_times[0], formula1_schedule.get(start_times[0]))  # 1. session
-                start_time = start_times[1]
-                if "Practice" in formula1_schedule.get(start_time, ""):  # Schedule second session
-                    Task(self._post_result, DateTrigger(start_time + datetime.timedelta(hours=1))).start()
+                        message = await channel.send(result)
+                    self.message = message if still_going else None
+                    self.sessions[key] = {"message_id": message.id, "finished": not still_going}
+                    self.manager.msgs[self.key] = message.id if still_going else ""
+                    self.manager._write_msgs()
+                    log.write(f"F1 {session} at {start_time}: updated message {message.id}, finished={not still_going}")
                 else:
-                    Task(self._start_live, DateTrigger(start_time)).start()
-
-            else:  # Both gone
-                await self._post_old_result(start_times[0], formula1_schedule.get(start_times[0]))  # 1. Session
-                await self._post_result()  # Second session
-
-    async def _post_old_result(self, session, session_info):
-        try:
-            result = formula1.result(session)
-            await self.bot.get_channel(self.channel_id).send(result)
-        except Exception:
-            Task(
-                self._post_old_result,
-                DateTrigger(datetime.datetime.now() + datetime.timedelta(hours=1)),
-            ).start(session, session_info)
-
-    async def _post_result(self):
-        result, still_going = formula1.auto_result(True)
-        if still_going:
-            log.write("Formula1 Session not finished yet; trying again in 10 minutes")
-            Task(self._post_result, DateTrigger(datetime.datetime.now() + datetime.timedelta(minutes=10))).start()
-        else:
-            await self.bot.get_channel(util.SPORTS_CHANNEL_ID).send(result)
+                    still_going = True
+            except Exception as error:
+                log.error(error)
+                still_going = True
+            if not still_going:
+                if live and self.task and self.live_session == start_time:
+                    self.task.stop()
+            elif not live:
+                log.write(f"F1 {session} at {start_time}: retrying in 10 minutes")
+                Task(self._post_result, DateTrigger(datetime.datetime.now() + datetime.timedelta(minutes=10))).start(start_time, session)
 
 
 class LiveManager:
@@ -258,8 +237,9 @@ class LiveManager:
 
     def _write_msgs(self):
         try:
-            with open(MSG_FILE, "w") as f:
+            with open(MSG_FILE + ".tmp", "w") as f:
                 json.dump(self.msgs, f)
+            os.replace(MSG_FILE + ".tmp", MSG_FILE)
             log.write("Saved sport messages file", False)
         except Exception:
             log.write("Failed to write sport messages file")
@@ -279,15 +259,16 @@ class LiveManager:
         await self.lolesport.create_schedule(now)
         await self.lolesport.load_saved()
 
-        f1_schedule = formula1.create_schedule()
-        await self.formula1.create_schedule(f1_schedule, now)
+        f1_schedule = await asyncio.to_thread(formula1.create_schedule)
+        await self.formula1.create_schedule(f1_schedule, datetime.datetime.now())
         await self.formula1.load_saved()
 
         # clean up saved message ids that are not associated with running tasks
-        self.clean_up()
         for instance in (self.football, self.lolesport, self.formula1):
             if not (instance.task and getattr(instance.task, "running", False)):
                 self.update_msg(instance.key, "")
+        if not (self.football.task and self.football.task.running):
+            football.clear_old_matches()
 
         # schedule next day's creator at next 00:01
         next_mid = now.replace(hour=0, minute=1, second=0, microsecond=0) + datetime.timedelta(

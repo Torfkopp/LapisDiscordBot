@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 from functools import partial
 
@@ -15,7 +16,9 @@ import secret
 @log.safe_call
 async def formula1_info(bot, now):
     """If it's Monday or Thursday and the corresponding message hasn't been sent, send a message with f1 info"""
-    embed = formula1.auto_info()
+    if now.weekday() not in (0, 3):
+        return
+    embed = await asyncio.to_thread(formula1.auto_info)
     if embed is not None:
         if (now.weekday() == 0 and not util.message_sent("rawe_ceek")) or (
             now.weekday() == 3 and not util.message_sent("race_schedule")

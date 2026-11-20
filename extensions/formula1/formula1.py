@@ -52,9 +52,9 @@ def create_schedule():
     return live.create_schedule()
 
 
-def auto_result(result_only: bool):
-    """Returns the result of the latest session and sets the current paras to it"""
-    return live.auto_result(result_only)
+def auto_result(result_only: bool, start_time, session):
+    """Returns results for the scheduled session."""
+    return live.auto_result(result_only, start_time, session)
 
 
 def auto_info():

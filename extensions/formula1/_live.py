@@ -1,5 +1,6 @@
 import datetime
 import random
+from functools import lru_cache
 
 import fastf1
 import interactions
@@ -15,7 +16,6 @@ from tabulate import tabulate
 COLOUR = util.Colour.FORMULA1.value
 CURRENT_SEASON_NUMBER = 1285547  # Adapt every season
 
-payload = ""  # Payload for the sport1 api
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0",
     "Accept": "*/*",
@@ -31,7 +31,6 @@ headers = {
     "Sec-GPC": "1",
     "TE": "trailers",
 }  # Headers for the sport1 api
-result_url = None  # Is set when auto_result is called but the session isn't finished yet
 
 
 def get_current():
@@ -174,25 +173,40 @@ def create_schedule():
     }
 
 
-def _get_result_url():
-    """Gets the url for the session to get the result from"""
+def _request_result(url):
+    log.write("API-Call Formula1: " + url, False)
+    response = requests.get(url, headers=headers, timeout=(5, 15))
+    response.raise_for_status()
+    return response.json()
+
+
+def _round_type(session):
+    return session.upper().replace(" ", "_").replace("SPRINT_SHOOTOUT", "SPRINT_QUALIFYING")
+
+
+def _matches_session(response, start_time, session):
+    scheduled = datetime.datetime.fromisoformat(response["scheduledStartTime"].replace("Z", "+00:00"))
+    scheduled = scheduled.astimezone(pytz.timezone("Europe/Berlin")).replace(tzinfo=None)
+    return _round_type(response["roundType"]) == _round_type(session) and scheduled == start_time
+
+
+@lru_cache(maxsize=64)
+def _get_result_url(start_time, session):
+    """Resolve the scheduled session, even if Sport1's current pointer is stale."""
     url = f"https://api.sport1.info/v2/de/motorsport/sport/sr:stage:7668/season/sr:stage:{CURRENT_SEASON_NUMBER}/minSportEventsWithSessions"
-    try:
-        log.write("API-Call Formula1: " + url, False)
-        response = requests.request("GET", url, data=payload, headers=headers)
-        response = response.json()
-    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
-        log.write("JSONDecodeError; API may be down")
-        return
-
-    current_comp_id = response["currentCompetitionId"]
-    current_match_id = ""
-    for compo in response["competitions"]:
-        if compo["id"] == current_comp_id:
-            current_match_id = compo["currentMatchId"]
-
-    url = f"https://api.sport1.info/v2/de/motorsport/sport/sr:stage:7668/match/{current_match_id}"
-    return url
+    response = _request_result(url)
+    competitions = sorted(
+        reversed(response["competitions"]),
+        key=lambda competition: competition["id"] != response["currentCompetitionId"],
+    )
+    for competition in competitions:
+        for match in competition["matches"]:
+            if _round_type(match["roundType"]) != _round_type(session):
+                continue
+            url = f"https://api.sport1.info/v2/de/motorsport/sport/sr:stage:7668/match/{match['id']}"
+            if _matches_session(_request_result(url), start_time, session):
+                return url
+    raise LookupError(f"No Sport1 result for {session} at {start_time}")
 
 
 def _make_result(response):
@@ -230,7 +244,7 @@ def _make_result(response):
                 ]
             )
 
-    elif response["roundType"] in ("QUALIFYING", "SPRINT_SHOOTOUT"):
+    elif response["roundType"] in ("QUALIFYING", "SPRINT_SHOOTOUT", "SPRINT_QUALIFYING"):
         headers = ["#", "Name", "Fastest"]
 
         for position in response["results"]:
@@ -284,30 +298,16 @@ def _make_result(response):
     return result
 
 
-def auto_result(result_only: bool):
-    """Returns the result of the latest session and sets the current paras to it"""
-    global result_url  # If result_url is set, use it, else get the url of the current session
-    url = result_url if result_url else _get_result_url()
+def auto_result(result_only: bool, start_time, session):
+    """Fetch only the requested session; unavailable results should be retried."""
     try:
-        log.write("API-Call Formula1: " + url, False)
-        response = requests.request("GET", url, data=payload, headers=headers)
-        response = response.json()
-    except (requests.exceptions.JSONDecodeError, requests.exceptions.ConnectionError):
-        log.write("JSONDecodeError; API may be down")
-        return None, False
-
-    result_url = url  # set result_url since the current_match pointer gets set immediately after session finish
-
-    # If only the result is wanted and the session is still in progress, don't create the result text
-    if result_only and response["period"] != "FULL_TIME":
+        response = _request_result(_get_result_url(start_time, session))
+        if not _matches_session(response, start_time, session):
+            raise ValueError(f"Sport1 returned a different session for {session} at {start_time}")
+        still_going = response["period"] != "FULL_TIME"
+        if (result_only and still_going) or not response["results"] or (still_going and not response["isLive"]):
+            return None, True
+        return util.uwuify_by_chance(_make_result(response)), still_going
+    except Exception as error:
+        log.error(error)
         return None, True
-
-    try:
-        result = util.uwuify_by_chance(_make_result(response))
-    except:
-        result = None  # If something doesn't work with making the result, treat it the same as an ended session
-
-    if response["period"] == "FULL_TIME" or not result:
-        result_url = None  # Reset the result_url if a session ends
-
-    return result, response["period"] != "FULL_TIME"
