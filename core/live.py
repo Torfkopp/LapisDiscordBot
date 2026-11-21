@@ -48,7 +48,7 @@ class DailyLive(BaseLive):
             try:
                 embeds, still_going = await asyncio.to_thread(self.source.get_live, day)
                 saved = self.days[day.isoformat()]
-                if embeds:
+                if embeds and (still_going or saved.get("message_id")):
                     channel = self.bot.get_channel(self.channel_id)
                     message = None
                     if saved.get("message_id"):
@@ -64,7 +64,7 @@ class DailyLive(BaseLive):
                     saved["message_id"] = message.id
                     log.write(f"Live {self.key} for {day}: {action} message {message.id} in channel {self.channel_id}", action == "sent")
                 else:
-                    log.write(f"Live {self.key} for {day}: no score embeds returned", False)
+                    log.write(f"Live {self.key} for {day}: no live update to send", False)
                 saved["finished"] = not still_going
                 if not still_going:
                     saved["finished_at"] = datetime.datetime.now().isoformat()
@@ -85,7 +85,6 @@ class DailyLive(BaseLive):
         if saved.get("finished"):
             if start_time is None or start_time.isoformat() <= saved.get("finished_at", ""):
                 return
-            saved = self.days[day.isoformat()] = {}
         saved["finished"] = False
         self.manager._write_msgs()
         self.task = Task(partial(self._live, day), IntervalTrigger(minutes=self.interval))
