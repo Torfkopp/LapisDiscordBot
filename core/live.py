@@ -56,12 +56,18 @@ class DailyLive(BaseLive):
                             message = await channel.fetch_message(saved["message_id"])
                         except NotFound:
                             pass
+                    action = "edited" if message else "sent"
                     if message:
                         await message.edit(embeds=embeds)
                     else:
                         message = await channel.send(embeds=embeds)
                     saved["message_id"] = message.id
+                    log.write(f"Live {self.key} for {day}: {action} message {message.id} in channel {self.channel_id}", action == "sent")
+                else:
+                    log.write(f"Live {self.key} for {day}: no score embeds returned", False)
                 saved["finished"] = not still_going
+                if not still_going:
+                    saved["finished_at"] = datetime.datetime.now().isoformat()
                 self.manager._write_msgs()
                 if not still_going:
                     self.stop_task(day)
@@ -69,12 +75,18 @@ class DailyLive(BaseLive):
                     if self.key == "score" and not self.tasks:
                         football.clear_old_matches()
             except Exception as error:
+                log.write(f"Live {self.key} for {day}: update failed in channel {self.channel_id}")
                 log.error(error)
 
-    async def _start_live(self, day):
+    async def _start_live(self, day, start_time=None):
         if day in self.tasks:
             return
-        self.days.setdefault(day.isoformat(), {})["finished"] = False
+        saved = self.days.setdefault(day.isoformat(), {})
+        if saved.get("finished"):
+            if start_time is None or start_time.isoformat() <= saved.get("finished_at", ""):
+                return
+            saved = self.days[day.isoformat()] = {}
+        saved["finished"] = False
         self.manager._write_msgs()
         self.task = Task(partial(self._live, day), IntervalTrigger(minutes=self.interval))
         self.tasks[day] = self.task
@@ -103,9 +115,9 @@ class DailyLive(BaseLive):
                     continue
                 self.scheduled.add(key)
                 if start_time > current:
-                    Task(self._start_live, DateTrigger(start_time)).start(day)
+                    Task(self._start_live, DateTrigger(start_time)).start(day, start_time)
                 elif current - start_time < datetime.timedelta(hours=3):
-                    await self._start_live(day)
+                    await self._start_live(day, start_time)
 
 
 class FootballLive(DailyLive):
